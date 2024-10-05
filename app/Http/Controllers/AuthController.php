@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Administrativo;
+use App\Models\Docente;
+use App\Models\Estudiante;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -116,6 +119,18 @@ class AuthController extends Controller
         $token_type = 'bearer';
         $expires_in = JWTAuth::factory()->getTTL() * 60;
 
+        if ($usuario->roles->isEmpty()) {
+            $usuario->assignRole('estudiante');
+        }
+
+        $usuario->load('estudiante', 'administrativo', 'docente');
+
+        $subclases = [
+            'estudiante' => $usuario->estudiante,
+            'administrativo' => $usuario->administrativo,
+            'docente' => $usuario->docente,
+        ];
+
         return response()->json(
             [
                 'access_token' => $access_token,
@@ -124,10 +139,12 @@ class AuthController extends Controller
                 'usuario' => $usuario,
                 'permisos' => $usuario->getAllPermissions(),
                 'roles' => $usuario->getRoleNames(),
+                'subclases' => $subclases,
             ],
             200
         );
     }
+
 
     private function validateRegisterRequest(Request $request)
     {
