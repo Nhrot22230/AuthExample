@@ -64,3 +64,97 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+# Installation Requirements
+
+Para instalar y ejecutar un proyecto en Laravel, se requieren los siguientes componentes y extensiones.
+
+## Composer
+
+Laravel utiliza [Composer](https://getcomposer.org/) como su gestor de dependencias. Asegúrate de tener Composer instalado en tu sistema.
+
+## PHP
+
+Este proyecto requiere PHP versión **8.3**.
+
+### Configuración de PHP
+
+A continuación, se muestran los detalles de la configuración de PHP en tu sistema:
+
+- **Configuration File (php.ini) Path**: `/etc/php/8.3/cli`
+- **Loaded Configuration File**: `/etc/php/8.3/cli/php.ini`
+- **Scan for additional .ini files in**: `/etc/php/8.3/cli/conf.d`
+- **Additional .ini files parsed**:
+  - `10-mysqlnd.ini`
+  - `10-opcache.ini`
+  - `10-pdo.ini`
+  - `15-xml.ini`
+  - `20-bz2.ini`
+  - `20-calendar.ini`
+  - `20-ctype.ini`
+  - `20-curl.ini`
+  - `20-dom.ini`
+  - `20-exif.ini`
+  - `20-ffi.ini`
+  - `20-fileinfo.ini`
+  - `20-ftp.ini`
+  - `20-gettext.ini`
+  - `20-iconv.ini`
+  - `20-intl.ini`
+  - `20-mbstring.ini`
+  - `20-mysqli.ini`
+  - `20-pdo_mysql.ini`
+  - `20-phar.ini`
+  - `20-posix.ini`
+  - `20-raphf.ini`
+  - `20-readline.ini`
+  - `20-shmop.ini`
+  - `20-simplexml.ini`
+  - `20-sockets.ini`
+  - `20-sysvmsg.ini`
+  - `20-sysvsem.ini`
+  - `20-sysvshm.ini`
+  - `20-tokenizer.ini`
+  - `20-xmlreader.ini`
+  - `20-xmlwriter.ini`
+  - `20-xsl.ini`
+  - `20-zip.ini`
+  - `25-http.ini`
+
+## Módulos de PHP Requeridos
+
+Asegúrate de que los siguientes módulos de PHP estén habilitados:
+
+- `curl`
+- `mbstring`
+- `mysqlnd`
+- `pdo`
+- `pdo_mysql`
+- `xml`
+- `zip`
+
+Puedes habilitar estos módulos editando tu archivo `php.ini` y asegurándote de que las siguientes líneas no estén comentadas:
+
+```ini
+extension=curl
+extension=mbstring
+extension=mysqlnd
+extension=pdo
+extension=pdo_mysql
+extension=xml
+extension=zip
+```
+
+Una vez que hayas configurado todo, puedes proceder a instalar las dependencias de tu proyecto Laravel ejecutando el siguiente comando en la raíz de tu proyecto:
+
+```bash
+composer update
+composer install
+php artisan migrate
+php artisan db:seed
+php artisan serve
+```
+
+Esta sección proporciona información clara y concisa sobre los requisitos de instalación para tu proyecto Laravel, asegurando que los usuarios tengan todo lo necesario para comenzar.
+
