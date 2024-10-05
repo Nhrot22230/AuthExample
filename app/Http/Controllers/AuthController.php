@@ -124,13 +124,6 @@ class AuthController extends Controller
         }
 
         $usuario->load('estudiante', 'administrativo', 'docente');
-
-        $subclases = [
-            'estudiante' => $usuario->estudiante,
-            'administrativo' => $usuario->administrativo,
-            'docente' => $usuario->docente,
-        ];
-
         return response()->json(
             [
                 'access_token' => $access_token,
@@ -139,7 +132,6 @@ class AuthController extends Controller
                 'usuario' => $usuario,
                 'permisos' => $usuario->getAllPermissions(),
                 'roles' => $usuario->getRoleNames(),
-                'subclases' => $subclases,
             ],
             200
         );

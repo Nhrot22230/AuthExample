@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EstudianteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\JWTMiddleware;
@@ -18,6 +19,15 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->middleware('can:ver usuarios');
         Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->middleware('can:editar usuarios');
         Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->middleware('can:eliminar usuarios');
+
+        // Route::get('/roles', [UsuarioController::class, 'roles'])->middleware('can:ver roles');
+        // Route::post('/roles', [UsuarioController::class, 'storeRole'])->middleware('can:crear roles');
+        // Route::put('/roles/{id}', [UsuarioController::class, 'updateRole'])->middleware('can:editar roles');
+        // Route::delete('/roles/{id}', [UsuarioController::class, 'destroyRole'])->middleware('can:eliminar roles');
+        // Route::post('/roles/{id}/assign', [UsuarioController::class, 'assignRole'])->middleware('can:asignar roles');
+        // Route::get('/permissions', [UsuarioController::class, 'permissions']);
+
+        Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver usuarios');
     });
 });
 
