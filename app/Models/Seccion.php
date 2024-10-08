@@ -17,16 +17,10 @@ class Seccion extends Model
         'descripcion',
         'codigoSeccion',
         'departamento_id',
-        'jefeSeccion_id',
     ];
 
     public function departamento()
     {
         return $this->belongsTo(Departamento::class);
-    }
-
-    public function jefeSeccion()
-    {
-        return $this->belongsTo(Docente::class, 'jefeSeccion_id');
     }
 }

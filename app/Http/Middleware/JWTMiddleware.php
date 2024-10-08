@@ -23,12 +23,19 @@ class JWTMiddleware
         try {
             $token = JWTAuth::parseToken();
             $payload = $token->getPayload();
+            $user = JWTAuth::authenticate();
+
             Log::channel('jwt-auth')->info('JWT Middleware', [
                 'token' => $request->bearerToken(),
                 'payload' => $payload,
+                'auth' => $user
             ]);
 
-            JWTAuth::authenticate();
+            $request->merge(['authUser' => $user->load('estudiante', 'administrativo', 'docente')]);
+
+            Log::channel('jwt-auth')->info('JWT Middleware', [
+                'request' => $request->all()
+            ]);
         } catch (TokenExpiredException $e) {
             return response()->json(['message' => 'No está autorizado al sistema: Token expirado'], 401);
         } catch (TokenInvalidException $e) {

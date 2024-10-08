@@ -24,16 +24,6 @@ class SeccionFactory extends Factory
             'descripcion' => $this->faker->sentence,
             'codigoSeccion' => $this->faker->unique()->randomNumber(8),
             'departamento_id' => Departamento::all()->random()->id ?? null,
-            'jefeSeccion_id' => null,
         ];
-    }
-
-    public function configure()
-    {
-        return $this->afterCreating(function (Seccion $seccion) {
-            $docente = Docente::factory()->count(1)->create();
-
-            $seccion->update(['jefeSeccion_id' => $docente->first()->id]);
-        });
     }
 }

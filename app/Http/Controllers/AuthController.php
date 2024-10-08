@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Administrativo;
-use App\Models\Docente;
-use App\Models\Estudiante;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,13 +16,21 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $usuario = Usuario::where('email', $credentials['email'])->first();
+        $usuario = Usuario::where('email', $credentials['email'])->first()->load('estudiante', 'administrativo', 'docente');
 
         if (!$usuario || !Hash::check($credentials['password'], $usuario->password)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        return $this->createUserResponse($usuario);
+        return response()->json(
+            [
+                'usuario' => $usuario,
+                'access_token' => JWTAuth::fromUser($usuario),
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            ],
+            200
+        );
     }
 
     public function register(Request $request)
@@ -42,11 +47,20 @@ class AuthController extends Controller
 
         try {
             $usuario->save();
+            $usuario->assignRole('estudiante');
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al registrar el usuario'], 400);
         }
 
-        return $this->createUserResponse($usuario);
+        return response()->json(
+            [
+                'usuario' => $usuario,
+                'access_token' => JWTAuth::fromUser($usuario),
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            ],
+            200
+        );
     }
 
     public function googleLogin(Request $request)
@@ -63,7 +77,15 @@ class AuthController extends Controller
             }
 
             $usuario = $this->findOrCreateUsuarioFromGooglePayload($payload);
-            return $this->createUserResponse($usuario);
+            return response()->json(
+                [
+                    'usuario' => $usuario,
+                    'access_token' => JWTAuth::fromUser($usuario),
+                    'token_type' => 'bearer',
+                    'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                ],
+                200
+            );
         } catch (JWTException $e) {
             Log::channel('jwt-auth')->error('Google login JWTException', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Token is invalid'], 401);
@@ -79,11 +101,7 @@ class AuthController extends Controller
 
         if ($usuario) {
             return response()->json(
-                [
-                    'usuario' => $usuario,
-                    'permisos' => $usuario->getAllPermissions(),
-                    'roles' => $usuario->getRoleNames(),
-                ],
+                $usuario->load('estudiante', 'administrativo', 'docente'),
                 200
             );
         }
@@ -95,7 +113,7 @@ class AuthController extends Controller
     {
         try {
             $token = JWTAuth::refresh(JWTAuth::getToken());
-            return response()->json(['token' => $token], 200);
+            return response()->json($token, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al refrescar el token'], 400);
         }
@@ -112,31 +130,6 @@ class AuthController extends Controller
             return response()->json(['message' => 'Error al cerrar la sesión'], 400);
         }
     }
-
-    private function createUserResponse(Usuario $usuario)
-    {
-        $access_token = JWTAuth::fromUser($usuario);
-        $token_type = 'bearer';
-        $expires_in = JWTAuth::factory()->getTTL() * 60;
-
-        if ($usuario->roles->isEmpty()) {
-            $usuario->assignRole('estudiante');
-        }
-
-        $usuario->load('estudiante', 'administrativo', 'docente');
-        return response()->json(
-            [
-                'access_token' => $access_token,
-                'token_type' => $token_type,
-                'expires_in' => $expires_in,
-                'usuario' => $usuario,
-                'permisos' => $usuario->getAllPermissions(),
-                'roles' => $usuario->getRoleNames(),
-            ],
-            200
-        );
-    }
-
 
     private function validateRegisterRequest(Request $request)
     {
@@ -163,11 +156,10 @@ class AuthController extends Controller
         $apellido_materno = $payload['middle_name'] ?? null;
         $google_id = $payload['sub'];
         $picture = $payload['picture'];
-
         $usuario = Usuario::where('email', $email)->first();
 
         if (!$usuario) {
-            return Usuario::create([
+            $db_usuario =  Usuario::create([
                 'nombre' => $nombre,
                 'apellido_paterno' => $apellido_paterno,
                 'apellido_materno' => $apellido_materno,
@@ -175,8 +167,11 @@ class AuthController extends Controller
                 'google_id' => $google_id,
                 'picture' => $picture,
             ]);
+            $db_usuario->assignRole('estudiante');
+            return $db_usuario;
         }
         
+
         if (!$usuario->google_id) {
             $usuario->update(['google_id' => $google_id, 'picture' => $picture]);
         }

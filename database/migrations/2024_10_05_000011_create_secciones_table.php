@@ -17,7 +17,6 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->string('codigoSeccion')->unique();
             $table->foreignId('departamento_id')->constrained('departamentos')->onDelete('cascade');
-            $table->foreignId('jefeSeccion_id')->unique()->nullable()->constrained('docentes')->onDelete('cascade');
             $table->timestamps();
         });
     }

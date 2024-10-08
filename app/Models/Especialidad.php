@@ -16,7 +16,6 @@ class Especialidad extends Model
         'nombre',
         'descripcion',
         'facultad_id',
-        'director_id',
     ];
 
     public function facultad()
@@ -27,10 +26,5 @@ class Especialidad extends Model
     public function estudiantes()
     {
         return $this->hasMany(Estudiante::class);
-    }
-
-    public function director()
-    {
-        return $this->belongsTo(Docente::class, 'director_id');
     }
 }
