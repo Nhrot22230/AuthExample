@@ -52,17 +52,17 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
     Route::prefix('v1')->group(function () {
         Route::get('/roles', [RolePermissionsController::class, 'listRoles'])->middleware('can:ver roles');
+        Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
         Route::get('/roles/count', [RolePermissionsController::class, 'countRoles'])->middleware('can:ver roles');
         Route::post('/roles/assign', [RolePermissionsController::class, 'assignRole'])->middleware('can:asignar roles');
         Route::post('/roles/revoke', [RolePermissionsController::class, 'revokeRole'])->middleware('can:revocar roles');
-        Route::post('/roles/new', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
         Route::post('/roles/delete', [RolePermissionsController::class, 'deleteRole'])->middleware('can:eliminar roles');
 
         Route::get('/permissions', [RolePermissionsController::class, 'listPermissions'])->middleware('can:ver permisos');
+        Route::post('/permissions', [RolePermissionsController::class, 'storePermission'])->middleware('can:crear permisos');
         Route::post('/permissions/assign', [RolePermissionsController::class, 'assignPermission'])->middleware('can:asignar permisos');
         Route::post('/permissions/revoke', [RolePermissionsController::class, 'revokePermission'])->middleware('can:revocar permisos');
-        Route::post('/permissions/new', [RolePermissionsController::class, 'storePermission'])->middleware('can:crear permisos');
         Route::post('/permissions/delete', [RolePermissionsController::class, 'deletePermission'])->middleware('can:eliminar permisos');
     });
 });
