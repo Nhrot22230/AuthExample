@@ -15,12 +15,11 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            'admin',
+            'administrativo',
             'secretarioAcademico',
             'estudiante',
             'docente',
             'jefePractica',
-            'administrativo',
         ];
 
         $permissions = [
@@ -68,8 +67,8 @@ class RolePermissionSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
-        $adminRole = Role::findByName('admin');
-        $adminRole->givePermissionTo(Permission::all());
+        $administrativoRole = Role::findByName('administrativo');
+        $administrativoRole->givePermissionTo(Permission::all());
         $secretarioRole = Role::findByName('secretarioAcademico');
         $secretarioRole->givePermissionTo([
             'ver usuarios',
@@ -95,15 +94,9 @@ class RolePermissionSeeder extends Seeder
             'ver estudiantes',
         ]);
 
-        $administrativoRole = Role::findByName('administrativo');
-        $administrativoRole->givePermissionTo([
-            'ver usuarios',
-            'ver administrativos',
-        ]);
-
         $admin = Usuario::find(1);
         if ($admin) {
-            $admin->assignRole('admin');
+            $admin->assignRole('administrativo');
         }
     }
 }

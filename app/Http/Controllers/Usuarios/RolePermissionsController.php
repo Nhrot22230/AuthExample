@@ -119,7 +119,7 @@ class RolePermissionsController extends Controller
      */
     public function listRoles()
     {
-        $roles = Role::all()->pluck('name');
+        $roles = Role::get();
         return response()->json(['roles' => $roles], 200);
     }
 
@@ -128,7 +128,20 @@ class RolePermissionsController extends Controller
      */
     public function listPermissions()
     {
-        $permissions = Permission::all()->pluck('name');
+        $permissions = Permission::get();
         return response()->json(['permissions' => $permissions], 200);
+    }
+
+
+    public function countRoles()
+    {
+        $roles = Role::withCount('users')->get();
+        return response()->json(['roles' => $roles], 200);
+    }
+
+    public function showRole($id)
+    {
+        $role = Role::findOrFail($id)->load('permissions');
+        return response()->json(['role' => $role], 200);
     }
 }
