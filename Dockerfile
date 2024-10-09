@@ -23,6 +23,9 @@ WORKDIR /var/www/html
 # Copia los archivos de la aplicación
 COPY . .
 
+# Copia el archivo .env o crea uno a partir del archivo de ejemplo
+RUN cp .env.example .env
+
 # Ejecuta `composer install` para instalar las dependencias de Laravel
 RUN composer install --no-dev --optimize-autoloader
 
