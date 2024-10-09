@@ -19,11 +19,13 @@ class SeccionFactory extends Factory
      */
     public function definition(): array
     {
+        $random_departamento = Departamento::inRandomOrder()->first();
+
         return [
             'nombre' => $this->faker->word,
             'descripcion' => $this->faker->sentence,
             'codigoSeccion' => $this->faker->unique()->randomNumber(8),
-            'departamento_id' => Departamento::all()->random()->id ?? null,
+            'departamento_id' => $random_departamento->id ?? Departamento::factory(),
         ];
     }
 }

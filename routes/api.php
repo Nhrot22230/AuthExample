@@ -52,7 +52,9 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
     Route::prefix('v1')->group(function () {
         Route::get('/roles', [RolePermissionsController::class, 'listRoles'])->middleware('can:ver roles');
+        Route::get('/roles-permissions', [RolePermissionsController::class, 'listRolesWithPermissions'])->middleware('can:ver roles');
         Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
+        Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->middleware('can:editar roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
         Route::get('/roles/count', [RolePermissionsController::class, 'countRoles'])->middleware('can:ver roles');
         Route::post('/roles/assign', [RolePermissionsController::class, 'assignRole'])->middleware('can:asignar roles');

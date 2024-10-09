@@ -19,10 +19,12 @@ class EspecialidadFactory extends Factory
      */
     public function definition(): array
     {
+        $random_facultad = Facultad::inRandomOrder()->first();
+
         return [
             'nombre' => $this->faker->word,
             'descripcion' => $this->faker->sentence,
-            'facultad_id' => Facultad::all()->random()->id ?? null,
+            'facultad_id' => $random_facultad->id ?? Facultad::factory(),
         ];
     }
 }

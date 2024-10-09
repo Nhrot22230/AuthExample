@@ -17,10 +17,12 @@ class AreaFactory extends Factory
      */
     public function definition(): array
     {
+        $random_especialidad = Especialidad::inRandomOrder()->first();
+
         return [
             'nombre' => $this->faker->word,
             'descripcion' => $this->faker->sentence,
-            'especialidad_id' => Especialidad::all()->random()->id ?? null,
+            'especialidad_id' => $random_especialidad->id ?? Especialidad::factory(),
         ];
     }
 }

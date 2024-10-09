@@ -47,13 +47,17 @@ class DocenteFactory extends Factory
         if (!$random_seccion) {
             $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
         }
+
+        $random_usuario = Usuario::inRandomOrder()->first();
+        $random_area = Area::inRandomOrder()->first();
+
         return [
-            'usuario_id' => Usuario::factory(),
+            'usuario_id' => $random_usuario->id ?? Usuario::factory(),
             'codigoDocente' => $this->faker->unique()->randomNumber(8),
             'tipo' => $this->faker->randomElement(['TPA', 'TC']),
             'seccion_id' => $random_seccion->id ?? null,
             'especialidad_id' => $random_especialidad->id ?? null,
-            'area_id' => Area::factory(),
+            'area_id' => $random_area->id ?? Area::factory(),
         ];
     }
 }

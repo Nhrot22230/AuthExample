@@ -85,8 +85,8 @@ class UsuarioController extends Controller
         }
 
         $usuario->estado = $validatedData['estado'] ?? $usuario->estado;
-        $usuario->google_id = $validatedData['google_id'];
-        $usuario->picture = $validatedData['picture'];
+        $usuario->google_id = $validatedData['google_id'] ?? $usuario->google_id;
+        $usuario->picture = $validatedData['picture'] ?? $usuario->picture;
 
         $usuario->save();
         return response()->json(['message' => 'Usuario actualizado exitosamente', 'usuario' => $usuario], 200);
@@ -95,9 +95,9 @@ class UsuarioController extends Controller
     /**
      * Eliminar un usuario.
      */
-    public function destroyByCodigo($codigo)
+    public function destroy($id)
     {
-        $usuario = Usuario::where('codigo', $codigo)->firstOrFail();
+        $usuario = Usuario::findOrFail($id);
         $usuario->delete();
         return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
     }
