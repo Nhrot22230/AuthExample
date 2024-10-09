@@ -17,9 +17,14 @@ class AdministrativoFactory extends Factory
      */
     public function definition(): array
     {
+        $lugaresTrabajo = ['Secretaría', 'Decanato', 'Dirección', 'Coordinación', 'Jefatura'];
+        $cargos = ['Secretario', 'Decano', 'Director', 'Coordinador', 'Jefe'];
+
         return [
             'usuario_id' => Usuario::all()->random()->id ?? Usuario::factory(),
             'codigoAdministrativo' => $this->faker->unique()->randomNumber(8),
+            'lugarTrabajo' => $this->faker->randomElement($lugaresTrabajo),
+            'cargo' => $this->faker->randomElement($cargos),
         ];
     }
 }

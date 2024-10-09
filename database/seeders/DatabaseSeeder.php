@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $this->call(EduConnectSeeder::class);
+        $this->call(UniversidadSeeder::class);
+        $this->call(UsuariosSeeder::class);
         $this->call(RolePermissionSeeder::class);
     }
 }

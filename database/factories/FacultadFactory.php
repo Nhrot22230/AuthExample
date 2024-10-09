@@ -19,7 +19,8 @@ class FacultadFactory extends Factory
     {
         return [
             'nombre' => $this->faker->word,
-            'descripcion' => $this->faker->sentence,
+            'abreviatura' => $this->faker->unique()->lexify('????'),
+            'anexo' => $this->faker->word,
             'departamento_id' => Departamento::all()->random()->id ?? null,
         ];
     }

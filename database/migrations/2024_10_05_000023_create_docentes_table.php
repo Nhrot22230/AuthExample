@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('usuario_id')->constrained()->onDelete('cascade');
             $table->string('codigoDocente')->unique();
-            $table->foreignId('area_id')->nullable()->constrained()->onDelete('set null');
+            $table->enum('tipo', ['TPA', 'TC']);
+            $table->foreignId('area_id')->nullable()->constrained('areas')->onDelete('cascade');
+            $table->foreignId('seccion_id')->constrained('secciones')->onDelete('cascade');
+            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
             $table->timestamps();
-
-            $table->foreignId('especialidad_id')->nullable()->constrained('especialidades')->onDelete('set null');
         });
     }
 

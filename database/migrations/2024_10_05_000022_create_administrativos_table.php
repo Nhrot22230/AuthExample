@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
             $table->string('codigoAdministrativo')->unique();
+            $table->string('cargo');
+            $table->string('lugarTrabajo');
             $table->timestamps();
         });
     }
