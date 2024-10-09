@@ -13,6 +13,8 @@ class Administrativo extends Model
     protected $fillable = [
         'usuario_id',
         'codigoAdministrativo',
+        'lugarTrabajo',
+        'cargo',
     ];
 
     public function usuario()

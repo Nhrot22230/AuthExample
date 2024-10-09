@@ -14,7 +14,8 @@ class Facultad extends Model
 
     protected $fillable = [
         'nombre',
-        'descripcion',
+        'abreviatura',
+        'anexo',
         'departamento_id',
     ];
 

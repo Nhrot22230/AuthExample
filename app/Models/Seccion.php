@@ -16,11 +16,16 @@ class Seccion extends Model
         'nombre',
         'descripcion',
         'codigoSeccion',
-        'departamento_id',
+        'departamento_id'
     ];
 
     public function departamento()
     {
         return $this->belongsTo(Departamento::class);
+    }
+
+    public function docentes()
+    {
+        return $this->hasMany(Docente::class);
     }
 }
