@@ -16,7 +16,8 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $usuario = Usuario::where('email', $credentials['email'])->first()->load('estudiante', 'administrativo', 'docente');
+        $usuario = Usuario::where('email', $credentials['email'])->first();
+        $usuario->load('estudiante', 'administrativo', 'docente');
 
         if (!$usuario || !Hash::check($credentials['password'], $usuario->password)) {
             return response()->json(['message' => 'Unauthorized'], 401);

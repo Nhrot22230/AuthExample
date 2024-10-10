@@ -84,6 +84,24 @@ class RolePermissionsController extends Controller
         return response()->json(['message' => 'Rol creado exitosamente', 'role' => $role], 201);
     }
 
+    public function updateRole(Request $request, $id)
+    {
+        $role = Role::findOrFail($id);
+        $validatedData = $request->validate([
+            'name' => 'required|string|unique:roles,name,' . $role->id,
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role->update(['name' => $validatedData['name']]);
+
+        if (!empty($validatedData['permissions'])) {
+            $role->syncPermissions($validatedData['permissions']);
+        }
+
+        return response()->json(['message' => 'Rol actualizado exitosamente', 'role' => $role], 200);
+    }
+
     public function storePermission(Request $request)
     {
         $validatedData = $request->validate([
@@ -119,7 +137,13 @@ class RolePermissionsController extends Controller
      */
     public function listRoles()
     {
-        $roles = Role::all()->pluck('name');
+        $roles = Role::get();
+        return response()->json(['roles' => $roles], 200);
+    }
+
+    public function listRolesWithPermissions()
+    {
+        $roles = Role::with('permissions')->get();
         return response()->json(['roles' => $roles], 200);
     }
 
@@ -128,7 +152,20 @@ class RolePermissionsController extends Controller
      */
     public function listPermissions()
     {
-        $permissions = Permission::all()->pluck('name');
+        $permissions = Permission::get();
         return response()->json(['permissions' => $permissions], 200);
+    }
+
+
+    public function countRoles()
+    {
+        $roles = Role::withCount('users')->get();
+        return response()->json(['roles' => $roles], 200);
+    }
+
+    public function showRole($id)
+    {
+        $role = Role::findOrFail($id)->load('permissions');
+        return response()->json(['role' => $role], 200);
     }
 }

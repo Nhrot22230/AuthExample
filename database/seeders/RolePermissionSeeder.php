@@ -15,61 +15,50 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            'admin',
+            'administrativo',
             'secretarioAcademico',
             'estudiante',
             'docente',
             'jefePractica',
-            'administrativo',
         ];
 
         $permissions = [
-            // Permisos de usuarios
-            'ver usuarios',
-            'crear usuarios',
-            'editar usuarios',
-            'eliminar usuarios',
+            ['name' => 'ver usuarios', 'category' => 'usuarios'],
+            ['name' => 'crear usuarios', 'category' => 'usuarios'],
+            ['name' => 'editar usuarios', 'category' => 'usuarios'],
+            ['name' => 'eliminar usuarios', 'category' => 'usuarios'],
 
-            // Permisos de estudiantes
-            'ver estudiantes',
-            'crear estudiantes',
-            'editar estudiantes',
-            'eliminar estudiantes',
+            ['name' => 'ver estudiantes', 'category' => 'estudiantes'],
+            ['name' => 'crear estudiantes', 'category' => 'estudiantes'],
+            ['name' => 'editar estudiantes', 'category' => 'estudiantes'],
+            ['name' => 'eliminar estudiantes', 'category' => 'estudiantes'],
 
-            // Permisos de docentes
-            'ver docentes',
-            'crear docentes',
-            'editar docentes',
-            'eliminar docentes',
+            ['name' => 'ver docentes', 'category' => 'docentes'],
+            ['name' => 'crear docentes', 'category' => 'docentes'],
+            ['name' => 'editar docentes', 'category' => 'docentes'],
+            ['name' => 'eliminar docentes', 'category' => 'docentes'],
 
-            // Permisos de administrativos
-            'ver administrativos',
-            'crear administrativos',
-            'editar administrativos',
-            'eliminar administrativos',
+            ['name' => 'ver roles', 'category' => 'roles'],
+            ['name' => 'crear roles', 'category' => 'roles'],
+            ['name' => 'asignar roles', 'category' => 'roles'],
+            ['name' => 'revocar roles', 'category' => 'roles'],
+            ['name' => 'eliminar roles', 'category' => 'roles'],
 
-            // Permisos de roles y permisos
-            'ver roles',
-            'crear roles',
-            'editar roles',
-            'eliminar roles',
-            'asignar roles',
-            'revocar roles',
-            'ver permisos',
-            'crear permisos',
-            'editar permisos',
-            'eliminar permisos',
-            'asignar permisos',
-            'revocar permisos',
+            ['name' => 'ver permisos', 'category' => 'permisos'],
+            ['name' => 'crear permisos', 'category' => 'permisos'],
+            ['name' => 'asignar permisos', 'category' => 'permisos'],
+            ['name' => 'revocar permisos', 'category' => 'permisos'],
+            ['name' => 'eliminar permisos', 'category' => 'permisos'],
         ];
+
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role]);
         }
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission['name'], 'category' => $permission['category']]);
         }
-        $adminRole = Role::findByName('admin');
-        $adminRole->givePermissionTo(Permission::all());
+        $administrativoRole = Role::findByName('administrativo');
+        $administrativoRole->givePermissionTo(Permission::all());
         $secretarioRole = Role::findByName('secretarioAcademico');
         $secretarioRole->givePermissionTo([
             'ver usuarios',
@@ -95,15 +84,9 @@ class RolePermissionSeeder extends Seeder
             'ver estudiantes',
         ]);
 
-        $administrativoRole = Role::findByName('administrativo');
-        $administrativoRole->givePermissionTo([
-            'ver usuarios',
-            'ver administrativos',
-        ]);
-
         $admin = Usuario::find(1);
         if ($admin) {
-            $admin->assignRole('admin');
+            $admin->assignRole('administrativo');
         }
     }
 }
