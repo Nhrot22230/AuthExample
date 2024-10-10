@@ -15,9 +15,9 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
-
-        $usuario = Usuario::where('email', $credentials['email'])->first();
-        $usuario->load('estudiante', 'administrativo', 'docente');
+        $usuario = Usuario::with('estudiante', 'administrativo', 'docente')
+            ->where('email', $credentials['email'])
+            ->first();
 
         if (!$usuario || !Hash::check($credentials['password'], $usuario->password)) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -157,8 +157,10 @@ class AuthController extends Controller
         $apellido_materno = $payload['middle_name'] ?? null;
         $google_id = $payload['sub'];
         $picture = $payload['picture'];
-        $usuario = Usuario::where('email', $email)->first();
-
+        $usuario = Usuario::with('estudiante', 'administrativo', 'docente')
+            ->where('email', $email)
+            ->first();
+        
         if (!$usuario) {
             $db_usuario =  Usuario::create([
                 'nombre' => $nombre,
@@ -172,7 +174,6 @@ class AuthController extends Controller
             return $db_usuario;
         }
         
-
         if (!$usuario->google_id) {
             $usuario->update(['google_id' => $google_id, 'picture' => $picture]);
         }

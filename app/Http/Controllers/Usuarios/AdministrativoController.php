@@ -15,7 +15,11 @@ class AdministrativoController extends Controller
      */
     public function index()
     {
-        $administrativos = Administrativo::with('usuario')->paginate(10);
+        // get url parameters page and per_page
+        $page = request('page', 1);
+        $per_page = request('per_page', 10);
+
+        $administrativos = Administrativo::with('usuario')->paginate($per_page, ['*'], 'page', $page);
         return response()->json($administrativos, 200);
     }
 

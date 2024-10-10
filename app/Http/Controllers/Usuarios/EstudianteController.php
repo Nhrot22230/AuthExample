@@ -14,13 +14,11 @@ class EstudianteController extends Controller
 {
     public function index()
     {
-        try {
-            $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])->get();
-            return response()->json($estudiantes, 200);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json(['message' => 'Error al obtener estudiantes'], 500);
-        }
+        $page = request('page', 1);
+        $per_page = request('per_page', 10);
+
+        $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])->paginate($per_page, ['*'], 'page', $page);
+        return response()->json($estudiantes, 200);
     }
 
     public function store(Request $request)

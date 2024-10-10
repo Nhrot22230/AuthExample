@@ -18,11 +18,10 @@ class EstudianteFactory extends Factory
      */
     public function definition(): array
     {
-        $random_usuario = Usuario::inRandomOrder()->first();
         $random_especialidad = Especialidad::inRandomOrder()->first();
 
         return [
-            'usuario_id' => $random_usuario->id ?? Usuario::factory(),
+            'usuario_id' => Usuario::factory(),
             'codigoEstudiante' => $this->faker->unique()->randomNumber(8),
             'especialidad_id' => $random_especialidad->id ?? Especialidad::factory(),
         ];
