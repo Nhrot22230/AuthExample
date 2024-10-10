@@ -48,11 +48,9 @@ class DocenteFactory extends Factory
             $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
         }
 
-        $random_usuario = Usuario::inRandomOrder()->first();
         $random_area = Area::inRandomOrder()->first();
-
         return [
-            'usuario_id' => $random_usuario->id ?? Usuario::factory(),
+            'usuario_id' => Usuario::factory(),
             'codigoDocente' => $this->faker->unique()->randomNumber(8),
             'tipo' => $this->faker->randomElement(['TPA', 'TC']),
             'seccion_id' => $random_seccion->id ?? null,

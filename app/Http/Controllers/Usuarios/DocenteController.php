@@ -12,7 +12,11 @@ class DocenteController extends Controller
 {
     public function index()
     {
-        $docentes = Docente::with(['usuario', 'seccion'])->get();
+        // get url parameters page and per_page
+        $page = request('page', 1);
+        $per_page = request('per_page', 10);
+
+        $docentes = Docente::with(['usuario', 'seccion'])->paginate($per_page, ['*'], 'page', $page);
         return response()->json($docentes, 200);
     }
 
