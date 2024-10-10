@@ -23,6 +23,16 @@ class RolePermissionSeeder extends Seeder
         ];
 
         $permissions = [
+            ['name' => 'ver instituciones', 'category' => 'instituciones'],
+            ['name' => 'crear instituciones', 'category' => 'instituciones'],
+            ['name' => 'editar instituciones', 'category' => 'instituciones'],
+            ['name' => 'eliminar instituciones', 'category' => 'instituciones'],
+
+            ['name' => 'ver administrativos', 'category' => 'administrativos'],
+            ['name' => 'crear administrativos', 'category' => 'administrativos'],
+            ['name' => 'editar administrativos', 'category' => 'administrativos'],
+            ['name' => 'eliminar administrativos', 'category' => 'administrativos'],
+
             ['name' => 'ver usuarios', 'category' => 'usuarios'],
             ['name' => 'crear usuarios', 'category' => 'usuarios'],
             ['name' => 'editar usuarios', 'category' => 'usuarios'],

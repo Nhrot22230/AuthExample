@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
-    /**
-     * Mostrar una lista de todos los usuarios.
-     */
     public function index()
     {
         $page = request('page', 1);
@@ -22,19 +19,16 @@ class UsuarioController extends Controller
         return response()->json(['usuarios' => $usuarios], 200);
     }
 
-    /**
-     * Mostrar un usuario específico.
-     */
     public function show($id)
     {
-        $usuario = Usuario::findOrFail($id);
-
-        return response()->json($usuario, 200);
+        try {
+            $usuario = Usuario::findOrFail($id);
+            return response()->json($usuario, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
     }
 
-    /**
-     * Crear un nuevo usuario.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -61,11 +55,15 @@ class UsuarioController extends Controller
         return response()->json(['message' => 'Usuario creado exitosamente', 'usuario' => $usuario], 201);
     }
 
-    /**
-     * Actualizar un usuario existente.
-     */
     public function update(Request $request, $id)
     {
+        $usuario = 0;
+        try {
+            $usuario = Usuario::findOrFail($id);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'required|string|max:255',
@@ -76,8 +74,6 @@ class UsuarioController extends Controller
             'google_id' => 'nullable|string|max:255',
             'picture' => 'nullable|string|max:255',
         ]);
-
-        $usuario = Usuario::findOrFail($id);
 
         $usuario->nombre = $validatedData['nombre'];
         $usuario->apellido_paterno = $validatedData['apellido_paterno'];
@@ -95,13 +91,14 @@ class UsuarioController extends Controller
         return response()->json(['message' => 'Usuario actualizado exitosamente', 'usuario' => $usuario], 200);
     }
 
-    /**
-     * Eliminar un usuario.
-     */
     public function destroy($id)
     {
-        $usuario = Usuario::findOrFail($id);
-        $usuario->delete();
-        return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
+        try {
+            $usuario = Usuario::findOrFail($id);
+            $usuario->delete();
+            return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
     }
 }

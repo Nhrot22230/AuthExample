@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\Usuarios\AdministrativoController;
 use App\Http\Controllers\Usuarios\DocenteController;
 use App\Http\Controllers\Usuarios\EstudianteController;
@@ -17,6 +18,12 @@ Route::get('/test', function () {
 
 Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
     Route::prefix('v1')->group(function () {
+        Route::get('/instituciones', [InstitucionController::class, 'listConfiguraciones'])->middleware('can:ver instituciones');
+        Route::get('/instituciones/last', [InstitucionController::class, 'getLastConfiguracion'])->middleware('can:ver instituciones');
+        Route::post('/instituciones', [InstitucionController::class, 'setConfiguracion'])->middleware('can:crear instituciones');
+    });
+
+    Route::prefix('v1')->group(function () {
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:crear usuarios');
         Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->middleware('can:ver usuarios');
@@ -30,24 +37,24 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver estudiantes');
         Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:crear estudiantes');
         Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver estudiantes');
-        Route::put('/estudiantes/{codigo}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
-        Route::delete('/estudiantes/{codigo}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
+        Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
+        Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
     });
 
     Route::prefix('v1')->group(function () {
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
         Route::get('/docentes/{codDocente}', [DocenteController::class, 'show'])->middleware('can:ver docentes');
-        Route::put('/docentes/{codigo}', [DocenteController::class, 'update'])->middleware('can:editar docentes');
-        Route::delete('/docentes/{codigo}', [DocenteController::class, 'destroy'])->middleware('can:eliminar docentes');
+        Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:editar docentes');
+        Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:eliminar docentes');
     });
 
     Route::prefix('v1')->group(function () {
         Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver administrativos');
         Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:crear administrativos');
-        Route::get('/administrativos/{codigo}', [AdministrativoController::class, 'show'])->middleware('can:ver administrativos');
-        Route::put('/administrativos/{codigo}', [AdministrativoController::class, 'update'])->middleware('can:editar administrativos');
-        Route::delete('/administrativos/{codigo}', [AdministrativoController::class, 'destroy'])->middleware('can:eliminar administrativos');
+        Route::get('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'show'])->middleware('can:ver administrativos');
+        Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:editar administrativos');
+        Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:eliminar administrativos');
     });
 
     Route::prefix('v1')->group(function () {
