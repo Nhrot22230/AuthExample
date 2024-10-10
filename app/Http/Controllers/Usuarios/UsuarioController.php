@@ -14,12 +14,12 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        // get url parameters page and per_page
         $page = request('page', 1);
-        $per_page = request('per_page', 10);
+        $perPage = request('per_page', 10);
 
-        $usuarios = Usuario::paginate($per_page, ['*'], 'page', $page);
-        return response()->json($usuarios, 200);
+        $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
+            ->paginate($perPage, ['*'], 'page', $page);
+        return response()->json(['usuarios' => $usuarios], 200);
     }
 
     /**

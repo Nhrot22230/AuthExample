@@ -6,7 +6,6 @@ use App\Models\Administrativo;
 use App\Models\Docente;
 use App\Models\Estudiante;
 use App\Models\Usuario;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 

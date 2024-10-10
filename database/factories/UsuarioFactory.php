@@ -11,22 +11,26 @@ use Illuminate\Support\Facades\Hash;
 class UsuarioFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
-     */
-    
-    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
+
+    // Hashea la contraseña solo una vez
+    protected static $hashedPassword;
+
     public function definition(): array
     {
+        if (!self::$hashedPassword) {
+            self::$hashedPassword = Hash::make('password');
+        }
+
         return [
             'nombre' => $this->faker->firstName(),
             'apellido_paterno' => $this->faker->lastName(),
             'apellido_materno' => $this->faker->lastName(),
             'email' => $this->faker->unique()->safeEmail(),
-            'password' => Hash::make('password'),
+            'password' => self::$hashedPassword,
             'estado' => $this->faker->randomElement(['activo', 'inactivo']), 
         ];
     }
