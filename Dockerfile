@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     zip \
     unzip \
+    git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql pdo_sqlite zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -25,6 +26,9 @@ COPY . .
 
 # Copia el archivo .env o crea uno a partir del archivo de ejemplo
 RUN cp .env.example .env
+
+# Elimina el directorio vendor si existe
+RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoloader
 
 # Ejecuta `composer install` para instalar las dependencias de Laravel
 RUN composer install --no-dev --optimize-autoloader
