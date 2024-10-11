@@ -90,14 +90,14 @@ class RolePermissionsController extends Controller
 
     public function updatePermission(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name',
-        ]);
-
         $permission = Permission::find($id);
         if (!$permission) {
             return response()->json(['message' => 'Permiso no encontrado'], 404);
         }
+
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255|unique:permissions,name' . $permission->name,
+        ]);
 
         $permission->update($validatedData);
         return response()->json(['message' => 'Permiso actualizado exitosamente', 'permission' => $permission], 200);
@@ -137,7 +137,6 @@ class RolePermissionsController extends Controller
 
     public function listUserRoles($id)
     {
-
         $usuario = Usuario::with('roles')->find($id);
         if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);

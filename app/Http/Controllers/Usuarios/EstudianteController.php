@@ -27,8 +27,8 @@ class EstudianteController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
             'email' => 'required|email|unique:usuarios,email',
             'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante',
             'especialidad_id' => 'required|exists:especialidades,id',
@@ -71,13 +71,17 @@ class EstudianteController extends Controller
 
     public function update(Request $request, $codigo)
     {
-        $estudiante = Estudiante::with('usuario')->where('codigoEstudiante', $codigo)->firstOrFail();
+        $estudiante = Estudiante::with('usuario')->where('codigoEstudiante', $codigo)->first();
+        if (!$estudiante) {
+            return response()->json(['message' => 'Estudiante no encontrado'], 404);
+        }
+
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
-            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario_id,
-            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->id,
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
+            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario_email,
+            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->codigoEstudiante,
             'especialidad_id' => 'required|exists:especialidades,id',
         ]);
         DB::transaction(function () use ($validatedData, $estudiante) {
@@ -93,5 +97,15 @@ class EstudianteController extends Controller
             ])->save();
         });
         return response()->json(['message' => 'Estudiante actualizado exitosamente'], 200);
+    }
+
+    public function destroy($codigo)
+    {
+        $estudiante = Estudiante::where('codigoEstudiante', $codigo)->first();
+        if (!$estudiante) {
+            return response()->json(['message' => 'Estudiante no encontrado'], 404);
+        }
+        $estudiante->delete();
+        return response()->json(['message' => 'Estudiante eliminado exitosamente'], 200);
     }
 }

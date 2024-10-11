@@ -18,6 +18,18 @@ class FacultadController extends Controller
         return response()->json($facultades, 200);
     }
 
+    public function indexAll()
+    {
+        $id_departamento = request('id_departamento', null);
+        if ($id_departamento) {
+            $facultades = Facultad::where('departamento_id', $id_departamento)->get();
+        } else {
+            $facultades = Facultad::all();
+        }
+
+        return response()->json($facultades, 200);
+    }
+
     public function show($id)
     {
         $facultad = Facultad::find($id);
@@ -68,6 +80,19 @@ class FacultadController extends Controller
         $facultad->anexo = $validatedData['anexo'];
         $facultad->departamento_id = $validatedData['departamento_id'];
         $facultad->save();
+
+        return response()->json($facultad, 200);
+    }
+
+    public function destroy($id)
+    {
+        $facultad = Facultad::find($id);
+
+        if (!$facultad) {
+            return response()->json(['message' => 'Facultad no encontrada'], 404);
+        }
+
+        $facultad->delete();
 
         return response()->json($facultad, 200);
     }

@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\Universidad\DepartamentoController;
+use App\Http\Controllers\Universidad\EspecialidadController;
+use App\Http\Controllers\Universidad\FacultadController;
+use App\Http\Controllers\Universidad\SeccionController;
 use App\Http\Controllers\Usuarios\AdministrativoController;
 use App\Http\Controllers\Usuarios\DocenteController;
 use App\Http\Controllers\Usuarios\EstudianteController;
@@ -21,9 +25,35 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/instituciones', [InstitucionController::class, 'listConfiguraciones'])->middleware('can:ver instituciones');
         Route::get('/instituciones/last', [InstitucionController::class, 'getLastConfiguracion'])->middleware('can:ver instituciones');
         Route::post('/instituciones', [InstitucionController::class, 'setConfiguracion'])->middleware('can:crear instituciones');
-    });
-
-    Route::prefix('v1')->group(function () {
+    
+        Route::get('/departamentos', [DepartamentoController::class, 'indexAll'])->middleware('can:ver departamentos');
+        Route::get('/departamentos/paginated', [DepartamentoController::class, 'index'])->middleware('can:ver departamentos');
+        Route::post('/departamentos', [DepartamentoController::class, 'store'])->middleware('can:crear departamentos');
+        Route::get('/departamentos/{id}', [DepartamentoController::class, 'show'])->middleware('can:ver departamentos');
+        Route::put('/departamentos/{id}', [DepartamentoController::class, 'update'])->middleware('can:editar departamentos');
+        Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy'])->middleware('can:eliminar departamentos');
+    
+        Route::get('/facultades', [FacultadController::class, 'indexAll'])->middleware('can:ver facultades');
+        Route::get('/facultades/paginated', [FacultadController::class, 'index'])->middleware('can:ver facultades');
+        Route::post('/facultades', [FacultadController::class, 'store'])->middleware('can:crear facultades');
+        Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware('can:ver facultades');
+        Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
+        Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
+    
+        Route::get('/especialidades', [EspecialidadController::class, 'indexAll'])->middleware('can:ver especialidades');
+        Route::get('/especialidades/paginated', [EspecialidadController::class, 'index'])->middleware('can:ver especialidades');
+        Route::post('/especialidades', [EspecialidadController::class, 'store'])->middleware('can:crear especialidades');
+        Route::get('/especialidades/{id}', [EspecialidadController::class, 'show'])->middleware('can:ver especialidades');
+        Route::put('/especialidades/{id}', [EspecialidadController::class, 'update'])->middleware('can:editar especialidades');
+        Route::delete('/especialidades/{id}', [EspecialidadController::class, 'destroy'])->middleware('can:eliminar especialidades');
+    
+        Route::get('/secciones', [SeccionController::class, 'indexAll'])->middleware('can:ver secciones');
+        Route::get('/secciones/paginated', [SeccionController::class, 'index'])->middleware('can:ver secciones');
+        Route::post('/secciones', [SeccionController::class, 'store'])->middleware('can:crear secciones');
+        Route::get('/secciones/{id}', [SeccionController::class, 'show'])->middleware('can:ver secciones');
+        Route::put('/secciones/{id}', [SeccionController::class, 'update'])->middleware('can:editar secciones');
+        Route::delete('/secciones/{id}', [SeccionController::class, 'destroy'])->middleware('can:eliminar secciones');
+    
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:crear usuarios');
         Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->middleware('can:ver usuarios');
@@ -31,33 +61,25 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/usuarios/{id}/permissions', [RolePermissionsController::class, 'listUserPermissions'])->middleware('can:ver permisos');
         Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->middleware('can:editar usuarios');
         Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->middleware('can:eliminar usuarios');
-    });
-
-    Route::prefix('v1')->group(function () {
+    
         Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver estudiantes');
         Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:crear estudiantes');
         Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver estudiantes');
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
-    });
-
-    Route::prefix('v1')->group(function () {
+    
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
         Route::get('/docentes/{codDocente}', [DocenteController::class, 'show'])->middleware('can:ver docentes');
         Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:editar docentes');
         Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:eliminar docentes');
-    });
 
-    Route::prefix('v1')->group(function () {
         Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver administrativos');
         Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:crear administrativos');
         Route::get('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'show'])->middleware('can:ver administrativos');
         Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:editar administrativos');
         Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:eliminar administrativos');
-    });
 
-    Route::prefix('v1')->group(function () {
         Route::post('/usuarios/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:asignar roles');
         Route::post('/usuarios/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:asignar permisos');
 
@@ -89,7 +111,7 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::post('refresh', [AuthController::class, 'refresh']);
-        Route::post('me', [AuthController::class, 'me']);
+        Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::post('/me', [AuthController::class, 'me']);
     });
 });

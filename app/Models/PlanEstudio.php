@@ -29,6 +29,11 @@ class PlanEstudio extends Model
 
     public function cursos()
     {
-        return $this->belongsToMany(Curso::class, 'plan_estudio_curso')->withPivot('requisito_tipo');
+        return $this->belongsToMany(Curso::class, 'plan_estudio_curso');
+    }
+
+    public function requisitos()
+    {
+        return $this->hasMany(Requisito::class);
     }
 }

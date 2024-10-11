@@ -37,7 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('horarios');
         Schema::dropIfExists('jp_horario');
+        Schema::dropIfExists('horarios');
     }
 };

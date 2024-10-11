@@ -38,8 +38,8 @@ class DocenteController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
             'email' => 'required|string|email:rfc,dns|max:255',
             'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente',
             'password' => 'nullable|string|min:8',
@@ -76,8 +76,8 @@ class DocenteController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
             'email' => 'required|string|email:rfc,dns|max:255',
             'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente',
             'tipo' => 'required|string',

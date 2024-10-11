@@ -28,6 +28,21 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar instituciones', 'category' => 'instituciones'],
             ['name' => 'eliminar instituciones', 'category' => 'instituciones'],
 
+            ['name' => 'ver departamentos', 'category' => 'departamentos'],
+            ['name' => 'crear departamentos', 'category' => 'departamentos'],
+            ['name' => 'editar departamentos', 'category' => 'departamentos'],
+            ['name' => 'eliminar departamentos', 'category' => 'departamentos'],
+
+            ['name' => 'ver especialidades', 'category' => 'especialidades'],
+            ['name' => 'crear especialidades', 'category' => 'especialidades'],
+            ['name' => 'editar especialidades', 'category' => 'especialidades'],
+            ['name' => 'eliminar especialidades', 'category' => 'especialidades'],
+
+            ['name' => 'ver secciones', 'category' => 'secciones'],
+            ['name' => 'crear secciones', 'category' => 'secciones'],
+            ['name' => 'editar secciones', 'category' => 'secciones'],
+            ['name' => 'eliminar secciones', 'category' => 'secciones'],
+
             ['name' => 'ver administrativos', 'category' => 'administrativos'],
             ['name' => 'crear administrativos', 'category' => 'administrativos'],
             ['name' => 'editar administrativos', 'category' => 'administrativos'],

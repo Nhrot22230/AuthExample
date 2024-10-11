@@ -35,8 +35,8 @@ class UsuarioController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:usuarios,email',
             'password' => 'required|string|min:8',
             'google_id' => 'nullable|string|max:255',
@@ -68,9 +68,9 @@ class UsuarioController extends Controller
 
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'required|string|max:255',
-            'apellido_materno' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $id,
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
+            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->email,
             'password' => 'nullable|string|min:8',
             'estado' => 'nullable|string|max:50',
             'google_id' => 'nullable|string|max:255',
@@ -108,8 +108,8 @@ class UsuarioController extends Controller
         $request->validate([
             'usuarios' => 'required|array',
             'usuarios.*.nombre' => 'required|string|max:255',
-            'usuarios.*.apellido_paterno' => 'required|string|max:255',
-            'usuarios.*.apellido_materno' => 'required|string|max:255',
+            'usuarios.*.apellido_paterno' => 'nullable|string|max:255',
+            'usuarios.*.apellido_materno' => 'nullable|string|max:255',
             'usuarios.*.email' => 'required|string|email|max:255|unique:usuarios,email',
             'usuarios.*.password' => 'required|string|min:8',
             'usuarios.*.google_id' => 'nullable|string|max:255',

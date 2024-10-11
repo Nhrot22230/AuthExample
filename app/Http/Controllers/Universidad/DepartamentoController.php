@@ -18,6 +18,13 @@ class DepartamentoController extends Controller
         return response()->json($departamentos, 200);
     }
 
+    public function indexAll()
+    {
+        $departamentos = Departamento::all();
+
+        return response()->json($departamentos, 200);
+    }
+
     public function show($id)
     {
         $departamento = Departamento::find($id);
@@ -60,6 +67,19 @@ class DepartamentoController extends Controller
         $departamento->nombre = $validatedData['nombre'];
         $departamento->descripcion = $validatedData['descripcion'];
         $departamento->save();
+
+        return response()->json($departamento, 200);
+    }
+
+    public function destroy($id)
+    {
+        $departamento = Departamento::find($id);
+
+        if (!$departamento) {
+            return response()->json(['message' => 'Departamento no encontrado'], 404);
+        }
+
+        $departamento->delete();
 
         return response()->json($departamento, 200);
     }

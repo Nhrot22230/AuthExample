@@ -34,6 +34,15 @@ return new class extends Migration
             $table->foreignId('plan_estudio_id')->constrained();
             $table->timestamps();
         });
+
+        Schema::create('curso_requisito', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
+            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->foreignId('requisito_id')->constrained('cursos')->onDelete('cascade');
+            $table->string('tipo');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -41,6 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('curso_requisito');
         Schema::dropIfExists('plan_estudio_semestre');
         Schema::dropIfExists('plan_estudio_curso');
         Schema::dropIfExists('plan_estudios');

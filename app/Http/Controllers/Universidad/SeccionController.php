@@ -18,6 +18,18 @@ class SeccionController extends Controller
         return response()->json($secciones, 200);
     }
 
+    public function indexAll()
+    {
+        $id_departamento = request('id_departamento', null);
+        if ($id_departamento) {
+            $secciones = Seccion::where('departamento_id', $id_departamento)->get();
+        } else {
+            $secciones = Seccion::all();
+        }
+
+        return response()->json($secciones, 200);
+    }
+
     public function show($id)
     {
         $seccion = Seccion::find($id);
@@ -67,5 +79,15 @@ class SeccionController extends Controller
         $seccion->departamento_id = $validatedData['departamento_id'];
         $seccion->save();
         return response()->json($seccion, 200);
+    }
+
+    public function destroy($id)
+    {
+        $seccion = Seccion::find($id);
+        if (!$seccion) {
+            return response()->json(['message' => 'Seccion no encontrada'], 404);
+        }
+        $seccion->delete();
+        return response()->json(['message' => 'Seccion eliminada'], 200);
     }
 }
