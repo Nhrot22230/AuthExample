@@ -52,6 +52,11 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasOne(Administrativo::class);
     }
 
+    public function horarios()
+    {
+        return $this->belongsToMany(Horario::class, 'jp_horario')->withTimestamps();
+    }
+
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
