@@ -15,13 +15,12 @@ class Facultad extends Model
     protected $fillable = [
         'nombre',
         'abreviatura',
-        'anexo',
-        'departamento_id',
+        'anexo'
     ];
 
-    public function departamento()
+    public function departamentos()
     {
-        return $this->belongsTo(Departamento::class);
+        return $this->hasMany(Departamento::class);
     }
 
     public function especialidades()

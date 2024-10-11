@@ -17,7 +17,7 @@ class SemestreController extends Controller
     }
 
     public function indexAll(){
-        $semestres = Semestre::all();
+        $semestres = Semestre::orderBy('fecha_inicio', 'desc')->get();
 
         return response()->json($semestres, 200);
     }

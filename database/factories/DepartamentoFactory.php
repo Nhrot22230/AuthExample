@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Facultad;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,9 +17,12 @@ class DepartamentoFactory extends Factory
      */
     public function definition(): array
     {
+        $random_facultad = Facultad::inRandomOrder()->first();
+
         return [
             'nombre' => $this->faker->word,
             'descripcion' => $this->faker->sentence,
+            'facultad_id' => $random_facultad ?? Facultad::factory(),
         ];
     }
 }

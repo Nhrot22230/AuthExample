@@ -32,4 +32,9 @@ class Especialidad extends Model
     {
         return $this->hasMany(Curso::class);
     }
+
+    public function areas()
+    {
+        return $this->hasMany(Area::class);
+    }
 }

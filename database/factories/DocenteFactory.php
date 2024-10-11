@@ -22,40 +22,24 @@ class DocenteFactory extends Factory
      */
     public function definition(): array
     {
-        $random_departamento = Departamento::whereHas('facultades')
-                                           ->whereHas('secciones')
-                                           ->inRandomOrder()
-                                           ->first();
-        if (!$random_departamento) {
-            $random_departamento = Departamento::factory()->create();
-        }
-        $random_facultad = $random_departamento->facultades->isNotEmpty() 
-                            ? $random_departamento->facultades->random() 
-                            : null;
+        $random_facultad = Facultad::whereHas('departamentos.secciones')->whereHas('especialidades.areas')->inRandomOrder()->first();
+
         if (!$random_facultad) {
-            $random_facultad = Facultad::factory()->create(['departamento_id' => $random_departamento->id]);
-        }
-        $random_especialidad = Especialidad::where('facultad_id', $random_facultad->id)
-                                           ->inRandomOrder()
-                                           ->first();
-        if (!$random_especialidad) {
-            $random_especialidad = Especialidad::factory()->create(['facultad_id' => $random_facultad->id]);
-        }
-        $random_seccion = Seccion::where('departamento_id', $random_departamento->id)
-                                  ->inRandomOrder()
-                                  ->first();
-        if (!$random_seccion) {
-            $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
+            $random_facultad = Facultad::factory()->create();
         }
 
-        $random_area = Area::inRandomOrder()->first();
+        $random_departamento = Departamento::factory()->create(['facultad_id' => $random_facultad->id]);
+        $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
+        $random_especialidad = Especialidad::factory()->create(['facultad_id' => $random_facultad->id]);
+        $random_area = Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
+
         return [
             'usuario_id' => Usuario::factory(),
             'codigoDocente' => $this->faker->unique()->randomNumber(8),
             'tipo' => $this->faker->randomElement(['TPA', 'TC']),
-            'seccion_id' => $random_seccion->id ?? null,
-            'especialidad_id' => $random_especialidad->id ?? null,
-            'area_id' => $random_area->id ?? Area::factory(),
+            'seccion_id' => $random_seccion ?? Seccion::factory(),
+            'especialidad_id' => $random_especialidad ?? Especialidad::factory(),
+            'area_id' => $random_area ?? Area::factory(),
         ];
     }
 }

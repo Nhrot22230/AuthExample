@@ -22,8 +22,8 @@ class UniversidadSeeder extends Seeder
     {
         //
         Institucion::factory(5)->create();
+        Facultad::factory(30)->create();
         Departamento::factory(10)->create();
-        Facultad::factory(15)->create();
         Especialidad::factory(50)->create();
         Seccion::factory(10)->create();
         Area::factory(10)->create();

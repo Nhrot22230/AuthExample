@@ -13,11 +13,12 @@ class Departamento extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'facultad_id',
     ];
 
-    public function facultades()
+    public function facultad()
     {
-        return $this->hasMany(Facultad::class);
+        return $this->belongsTo(Facultad::class);
     }
 
     public function secciones()

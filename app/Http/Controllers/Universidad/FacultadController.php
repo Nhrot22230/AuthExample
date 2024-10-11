@@ -20,17 +20,8 @@ class FacultadController extends Controller
 
     public function indexAll()
     {
-        $id_departamento = request('id_departamento', null);
         $search = request('search', '');
-        if ($id_departamento) {
-            $facultades = Facultad::where([
-                ['nombre', 'like', "%$search%"],
-                ['departamento_id', $id_departamento],
-            ])->get();
-        } else {
-            $facultades = Facultad::all();
-        }
-
+        $facultades = Facultad::where('nombre', 'like', "%$search%")->get();
         return response()->json($facultades, 200);
     }
 
@@ -51,7 +42,6 @@ class FacultadController extends Controller
             'nombre' => 'required|string|max:255',
             'abreviatura' => 'required|string|max:255',
             'anexo' => 'nullable|string',
-            'departamento_id' => 'required|integer|exists:departamentos,id',
         ]);
 
         $facultad = new Facultad();
@@ -70,7 +60,6 @@ class FacultadController extends Controller
             'nombre' => 'required|string|max:255',
             'abreviatura' => 'required|string|max:255',
             'anexo' => 'nullable|string',
-            'departamento_id' => 'required|integer|exists:departamentos,id',
         ]);
 
         $facultad = Facultad::find($id);
@@ -82,7 +71,6 @@ class FacultadController extends Controller
         $facultad->nombre = $validatedData['nombre'];
         $facultad->abreviatura = $validatedData['abreviatura'];
         $facultad->anexo = $validatedData['anexo'];
-        $facultad->departamento_id = $validatedData['departamento_id'];
         $facultad->save();
 
         return response()->json($facultad, 200);

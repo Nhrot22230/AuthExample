@@ -13,14 +13,15 @@ class DepartamentoController extends Controller
     {
         $per_page = request('per_page', 10);
         $search = request('search', '');
-        $departamentos = Departamento::where('nombre', 'like', "%$search%")->paginate($per_page);
+        $departamentos = Departamento::with('facultad')
+            ->where('nombre', 'like', "%$search%")->paginate($per_page);
 
         return response()->json($departamentos, 200);
     }
 
     public function indexAll()
     {
-        $departamentos = Departamento::all();
+        $departamentos = Departamento::with('facultad')->get();
 
         return response()->json($departamentos, 200);
     }
@@ -41,11 +42,13 @@ class DepartamentoController extends Controller
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
+            'facultad_id' => 'required|exists:facultades,id',
         ]);
 
         $departamento = new Departamento();
         $departamento->nombre = $validatedData['nombre'];
         $departamento->descripcion = $validatedData['descripcion'];
+        $departamento->facultad_id = $validatedData['facultad_id'];
         $departamento->save();
 
         return response()->json($departamento, 201);
@@ -56,6 +59,7 @@ class DepartamentoController extends Controller
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
+            'facultad_id' => 'required|exists:facultades,id',
         ]);
 
         $departamento = Departamento::find($id);
@@ -66,6 +70,7 @@ class DepartamentoController extends Controller
 
         $departamento->nombre = $validatedData['nombre'];
         $departamento->descripcion = $validatedData['descripcion'];
+        $departamento->facultad_id = $validatedData['facultad_id'];
         $departamento->save();
 
         return response()->json($departamento, 200);

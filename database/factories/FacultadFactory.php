@@ -17,13 +17,10 @@ class FacultadFactory extends Factory
      */
     public function definition(): array
     {
-        $random_departamento = Departamento::inRandomOrder()->first();
-
         return [
             'nombre' => $this->faker->word,
             'abreviatura' => $this->faker->unique()->lexify('????'),
             'anexo' => $this->faker->word,
-            'departamento_id' => $random_departamento->id ?? Departamento::factory(),
         ];
     }
 }
