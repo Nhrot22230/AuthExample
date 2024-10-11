@@ -15,10 +15,19 @@ class AdministrativoController extends Controller
     {
         $per_page = request('per_page', 10);
         $search = request('search', '');
-        
+
         $administrativos = Administrativo::with('usuario')
-            ->where('codigoAdministrativo', 'like', "%$search%")
+            ->where([
+                ['nombre', 'like', '%' . $search . '%'],
+                ['apellido_paterno', 'like', '%' . $search . '%'],
+                ['apellido_materno', 'like', '%' . $search . '%'],
+                ['email', 'like', '%' . $search . '%'],
+                ['codigoAdministrativo', 'like', '%' . $search . '%'],
+                ['lugarTrabajo', 'like', '%' . $search . '%'],
+                ['cargo', 'like', '%' . $search . '%'],
+            ])
             ->paginate($per_page);
+
         return response()->json($administrativos, 200);
     }
 

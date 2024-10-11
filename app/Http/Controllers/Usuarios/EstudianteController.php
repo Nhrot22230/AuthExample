@@ -17,7 +17,13 @@ class EstudianteController extends Controller
         $per_page = request('per_page', 10);
         $search = request('search', '');
         $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
-            ->where('codigoEstudiante', 'like', "%$search%")
+            ->where([
+                ['nombre', 'like', '%' . $search . '%'],
+                ['apellido_paterno', 'like', '%' . $search . '%'],
+                ['apellido_materno', 'like', '%' . $search . '%'],
+                ['email', 'like', '%' . $search . '%'],
+                ['codigoEstudiante', 'like', '%' . $search . '%'],
+            ])
             ->paginate($per_page);
 
         return response()->json($estudiantes, 200);

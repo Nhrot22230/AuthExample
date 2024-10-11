@@ -53,6 +53,16 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar secciones', 'category' => 'secciones'],
             ['name' => 'eliminar secciones', 'category' => 'secciones'],
 
+            ['name' => 'ver cursos', 'category' => 'cursos'],
+            ['name' => 'crear cursos', 'category' => 'cursos'],
+            ['name' => 'editar cursos', 'category' => 'cursos'],
+            ['name' => 'eliminar cursos', 'category' => 'cursos'],
+
+            ['name' => 'ver areas', 'category' => 'areas'],
+            ['name' => 'crear areas', 'category' => 'areas'],
+            ['name' => 'editar areas', 'category' => 'areas'],
+            ['name' => 'eliminar areas', 'category' => 'areas'],
+
             ['name' => 'ver administrativos', 'category' => 'administrativos'],
             ['name' => 'crear administrativos', 'category' => 'administrativos'],
             ['name' => 'editar administrativos', 'category' => 'administrativos'],
@@ -110,16 +120,14 @@ class RolePermissionSeeder extends Seeder
         ]);
         
         $docenteRole = Role::findByName('docente');
-        $docenteRole->givePermissionTo([
-            'ver estudiantes',
-            'ver usuarios',
-            'ver docentes',
-        ]);
+        $permisos_ver = Permission::where('name', 'like', 'ver %')->get();
+        $docenteRole->givePermissionTo($permisos_ver);
 
         $jefePracticaRole = Role::findByName('jefePractica');
-        $jefePracticaRole->givePermissionTo([
-            'ver estudiantes',
-        ]);
+        $jefePracticaRole->givePermissionTo($permisos_ver);
+
+        $estudianteRole = Role::findByName('estudiante');
+        $estudianteRole->givePermissionTo($permisos_ver);
 
         $admin = Usuario::find(1);
         if ($admin) {

@@ -27,4 +27,9 @@ class Especialidad extends Model
     {
         return $this->hasMany(Estudiante::class);
     }
+
+    public function cursos()
+    {
+        return $this->hasMany(Curso::class);
+    }
 }

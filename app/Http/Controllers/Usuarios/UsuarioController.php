@@ -15,8 +15,13 @@ class UsuarioController extends Controller
         $perPage = request('per_page', 10);
         $search = request('search', '');
         $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
-        ->where('nombre', 'like', "%$search%")
-        ->paginate($perPage);
+            ->where([
+                ['nombre', 'like', '%' . $search . '%'],
+                ['apellido_paterno', 'like', '%' . $search . '%'],
+                ['apellido_materno', 'like', '%' . $search . '%'],
+                ['email', 'like', '%' . $search . '%'],
+            ])
+            ->paginate($perPage);
 
         return response()->json(['usuarios' => $usuarios], 200);
     }
@@ -104,7 +109,8 @@ class UsuarioController extends Controller
         }
     }
 
-    public function massiveLoad(Request $request) {
+    public function massiveLoad(Request $request)
+    {
         $request->validate([
             'usuarios' => 'required|array',
             'usuarios.*.nombre' => 'required|string|max:255',
@@ -117,6 +123,5 @@ class UsuarioController extends Controller
         ]);
 
         $usuarios = [];
-        
     }
 }

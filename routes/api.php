@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
 use App\Http\Controllers\Universidad\EspecialidadController;
 use App\Http\Controllers\Universidad\FacultadController;
@@ -54,6 +55,12 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/secciones/{id}', [SeccionController::class, 'show'])->middleware('can:ver secciones');
         Route::put('/secciones/{id}', [SeccionController::class, 'update'])->middleware('can:editar secciones');
         Route::delete('/secciones/{id}', [SeccionController::class, 'destroy'])->middleware('can:eliminar secciones');
+
+        Route::get('/cursos', [CursoController::class, 'index'])->middleware('can:ver cursos');
+        Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:crear cursos');
+        Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
+        Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:editar cursos');
+        Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:eliminar cursos');
 
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');

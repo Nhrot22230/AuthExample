@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('cod_curso');
             $table->string('nombre');
             $table->double('creditos');
-            $table->tinyInteger('estado');
+            $table->string('estado')->default('activo');
             $table->timestamps();
         });
     }
