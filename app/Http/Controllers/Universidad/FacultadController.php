@@ -21,8 +21,12 @@ class FacultadController extends Controller
     public function indexAll()
     {
         $id_departamento = request('id_departamento', null);
+        $search = request('search', '');
         if ($id_departamento) {
-            $facultades = Facultad::where('departamento_id', $id_departamento)->get();
+            $facultades = Facultad::where([
+                ['nombre', 'like', "%$search%"],
+                ['departamento_id', $id_departamento],
+            ])->get();
         } else {
             $facultades = Facultad::all();
         }

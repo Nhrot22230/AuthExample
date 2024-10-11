@@ -33,6 +33,11 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar semestres', 'category' => 'semestres'],
             ['name' => 'eliminar semestres', 'category' => 'semestres'],
 
+            ['name' => 'ver areas', 'category' => 'areas'],
+            ['name' => 'crear areas', 'category' => 'areas'],
+            ['name' => 'editar areas', 'category' => 'areas'],
+            ['name' => 'eliminar areas', 'category' => 'areas'],
+
             ['name' => 'ver facultades', 'category' => 'facultades'],
             ['name' => 'crear facultades', 'category' => 'facultades'],
             ['name' => 'editar facultades', 'category' => 'facultades'],

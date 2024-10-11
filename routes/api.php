@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
 use App\Http\Controllers\Universidad\EspecialidadController;
@@ -41,6 +42,14 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware('can:ver facultades');
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
+
+        Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
+        Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
+        Route::post('/areas', [AreaController::class, 'store'])->middleware('can:crear areas');
+        Route::get('/areas/{id}', [AreaController::class, 'show'])->middleware('can:ver areas');
+        Route::put('/areas/{id}', [AreaController::class, 'update'])->middleware('can:editar areas');
+        Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->middleware('can:eliminar areas');
+
     
         Route::get('/especialidades', [EspecialidadController::class, 'indexAll'])->middleware('can:ver especialidades');
         Route::get('/especialidades/paginated', [EspecialidadController::class, 'index'])->middleware('can:ver especialidades');
