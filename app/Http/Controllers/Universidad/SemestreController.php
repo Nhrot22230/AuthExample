@@ -25,7 +25,7 @@ class SemestreController extends Controller
 
     public function update(Request $request, $id){
         $request->validate([
-            'año' => 'required|integer',
+            'año' => 'required|string',
             'periodo' => 'required|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date',
@@ -35,7 +35,7 @@ class SemestreController extends Controller
         $semestre = Semestre::find($id);
 
         if($semestre){
-            $semestre->año = $request->input('año');
+            $semestre->anho = $request->input('año');
             $semestre->periodo = $request->input('periodo');
             $semestre->fecha_inicio = $request->input('fecha_inicio');
             $semestre->fecha_fin = $request->input('fecha_fin');
@@ -52,7 +52,7 @@ class SemestreController extends Controller
 
     public function store(Request $request){
         $request->validate([
-            'año' => 'required|integer',
+            'año' => 'required|string',
             'periodo' => 'required|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date',
@@ -60,7 +60,7 @@ class SemestreController extends Controller
         ]);
 
         $semestre = new Semestre();
-        $semestre->año = $request->input('año');
+        $semestre->anho = $request->input('año');
         $semestre->periodo = $request->input('periodo');
         $semestre->fecha_inicio = $request->input('fecha_inicio');
         $semestre->fecha_fin = $request->input('fecha_fin');
