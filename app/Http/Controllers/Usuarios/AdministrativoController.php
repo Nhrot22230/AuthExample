@@ -6,75 +6,72 @@ use App\Http\Controllers\Controller;
 use App\Models\Administrativo;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AdministrativoController extends Controller
 {
-    /**
-     * Listar todos los administrativos.
-     */
     public function index()
     {
-        // get url parameters page and per_page
-        $page = request('page', 1);
         $per_page = request('per_page', 10);
-
-        $administrativos = Administrativo::with('usuario')->paginate($per_page, ['*'], 'page', $page);
+        $search = request('search', '');
+        
+        $administrativos = Administrativo::with('usuario')
+            ->where('codigoAdministrativo', 'like', "%$search%")
+            ->paginate($per_page);
         return response()->json($administrativos, 200);
     }
 
-    /**
-     * Mostrar un administrativo por su código.
-     */
     public function show($codigo)
     {
-        $administrativo = Administrativo::with('usuario')->where('codigoAdministrativo', $codigo)->first();
-
+        $administrativo = Administrativo::with('usuario')
+            ->where('codigoAdministrativo', $codigo)->first();
         if (!$administrativo) {
             return response()->json(['message' => 'Administrativo no encontrado'], 404);
         }
-
         return response()->json($administrativo, 200);
     }
 
-    /**
-     * Actualizar un administrativo por su código.
-     */
     public function update(Request $request, $codigo)
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
+            'email' => 'required|string|email:rfc,dns|max:255',
             'password' => 'nullable|string|min:8',
             'lugarTrabajo' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
+            'codigoAdministrativo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo,' . $codigo,
         ]);
 
-        $administrativo = Administrativo::with('usuario')->where('codigoAdministrativo', $codigo)->firstOrFail();
-
-        $usuario = $administrativo->usuario;
-        $usuario->nombre = $validatedData['nombre'];
-        $usuario->apellido_paterno = $validatedData['apellido_paterno'];
-        $usuario->apellido_materno = $validatedData['apellido_materno'];
-        $usuario->email = $validatedData['email'];
-
-        if (!empty($validatedData['password'])) {
-            $usuario->password = Hash::make($validatedData['password']);
-        }
-        $usuario->save();
-
-        $administrativo->lugarTrabajo = $validatedData['lugarTrabajo'];
-        $administrativo->cargo = $validatedData['cargo'];
-        $administrativo->save();
-
-        return response()->json(['message' => 'Administrativo actualizado exitosamente', 'administrativo' => $administrativo], 200);
+        DB::transaction(function () use ($validatedData, $codigo) {
+            $administrativo = Administrativo::with('usuario')->where('codigoAdministrativo', $codigo)->first();
+            if (!$administrativo) {
+                return response()->json(['message' => 'Administrativo no encontrado'], 404);
+            }
+            $administrativo->usuario->update([
+                'nombre' => $validatedData['nombre'],
+                'apellido_paterno' => $validatedData['apellido_paterno'],
+                'apellido_materno' => $validatedData['apellido_materno'],
+                'email' => $validatedData['email'],
+            ]);
+            if (!empty($validatedData['password'])) {
+                $administrativo->usuario->update([
+                    'password' => Hash::make($validatedData['password']),
+                ]);
+            }
+            $administrativo->update([
+                'lugarTrabajo' => $validatedData['lugarTrabajo'],
+                'cargo' => $validatedData['cargo'],
+                'codigoAdministrativo' => $validatedData['codigoAdministrativo'],
+            ]);
+        });
+        return response()->json([
+            'message' => 'Administrativo actualizado exitosamente',
+        ], 200);
     }
 
-    /**
-     * Crear un nuevo administrativo.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -82,38 +79,34 @@ class AdministrativoController extends Controller
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:usuarios,email',
-            'password' => 'required|string|min:8',
             'codigoAdministrativo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo',
             'lugarTrabajo' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
         ]);
-
         $usuario = Usuario::firstOrCreate(
             ['email' => $validatedData['email']],
             [
                 'nombre' => $validatedData['nombre'],
                 'apellido_paterno' => $validatedData['apellido_paterno'],
                 'apellido_materno' => $validatedData['apellido_materno'],
-                'password' => Hash::make($validatedData['password']),
+                'password' => Hash::make($validatedData['codigoAdministrativo']),
             ]
         );
-
         $administrativo = new Administrativo();
         $administrativo->usuario_id = $usuario->id;
         $administrativo->codigoAdministrativo = $validatedData['codigoAdministrativo'];
         $administrativo->lugarTrabajo = $validatedData['lugarTrabajo'];
         $administrativo->cargo = $validatedData['cargo'];
-
         $usuario->administrativo()->save($administrativo);
         return response()->json(['message' => 'Administrativo creado exitosamente', 'administrativo' => $administrativo], 201);
     }
 
-    /**
-     * Eliminar un administrativo por su código.
-     */
     public function destroy($codigo)
     {
-        $administrativo = Administrativo::where('codigoAdministrativo', $codigo)->firstOrFail();
+        $administrativo = Administrativo::where('codigoAdministrativo', $codigo)->first();
+        if (!$administrativo) {
+            return response()->json(['message' => 'Administrativo no encontrado'], 404);
+        }
         $administrativo->delete();
         return response()->json(['message' => 'Administrativo eliminado exitosamente'], 200);
     }

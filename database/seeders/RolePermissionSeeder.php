@@ -50,12 +50,14 @@ class RolePermissionSeeder extends Seeder
 
             ['name' => 'ver roles', 'category' => 'roles'],
             ['name' => 'crear roles', 'category' => 'roles'],
+            ['name' => 'editar roles', 'category' => 'roles'],
             ['name' => 'asignar roles', 'category' => 'roles'],
             ['name' => 'revocar roles', 'category' => 'roles'],
             ['name' => 'eliminar roles', 'category' => 'roles'],
 
             ['name' => 'ver permisos', 'category' => 'permisos'],
             ['name' => 'crear permisos', 'category' => 'permisos'],
+            ['name' => 'editar permisos', 'category' => 'permisos'],
             ['name' => 'asignar permisos', 'category' => 'permisos'],
             ['name' => 'revocar permisos', 'category' => 'permisos'],
             ['name' => 'eliminar permisos', 'category' => 'permisos'],

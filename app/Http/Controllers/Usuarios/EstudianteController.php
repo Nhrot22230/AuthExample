@@ -14,99 +14,84 @@ class EstudianteController extends Controller
 {
     public function index()
     {
-        $page = request('page', 1);
         $per_page = request('per_page', 10);
+        $search = request('search', '');
+        $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
+            ->where('codigoEstudiante', 'like', "%$search%")
+            ->paginate($per_page);
 
-        $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])->paginate($per_page, ['*'], 'page', $page);
         return response()->json($estudiantes, 200);
     }
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido_paterno' => 'required|string|max:255',
+            'apellido_materno' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email',
+            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante',
+            'especialidad_id' => 'required|exists:especialidades,id',
+        ]);
 
-        try {
-            $request->validate([
-                'nombre' => 'required|string',
-                'apellido_paterno' => 'required|string',
-                'apellido_materno' => 'required|string',
-                'email' => 'required|email|unique:usuarios,email',
-                'codigoEstudiante' => 'required|string',
-                'especialidad_id' => 'required|exists:especialidades,id',
-            ]);
-
+        DB::transaction(function () use ($validatedData) {
             $usuario = Usuario::firstOrCreate(
-                ['email' => $request->email],
+                ['email' => $validatedData['email']],
                 [
-                    'nombre' => $request->nombre,
-                    'apellido_paterno' => $request->apellido_paterno,
-                    'apellido_materno' => $request->apellido_materno,
-                    'password' => Hash::make($request->codigoEstudiante),
+                    'nombre' => $validatedData['nombre'],
+                    'apellido_paterno' => $validatedData['apellido_paterno'],
+                    'apellido_materno' => $validatedData['apellido_materno'],
+                    'password' => Hash::make($validatedData['codigoEstudiante']),
                 ]
             );
 
-            $estudiante = Estudiante::create([
+            Estudiante::create([
                 'usuario_id' => $usuario->id,
-                'especialidad_id' => $request->especialidad_id,
-                'codigoEstudiante' => $request->codigoEstudiante,
+                'especialidad_id' => $validatedData['especialidad_id'],
+                'codigoEstudiante' => $validatedData['codigoEstudiante'],
             ]);
+        });
 
-            DB::commit();
-            return response()->json($estudiante, 201);
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error($e->getMessage());
-            return response()->json(['message' => 'Error al crear estudiante'], 500);
-        }
+        return response()->json(['message' => 'Estudiante creado exitosamente'], 201);
     }
+
 
     public function show($codigo)
     {
-        try {
-            $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])->where('codigoEstudiante', $codigo)->first();
-            if (!$estudiante) {
-                return response()->json(['message' => 'Estudiante no encontrado'], 404);
-            }
+        $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])
+            ->where('codigoEstudiante', $codigo)
+            ->first();
 
-            return response()->json($estudiante, 200);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
+        if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
+
+        return response()->json($estudiante, 200);
     }
 
     public function update(Request $request, $codigo)
     {
-        DB::beginTransaction();
-
-        try {
-            $request->validate([
-                'nombre' => 'required|string',
-                'apellido_paterno' => 'required|string',
-                'apellido_materno' => 'required|string',
-                'email' => 'required|email|unique:usuarios,email',
-                'especialidad_id' => 'required|exists:especialidades,id',
-                'codigoEstudiante' => 'required|string',
-            ]);
-
-            $estudiante = Estudiante::with('usuario')->where('codigoEstudiante', $codigo)->firstOrFail();
+        $estudiante = Estudiante::with('usuario')->where('codigoEstudiante', $codigo)->firstOrFail();
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido_paterno' => 'required|string|max:255',
+            'apellido_materno' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario_id,
+            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->id,
+            'especialidad_id' => 'required|exists:especialidades,id',
+        ]);
+        DB::transaction(function () use ($validatedData, $estudiante) {
             $estudiante->usuario->fill([
-                'nombre' => $request->nombre,
-                'apellido_paterno' => $request->apellido_paterno,
-                'apellido_materno' => $request->apellido_materno,
-                'email' => $request->email,
+                'nombre' => $validatedData['nombre'],
+                'apellido_paterno' => $validatedData['apellido_paterno'],
+                'apellido_materno' => $validatedData['apellido_materno'],
+                'email' => $validatedData['email'],
             ])->save();
-
             $estudiante->fill([
-                'especialidad_id' => $request->especialidad_id,
-                'codigoEstudiante' => $request->codigoEstudiante,
+                'especialidad_id' => $validatedData['especialidad_id'],
+                'codigoEstudiante' => $validatedData['codigoEstudiante'],
             ])->save();
-            DB::commit();
-            return response()->json($estudiante, 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error($e->getMessage());
-            return response()->json(['message' => 'Error al actualizar estudiante'], 500);
-        }
+        });
+        return response()->json(['message' => 'Estudiante actualizado exitosamente'], 200);
     }
 }
