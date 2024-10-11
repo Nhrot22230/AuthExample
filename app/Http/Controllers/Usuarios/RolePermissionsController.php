@@ -12,11 +12,10 @@ class RolePermissionsController extends Controller
 {
     public function indexRoles()
     {
-        $page = request('page', 1);
         $perPage = request('per_page', 10);
         $roles = Role::with('permissions')
             ->withCount('users')
-            ->paginate($perPage, ['*'], 'page', $page);
+            ->paginate($perPage);
         return response()->json(['roles' => $roles], 200);
     }
 
@@ -24,7 +23,6 @@ class RolePermissionsController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
-            'guard_name' => 'required|string|max:255',
             'permissions' => 'nullable|array',
         ]);
 
@@ -37,23 +35,25 @@ class RolePermissionsController extends Controller
 
     public function showRole($id)
     {
-        try {
-            $role = Role::with('permissions')->findOrFail($id);
-            return response()->json(['role' => $role], 200);
-        } catch (\Exception $e) {
+        $role = Role::with('permissions')->find($id);
+        if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
+        return response()->json(['role' => $role], 200);
     }
 
     public function updateRole(Request $request, $id)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $id,
-            'guard_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:roles,name',
             'permissions' => 'nullable|array',
         ]);
 
-        $role = Role::findOrFail($id);
+        $role = Role::find($id);
+        if (!$role) {
+            return response()->json(['message' => 'Rol no encontrado'], 404);
+        }
+
         $role->update($validatedData);
         if (isset($validatedData['permissions'])) {
             $role->syncPermissions($validatedData['permissions']);
@@ -63,41 +63,42 @@ class RolePermissionsController extends Controller
 
     public function destroyRole($id)
     {
-        try{ 
-        $role = Role::findOrFail($id);
-        $role->delete();
-        return response()->json(['message' => 'Rol eliminado exitosamente'], 200);
-        } catch (\Exception $e) {
+        $role = Role::find($id);
+        if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
+
+        $role->delete();
+        return response()->json(['message' => 'Rol eliminado exitosamente'], 200);
     }
 
     public function indexPermissions()
     {
-        $page = request('page', 1);
         $perPage = request('per_page', 10);
-        $permissions = Permission::paginate($perPage, ['*'], 'page', $page);
+        $permissions = Permission::paginate($perPage);
         return response()->json(['permissions' => $permissions], 200);
     }
 
     public function showPermission($id)
     {
-        try {
-            $permission = Permission::findOrFail($id);
-            return response()->json(['permission' => $permission], 200);
-        } catch (\Exception $e) {
+        $permission = Permission::find($id);
+        if (!$permission) {
             return response()->json(['message' => 'Permiso no encontrado'], 404);
         }
+        return response()->json(['permission' => $permission], 200);
     }
 
     public function updatePermission(Request $request, $id)
     {
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name,' . $id,
-            'guard_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:permissions,name',
         ]);
 
-        $permission = Permission::findOrFail($id);
+        $permission = Permission::find($id);
+        if (!$permission) {
+            return response()->json(['message' => 'Permiso no encontrado'], 404);
+        }
+
         $permission->update($validatedData);
         return response()->json(['message' => 'Permiso actualizado exitosamente', 'permission' => $permission], 200);
     }
@@ -109,7 +110,11 @@ class RolePermissionsController extends Controller
             'usuario_id' => 'required|integer|exists:usuarios,id',
         ]);
 
-        $usuario = Usuario::findOrFail($validatedData['usuario_id']);
+        $usuario = Usuario::find($validatedData['usuario_id']);
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
         $usuario->syncRoles($validatedData['roles']);
         return response()->json(['message' => 'Roles asignados exitosamente', 'user' => $usuario], 200);
     }
@@ -121,30 +126,35 @@ class RolePermissionsController extends Controller
             'usuario_id' => 'required|integer|exists:usuarios,id',
         ]);
 
-        $usuario = Usuario::findOrFail($validatedData['usuario_id']);
+        $usuario = Usuario::find($validatedData['usuario_id']);
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
         $usuario->syncPermissions($validatedData['permissions']);
         return response()->json(['message' => 'Permisos asignados exitosamente', 'user' => $usuario], 200);
     }
 
     public function listUserRoles($id)
     {
-        try {
-            $usuario = Usuario::with('roles')->findOrFail($id);
-            $roles = $usuario->roles()->get();
-            return response()->json(['roles' => $roles], 200);
-        } catch (\Exception $e) {
+
+        $usuario = Usuario::with('roles')->find($id);
+        if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
+
+        $roles = $usuario->roles()->get();
+        return response()->json(['roles' => $roles], 200);
     }
 
     public function listUserPermissions($id)
     {
-        try {
-            $usuario = Usuario::with('permissions')->findOrFail($id);
-            $permissions = $usuario->permissions()->get();
-            return response()->json(['permissions' => $permissions], 200);
-        } catch (\Exception $e) {
+        $usuario = Usuario::with('permissions')->find($id);
+        if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
+
+        $permissions = $usuario->permissions()->get();
+        return response()->json(['permissions' => $permissions], 200);
     }
 }

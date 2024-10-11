@@ -11,11 +11,12 @@ class UsuarioController extends Controller
 {
     public function index()
     {
-        $page = request('page', 1);
         $perPage = request('per_page', 10);
-
+        $search = request('search', '');
         $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
-            ->paginate($perPage, ['*'], 'page', $page);
+        ->where('nombre', 'like', "%$search%")
+        ->paginate($perPage);
+
         return response()->json(['usuarios' => $usuarios], 200);
     }
 
@@ -100,5 +101,18 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
+    }
+
+    public function massiveLoad(Request $request) {
+        $request->validate([
+            'usuarios' => 'required|array',
+            'usuarios.*.nombre' => 'required|string|max:255',
+            'usuarios.*.apellido_paterno' => 'required|string|max:255',
+            'usuarios.*.apellido_materno' => 'required|string|max:255',
+            'usuarios.*.email' => 'required|string|email|max:255|unique:usuarios,email',
+            'usuarios.*.password' => 'required|string|min:8',
+            'usuarios.*.google_id' => 'nullable|string|max:255',
+            'usuarios.*.picture' => 'nullable|string|max:255',
+        ]);
     }
 }
