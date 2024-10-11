@@ -16,13 +16,13 @@ class DocenteController extends Controller
         $per_page = request('per_page', 10);
         $search = request('search', '');
         $docentes = Docente::with(['usuario', 'seccion', 'especialidad'])
-            ->where([
-                ['nombre', 'like', '%' . $search . '%'],
-                ['apellido_paterno', 'like', '%' . $search . '%'],
-                ['apellido_materno', 'like', '%' . $search . '%'],
-                ['email', 'like', '%' . $search . '%'],
-                ['codigoDocente', 'like', '%' . $search . '%'],
-            ])
+            ->whereHas('usuario', function ($query) use ($search) {
+                $query->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            })
+            ->orWhere('codigoDocente', 'like', '%' . $search . '%')
             ->paginate($per_page);
         return response()->json($docentes, 200);
     }

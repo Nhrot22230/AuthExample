@@ -14,17 +14,18 @@ class EstudianteController extends Controller
 {
     public function index()
     {
-        $per_page = request('per_page', 10);
+        $perPage = request('per_page', 10);
         $search = request('search', '');
+
         $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
-            ->where([
-                ['nombre', 'like', '%' . $search . '%'],
-                ['apellido_paterno', 'like', '%' . $search . '%'],
-                ['apellido_materno', 'like', '%' . $search . '%'],
-                ['email', 'like', '%' . $search . '%'],
-                ['codigoEstudiante', 'like', '%' . $search . '%'],
-            ])
-            ->paginate($per_page);
+            ->whereHas('usuario', function ($query) use ($search) {
+                $query->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            })
+            ->orWhere('codigoEstudiante', 'like', '%' . $search . '%') // this is on Estudiante model
+            ->paginate($perPage);
 
         return response()->json($estudiantes, 200);
     }

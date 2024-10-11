@@ -17,15 +17,13 @@ class AdministrativoController extends Controller
         $search = request('search', '');
 
         $administrativos = Administrativo::with('usuario')
-            ->where([
-                ['nombre', 'like', '%' . $search . '%'],
-                ['apellido_paterno', 'like', '%' . $search . '%'],
-                ['apellido_materno', 'like', '%' . $search . '%'],
-                ['email', 'like', '%' . $search . '%'],
-                ['codigoAdministrativo', 'like', '%' . $search . '%'],
-                ['lugarTrabajo', 'like', '%' . $search . '%'],
-                ['cargo', 'like', '%' . $search . '%'],
-            ])
+            ->whereHas('usuario', function ($query) use ($search) {
+                $query->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            })
+            ->orWhere('codigoAdministrativo', 'like', '%' . $search . '%')
             ->paginate($per_page);
 
         return response()->json($administrativos, 200);

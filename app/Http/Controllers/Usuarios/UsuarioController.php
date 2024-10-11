@@ -14,13 +14,14 @@ class UsuarioController extends Controller
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
+
         $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
-            ->where([
-                ['nombre', 'like', '%' . $search . '%'],
-                ['apellido_paterno', 'like', '%' . $search . '%'],
-                ['apellido_materno', 'like', '%' . $search . '%'],
-                ['email', 'like', '%' . $search . '%'],
-            ])
+            ->where(function ($query) use ($search) {
+                $query->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            })
             ->paginate($perPage);
 
         return response()->json(['usuarios' => $usuarios], 200);
