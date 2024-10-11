@@ -9,10 +9,9 @@ use Illuminate\Http\Request;
 class SemestreController extends Controller
 {
     //
-
     public function index(){
         $per_page = 10;
-        $semestres = Semestre::paginate($per_page);
+        $semestres = Semestre::orderBy('fecha_inicio', 'desc')->paginate($per_page);
 
         return response()->json($semestres, 200);
     }
