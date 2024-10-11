@@ -16,19 +16,35 @@ class EstudianteController extends Controller
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
+        $especialidadId = request('especialidad_id', null); // Obtener el ID de la especialidad
+        $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
 
         $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
-            ->whereHas('usuario', function ($query) use ($search) {
-                $query->where('nombre', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
-            })
-            ->orWhere('codigoEstudiante', 'like', '%' . $search . '%') // this is on Estudiante model
-            ->paginate($perPage);
+            ->where(function ($query) use ($search) {
+                $query->whereHas('usuario', function ($subQuery) use ($search) {
+                    $subQuery->where('nombre', 'like', '%' . $search . '%')
+                        ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                        ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                    ->orWhere('codigoEstudiante', 'like', '%' . $search . '%');
+            });
+
+        if (!empty($especialidadId)) {
+            $estudiantes->where('especialidad_id', $especialidadId);
+        }
+
+        if (!empty($facultadId)) {
+            $estudiantes->whereHas('especialidad.facultad', function ($query) use ($facultadId) {
+                $query->where('id', $facultadId);
+            });
+        }
+
+        $estudiantes = $estudiantes->paginate($perPage);
 
         return response()->json($estudiantes, 200);
     }
+
 
     public function store(Request $request)
     {
