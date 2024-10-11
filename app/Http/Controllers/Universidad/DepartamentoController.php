@@ -21,7 +21,9 @@ class DepartamentoController extends Controller
 
     public function indexAll()
     {
-        $departamentos = Departamento::with('facultad')->get();
+        $search = request('search', '');
+        $departamentos = Departamento::with('facultad')
+            ->where('nombre', 'like', "%$search%")->get();
 
         return response()->json($departamentos, 200);
     }

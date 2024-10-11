@@ -48,7 +48,6 @@ class FacultadController extends Controller
         $facultad->nombre = $validatedData['nombre'];
         $facultad->abreviatura = $validatedData['abreviatura'];
         $facultad->anexo = $validatedData['anexo'];
-        $facultad->departamento_id = $validatedData['departamento_id'];
         $facultad->save();
 
         return response()->json($facultad, 201);

@@ -16,7 +16,7 @@ class RolePermissionsController extends Controller
         $roles = Role::with('permissions')
             ->withCount('users')
             ->paginate($perPage);
-        return response()->json(['roles' => $roles], 200);
+        return response()->json($roles, 200);
     }
 
     public function storeRole(Request $request)
@@ -76,7 +76,7 @@ class RolePermissionsController extends Controller
     {
         $perPage = request('per_page', 10);
         $permissions = Permission::paginate($perPage);
-        return response()->json(['permissions' => $permissions], 200);
+        return response()->json($permissions, 200);
     }
 
     public function showPermission($id)
@@ -143,7 +143,7 @@ class RolePermissionsController extends Controller
         }
 
         $roles = $usuario->roles()->get();
-        return response()->json(['roles' => $roles], 200);
+        return response()->json($roles, 200);
     }
 
     public function listUserPermissions($id)
@@ -154,6 +154,6 @@ class RolePermissionsController extends Controller
         }
 
         $permissions = $usuario->permissions()->get();
-        return response()->json(['permissions' => $permissions], 200);
+        return response()->json($permissions, 200);
     }
 }
