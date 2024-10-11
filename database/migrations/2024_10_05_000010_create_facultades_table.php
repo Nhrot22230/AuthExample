@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('facultades', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('abreviatura')->unique();
+            $table->string('nombre')->index();
+            $table->string('abreviatura');
             $table->string('anexo')->nullable();
             $table->timestamps();
         });

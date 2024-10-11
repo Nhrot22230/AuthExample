@@ -55,17 +55,15 @@ class AreaController extends Controller
 
     public function update(Request $request, $id)
     {
+        $area = Area::find($id);
+        if (!$area) {
+            return response()->json(['message' => 'Area no encontrada'], 404);
+        }
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'especialidad_id' => 'required|integer|exists:especialidades,id',
         ]);
-
-        $area = Area::find($id);
-
-        if (!$area) {
-            return response()->json(['message' => 'Area no encontrada'], 404);
-        }
 
         $area->nombre = $validatedData['nombre'];
         $area->descripcion = $validatedData['descripcion'];

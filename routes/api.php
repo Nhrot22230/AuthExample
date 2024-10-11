@@ -58,6 +58,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/especialidades/{id}', [EspecialidadController::class, 'update'])->middleware('can:editar especialidades');
         Route::delete('/especialidades/{id}', [EspecialidadController::class, 'destroy'])->middleware('can:eliminar especialidades');
     
+        
         Route::get('/secciones', [SeccionController::class, 'indexAll'])->middleware('can:ver secciones');
         Route::get('/secciones/paginated', [SeccionController::class, 'index'])->middleware('can:ver secciones');
         Route::post('/secciones', [SeccionController::class, 'store'])->middleware('can:crear secciones');
@@ -65,12 +66,14 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/secciones/{id}', [SeccionController::class, 'update'])->middleware('can:editar secciones');
         Route::delete('/secciones/{id}', [SeccionController::class, 'destroy'])->middleware('can:eliminar secciones');
 
+        
         Route::get('/cursos', [CursoController::class, 'index'])->middleware('can:ver cursos');
         Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:crear cursos');
         Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
         Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:editar cursos');
         Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:eliminar cursos');
 
+        
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');
         Route::post('/semestres', [SemestreController::class, 'store'])->middleware('can:crear semestres');
@@ -78,6 +81,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
     
+        
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:crear usuarios');
         Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])->middleware('can:ver usuarios');
@@ -86,14 +90,17 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->middleware('can:editar usuarios');
         Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->middleware('can:eliminar usuarios');
     
+        
         Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver estudiantes');
         Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:crear estudiantes');
         Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver estudiantes');
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
     
+        
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
+        Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:crear docentes');
         Route::get('/docentes/{codDocente}', [DocenteController::class, 'show'])->middleware('can:ver docentes');
         Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:editar docentes');
         Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:eliminar docentes');

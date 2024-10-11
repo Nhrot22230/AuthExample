@@ -58,17 +58,15 @@ class DepartamentoController extends Controller
 
     public function update(Request $request, $id)
     {
+        $departamento = Departamento::find($id);
+        if (!$departamento) {
+            return response()->json(['message' => 'Departamento no encontrado'], 404);
+        }
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'facultad_id' => 'required|exists:facultades,id',
         ]);
-
-        $departamento = Departamento::find($id);
-
-        if (!$departamento) {
-            return response()->json(['message' => 'Departamento no encontrado'], 404);
-        }
 
         $departamento->nombre = $validatedData['nombre'];
         $departamento->descripcion = $validatedData['descripcion'];

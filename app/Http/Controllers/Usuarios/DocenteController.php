@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
 use App\Models\Docente;
+use App\Models\Especialidad;
+use App\Models\Seccion;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class DocenteController extends Controller
 {
@@ -42,12 +45,17 @@ class DocenteController extends Controller
 
     public function update(Request $request, $codigo)
     {
+        $docente = Docente::with('usuario')->where('codigoDocente', $codigo)->first();
+        if (!$docente) {
+            return response()->json(['message' => 'Docente no encontrado'], 404);
+        }
+
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'nullable|string|max:255',
             'apellido_materno' => 'nullable|string|max:255',
             'email' => 'required|string|email:rfc,dns|max:255',
-            'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente',
+            'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente,' . $docente->id,
             'password' => 'nullable|string|min:8',
             'tipo' => 'required|string',
             'especialidad_id' => 'required|integer|exists:especialidades,id',
@@ -55,8 +63,7 @@ class DocenteController extends Controller
             'area_id' => 'nullable|integer|exists:areas,id',
         ]);
 
-        DB::transaction(function () use ($validatedData, $codigo) {
-            $docente = Docente::with('usuario')->where('codigoDocente', $codigo)->firstOrFail();
+        DB::transaction(function () use ($validatedData, $docente) {
             $usuarioData = [
                 'nombre' => $validatedData['nombre'],
                 'apellido_paterno' => $validatedData['apellido_paterno'],
@@ -67,16 +74,21 @@ class DocenteController extends Controller
                 $usuarioData['password'] = Hash::make($validatedData['password']);
             }
             $docente->usuario->update($usuarioData);
-            $docente->update([
+            $docenteData = [
                 'codigoDocente' => $validatedData['codigoDocente'],
                 'tipo' => $validatedData['tipo'],
                 'especialidad_id' => $validatedData['especialidad_id'],
                 'seccion_id' => $validatedData['seccion_id'],
-                'area_id' => $validatedData['area_id'] ?? null,
-            ]);
+            ];
+            if (!empty($validatedData['area_id'])) {
+                $docenteData['area_id'] = $validatedData['area_id'];
+            }
+            $docente->update($docenteData);
         });
+
         return response()->json(['message' => 'Docente actualizado exitosamente'], 200);
     }
+
 
     public function store(Request $request)
     {
@@ -123,5 +135,55 @@ class DocenteController extends Controller
 
         $docente->delete();
         return response()->json(['message' => 'Docente eliminado exitosamente'], 200);
+    }
+
+    public function storeMultiple(Request $request)
+    {
+        try {
+            $request->validate([
+                'docentes' => 'required|array',
+                'docentes.*.Codigo' => 'required|string|max:50|unique:docentes,codigoDocente',
+                'docentes.*.Nombre' => 'required|string|max:255',
+                'docentes.*.ApellidoPaterno' => 'required|string|max:255',
+                'docentes.*.ApellidoMaterno' => 'nullable|string|max:255',
+                'docentes.*.Email' => 'required|email|unique:usuarios,email',
+                'docentes.*.Especialidad' => 'required|string|exists:especialidades,nombre',
+                'docentes.*.Seccion' => 'required|string|exists:secciones,nombre',
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('usuarios')->error('Error al validar los datos de los docentes', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al validar los datos de los docentes'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->docentes as $docenteData) {
+                $especialidad = Especialidad::where('nombre', $docenteData['Especialidad'])->firstOrFail();
+                $seccion = Seccion::where('nombre', $docenteData['Seccion'])->firstOrFail();
+                $usuario = Usuario::firstOrCreate(
+                    ['email' => $docenteData['Email']],
+                    [
+                        'nombre' => $docenteData['Nombre'],
+                        'apellido_paterno' => $docenteData['ApellidoPaterno'],
+                        'apellido_materno' => $docenteData['ApellidoMaterno'] ?? '',
+                        'password' => Hash::make($docenteData['Codigo']),
+                    ]
+                );
+
+                Docente::create([
+                    'usuario_id' => $usuario->id,
+                    'codigoDocente' => $docenteData['Codigo'],
+                    'tipo' => 'TPA',
+                    'especialidad_id' => $especialidad->id,
+                    'seccion_id' => $seccion->id,
+                    'area_id' => null,
+                ]);
+            }
+            DB::commit();
+            return response()->json(['message' => 'Docentes cargados exitosamente'], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al cargar docentes', 'error' => $e->getMessage()], 500);
+        }
     }
 }

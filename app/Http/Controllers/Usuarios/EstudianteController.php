@@ -84,7 +84,6 @@ class EstudianteController extends Controller
         $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])
             ->where('codigoEstudiante', $codigo)
             ->first();
-
         if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
@@ -103,10 +102,11 @@ class EstudianteController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'nullable|string|max:255',
             'apellido_materno' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario_email,
-            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->codigoEstudiante,
+            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario->id,
+            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->id,
             'especialidad_id' => 'required|exists:especialidades,id',
         ]);
+
         DB::transaction(function () use ($validatedData, $estudiante) {
             $estudiante->usuario->fill([
                 'nombre' => $validatedData['nombre'],
@@ -119,8 +119,10 @@ class EstudianteController extends Controller
                 'codigoEstudiante' => $validatedData['codigoEstudiante'],
             ])->save();
         });
+
         return response()->json(['message' => 'Estudiante actualizado exitosamente'], 200);
     }
+
 
     public function destroy($codigo)
     {

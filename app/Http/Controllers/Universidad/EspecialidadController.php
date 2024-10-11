@@ -61,17 +61,15 @@ class EspecialidadController extends Controller
 
     public function update(Request $request, $id)
     {
+        $especialidad = Especialidad::find($id);
+        if (!$especialidad) {
+            return response()->json(['message' => 'Especialidad no encontrada'], 404);
+        }
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'facultad_id' => 'required|integer|exists:facultades,id',
         ]);
-
-        $especialidad = Especialidad::find($id);
-
-        if (!$especialidad) {
-            return response()->json(['message' => 'Especialidad no encontrada'], 404);
-        }
 
         $especialidad->nombre = $validatedData['nombre'];
         $especialidad->descripcion = $validatedData['descripcion'];

@@ -65,10 +65,8 @@ class UsuarioController extends Controller
 
     public function update(Request $request, $id)
     {
-        $usuario = 0;
-        try {
-            $usuario = Usuario::findOrFail($id);
-        } catch (\Exception $e) {
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
@@ -76,7 +74,7 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'nullable|string|max:255',
             'apellido_materno' => 'nullable|string|max:255',
-            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->email,
+            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->id,
             'password' => 'nullable|string|min:8',
             'estado' => 'nullable|string|max:50',
             'google_id' => 'nullable|string|max:255',
@@ -101,28 +99,11 @@ class UsuarioController extends Controller
 
     public function destroy($id)
     {
-        try {
-            $usuario = Usuario::findOrFail($id);
-            $usuario->delete();
-            return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
-        } catch (\Exception $e) {
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
-    }
-
-    public function massiveLoad(Request $request)
-    {
-        $request->validate([
-            'usuarios' => 'required|array',
-            'usuarios.*.nombre' => 'required|string|max:255',
-            'usuarios.*.apellido_paterno' => 'nullable|string|max:255',
-            'usuarios.*.apellido_materno' => 'nullable|string|max:255',
-            'usuarios.*.email' => 'required|string|email|max:255|unique:usuarios,email',
-            'usuarios.*.password' => 'required|string|min:8',
-            'usuarios.*.google_id' => 'nullable|string|max:255',
-            'usuarios.*.picture' => 'nullable|string|max:255',
-        ]);
-
-        $usuarios = [];
+        $usuario->delete();
+        return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
     }
 }

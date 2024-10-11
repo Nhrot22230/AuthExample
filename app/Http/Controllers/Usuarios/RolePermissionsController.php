@@ -48,9 +48,8 @@ class RolePermissionsController extends Controller
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
-
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name' . $role->name,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
             'permissions' => 'nullable|array',
         ]);
 
@@ -60,6 +59,7 @@ class RolePermissionsController extends Controller
         }
         return response()->json(['message' => 'Rol actualizado exitosamente', 'role' => $role], 200);
     }
+
 
     public function destroyRole($id)
     {
@@ -96,12 +96,14 @@ class RolePermissionsController extends Controller
         }
 
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name' . $permission->name,
+            'name' => 'required|string|max:255|unique:permissions,name,' . $id . ',id',
         ]);
 
         $permission->update($validatedData);
+
         return response()->json(['message' => 'Permiso actualizado exitosamente', 'permission' => $permission], 200);
     }
+
 
     public function syncRoles(Request $request)
     {

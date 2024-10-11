@@ -128,13 +128,18 @@ return [
         ],
 
         'http' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/http.log'),
         ],
 
         'jwt-auth' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/jwt-auth.log'),
+        ],
+
+        'usuarios' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/usuarios.log'),
         ],
     ],
 
