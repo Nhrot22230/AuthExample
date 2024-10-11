@@ -12,11 +12,18 @@ class Semestre extends Model
     protected $fillable = [
         'anho',
         'periodo',
+        'fecha_inicio',
+        'fecha_fin',
         'estado',
     ];
 
     public function horarios()
     {
         return $this->hasMany(Horario::class);
+    }
+
+    public function planEstudio()
+    {
+        return $this->belongsToMany(PlanEstudio::class, 'plan_estudio_semestre');
     }
 }

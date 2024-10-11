@@ -44,15 +44,15 @@ class RolePermissionsController extends Controller
 
     public function updateRole(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name',
-            'permissions' => 'nullable|array',
-        ]);
-
         $role = Role::find($id);
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
+
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name' . $role->name,
+            'permissions' => 'nullable|array',
+        ]);
 
         $role->update($validatedData);
         if (isset($validatedData['permissions'])) {

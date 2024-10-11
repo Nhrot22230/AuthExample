@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('anho');
             $table->unsignedInteger('periodo');
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin');
             $table->tinyInteger('estado');
             $table->timestamps();
         });

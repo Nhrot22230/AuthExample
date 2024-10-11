@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Usuarios;
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
@@ -114,5 +115,8 @@ class UsuarioController extends Controller
             'usuarios.*.google_id' => 'nullable|string|max:255',
             'usuarios.*.picture' => 'nullable|string|max:255',
         ]);
+
+        $usuarios = [];
+        
     }
 }

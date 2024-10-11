@@ -17,13 +17,18 @@ class Curso extends Model
         'estado',
     ];
 
-    public function especialidad()
+    public function planesEstudio()
     {
-        return $this->belongsTo(Especialidad::class);
+        return $this->belongsToMany(PlanEstudio::class, 'plan_estudio_curso')->withPivot('requisito_tipo');
     }
 
-    public function horarios()
+    public function requisitos()
     {
-        return $this->hasMany(Horario::class);
+        return $this->belongsToMany(Curso::class, 'curso_requisito', 'curso_id', 'requisito_id')->withPivot('tipo');
+    }
+
+    public function esRequisitoDe()
+    {
+        return $this->belongsToMany(Curso::class, 'curso_requisito', 'requisito_id', 'curso_id')->withPivot('tipo');
     }
 }
