@@ -10,13 +10,32 @@ use Spatie\Permission\Models\Permission;
 
 class RolePermissionsController extends Controller
 {
-    public function indexRoles()
+    public function indexRolesPaginated()
     {
         $perPage = request('per_page', 10);
         $roles = Role::with('permissions')
             ->withCount('users')
             ->paginate($perPage);
         return response()->json($roles, 200);
+    }
+
+    public function indexRoles()
+    {
+        $roles = Role::with('permissions')->get();
+        return response()->json($roles, 200);
+    }
+
+    public function indexPermissionsPaginated()
+    {
+        $perPage = request('per_page', 10);
+        $permissions = Permission::paginate($perPage);
+        return response()->json($permissions, 200);
+    }
+
+    public function indexPermissions()
+    {
+        $permissions = Permission::get();
+        return response()->json($permissions, 200);
     }
 
     public function storeRole(Request $request)
@@ -39,7 +58,7 @@ class RolePermissionsController extends Controller
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
-        return response()->json(['role' => $role], 200);
+        return response()->json($role, 200);
     }
 
     public function updateRole(Request $request, $id)
@@ -57,7 +76,7 @@ class RolePermissionsController extends Controller
         if (isset($validatedData['permissions'])) {
             $role->syncPermissions($validatedData['permissions']);
         }
-        return response()->json(['message' => 'Rol actualizado exitosamente', 'role' => $role], 200);
+        return response()->json(['message' => 'Rol actualizado exitosamente'], 200);
     }
 
 
@@ -70,13 +89,6 @@ class RolePermissionsController extends Controller
 
         $role->delete();
         return response()->json(['message' => 'Rol eliminado exitosamente'], 200);
-    }
-
-    public function indexPermissions()
-    {
-        $perPage = request('per_page', 10);
-        $permissions = Permission::paginate($perPage);
-        return response()->json($permissions, 200);
     }
 
     public function showPermission($id)

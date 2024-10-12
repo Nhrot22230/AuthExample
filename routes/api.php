@@ -29,6 +29,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/instituciones/last', [InstitucionController::class, 'getLastConfiguracion'])->middleware('can:ver instituciones');
         Route::post('/instituciones', [InstitucionController::class, 'setConfiguracion'])->middleware('can:crear instituciones');
     
+        
         Route::get('/departamentos', [DepartamentoController::class, 'indexAll'])->middleware('can:ver departamentos');
         Route::get('/departamentos/paginated', [DepartamentoController::class, 'index'])->middleware('can:ver departamentos');
         Route::post('/departamentos', [DepartamentoController::class, 'store'])->middleware('can:crear departamentos');
@@ -36,12 +37,14 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/departamentos/{id}', [DepartamentoController::class, 'update'])->middleware('can:editar departamentos');
         Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy'])->middleware('can:eliminar departamentos');
     
+
         Route::get('/facultades', [FacultadController::class, 'indexAll'])->middleware('can:ver facultades');
         Route::get('/facultades/paginated', [FacultadController::class, 'index'])->middleware('can:ver facultades');
         Route::post('/facultades', [FacultadController::class, 'store'])->middleware('can:crear facultades');
         Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware('can:ver facultades');
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
+
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
@@ -105,6 +108,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:editar docentes');
         Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:eliminar docentes');
 
+        
         Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver administrativos');
         Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:crear administrativos');
         Route::post('/administrativos/multiple', [AdministrativoController::class, 'storeMultiple'])->middleware('can:crear administrativos');
@@ -116,11 +120,13 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::post('/usuarios/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:asignar permisos');
 
         Route::get('/roles', [RolePermissionsController::class, 'indexRoles'])->middleware('can:ver roles');
+        Route::get('/roles/paginated', [RolePermissionsController::class, 'indexRolesPaginated'])->middleware('can:ver roles');
         Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
         Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->middleware('can:editar roles');
 
         Route::get('/permissions', [RolePermissionsController::class, 'indexPermissions'])->middleware('can:ver permisos');
+        Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
     });

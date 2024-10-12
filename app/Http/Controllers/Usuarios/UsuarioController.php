@@ -23,8 +23,7 @@ class UsuarioController extends Controller
                     ->orWhere('email', 'like', '%' . $search . '%');
             })
             ->paginate($perPage);
-
-        return response()->json(['usuarios' => $usuarios], 200);
+        return response()->json($usuarios, 200);
     }
 
     public function show($id)
