@@ -24,7 +24,7 @@ class DocenteFactory extends Factory
     {
         $random_seccion = Seccion::inRandomOrder()->first();
         if (!$random_seccion) {
-            $random_departamento = Departamento::inRandomOrder()->first();
+            $random_departamento = Departamento::inRandomOrder()->first() ?? Departamento::factory()->create();
             $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
         }
 
