@@ -16,19 +16,36 @@ class DocenteController extends Controller
 {
     public function index()
     {
+        // Recibimos los parámetros
         $per_page = request('per_page', 10);
         $search = request('search', '');
+        $seccionId = request('seccion_id', null);
+        $especialidadId = request('especialidad_id', null);
+        $tipo = request('tipo', null);
+
         $docentes = Docente::with(['usuario', 'seccion', 'especialidad'])
-            ->whereHas('usuario', function ($query) use ($search) {
-                $query->where('nombre', 'like', '%' . $search . '%')
+            ->where(function ($query) use ($search) {
+                $query->whereHas('usuario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%')
                     ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
                     ->orWhere('apellido_materno', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%');
-            })
-            ->orWhere('codigoDocente', 'like', '%' . $search . '%')
-            ->paginate($per_page);
+                })
+                ->orWhere('codigoDocente', 'like', '%' . $search . '%');
+            });
+        if ($seccionId) {
+            $docentes->where('seccion_id', $seccionId);
+        }
+        if ($especialidadId) {
+            $docentes->where('especialidad_id', $especialidadId);
+        }
+        if ($tipo) {
+            $docentes->where('tipo', $tipo);
+        }
+        $docentes = $docentes->paginate($per_page);
         return response()->json($docentes, 200);
     }
+
 
     public function show($codigo)
     {
