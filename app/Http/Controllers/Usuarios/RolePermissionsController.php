@@ -120,10 +120,15 @@ class RolePermissionsController extends Controller
 
     public function syncRoles(Request $request)
     {
-        $validatedData = $request->validate([
-            'roles' => 'required|array',
-            'usuario_id' => 'required|integer|exists:usuarios,id',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'roles' => 'nullable|array|exists:roles,name',
+                'usuario_id' => 'required|integer|exists:usuarios,id',
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('usuarios')->error('Error al asignar roles a usuario', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al asignar roles a usuario' . $e->getMessage()], 420);
+        }
 
         $usuario = Usuario::find($validatedData['usuario_id']);
         if (!$usuario) {
@@ -138,7 +143,7 @@ class RolePermissionsController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'permissions' => 'required|array',
+                'permissions' => 'nullable|array|exists:permissions,name',
                 'usuario_id' => 'required|integer|exists:usuarios,id',
             ]);
         } catch (\Exception $e) {
