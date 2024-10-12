@@ -8,6 +8,7 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AdministrativoController extends Controller
 {
@@ -119,43 +120,52 @@ class AdministrativoController extends Controller
     }
 
 
-    public function massStore(Request $request)
+    public function storeMultiple(Request $request)
     {
-        $request->validate([
-            'administrativos' => 'required|array',
-            'administrativos.*.nombre' => 'required|string|max:255',
-            'administrativos.*.apellido_paterno' => 'nullable|string|max:255',
-            'administrativos.*.apellido_materno' => 'nullable|string|max:255',
-            'administrativos.*.email' => 'required|email',
-            'administrativos.*.lugarTrabajo' => 'required|string|max:255',
-            'administrativos.*.cargo' => 'required|string|max:255',
-            'administrativos.*.codigoAdministrativo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'administrativos' => 'required|array',
+                'administrativos.*.Codigo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo',
+                'administrativos.*.Nombre' => 'required|string|max:255',
+                'administrativos.*.ApellidoPaterno' => 'nullable|string|max:255',
+                'administrativos.*.ApellidoMaterno' => 'nullable|string|max:255',
+                'administrativos.*.Email' => 'required|string|email|max:255',
+                'administrativos.*.LugarTrabajo' => 'required|string|max:255',
+                'administrativos.*.Cargo' => 'required|string|max:255',
+            ]);
+        }
+        catch (\Exception $e) {
+            Log::channel('usuarios')->error('Error al validar los datos para crear múltiples administrativos: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al procesar la solicitud'], 422);
+        }
+
         DB::beginTransaction();
         try {
-            foreach ($request->administrativos as $administrativoData) {
+            foreach ($validatedData['administrativos'] as $administrativoData) {
                 $usuario = Usuario::firstOrCreate(
-                    ['email' => $administrativoData['email']],
+                    ['email' => $administrativoData['Email']],
                     [
-                        'nombre' => $administrativoData['nombre'],
-                        'apellido_paterno' => $administrativoData['apellido_paterno'],
-                        'apellido_materno' => $administrativoData['apellido_materno'],
-                        'password' => Hash::make($administrativoData['codigoAdministrativo']),
+                        'nombre' => $administrativoData['Nombre'],
+                        'apellido_paterno' => $administrativoData['ApellidoPaterno'],
+                        'apellido_materno' => $administrativoData['ApellidoMaterno'],
+                        'password' => Hash::make($administrativoData['Codigo']),
                     ]
                 );
 
-                Administrativo::create([
-                    'usuario_id' => $usuario->id,
-                    'codigoAdministrativo' => $administrativoData['codigoAdministrativo'],
-                    'lugarTrabajo' => $administrativoData['lugarTrabajo'],
-                    'cargo' => $administrativoData['cargo'],
-                ]);
+                $administrativo = new Administrativo();
+                $administrativo->usuario_id = $usuario->id;
+                $administrativo->codigoAdministrativo = $administrativoData['Codigo'];
+                $administrativo->lugarTrabajo = $administrativoData['LugarTrabajo'];
+                $administrativo->cargo = $administrativoData['Cargo'];
+                $usuario->administrativo()->save($administrativo);
             }
             DB::commit();
             return response()->json(['message' => 'Administrativos creados exitosamente'], 201);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al crear administrativos', 'error' => $e->getMessage()], 500);
+            Log::channel('usuarios')->error('Error al crear múltiples administrativos: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al procesar la solicitud'], 420);
         }
     }
 }

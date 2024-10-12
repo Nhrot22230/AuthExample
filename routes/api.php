@@ -93,10 +93,10 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         
         Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver estudiantes');
         Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:crear estudiantes');
+        Route::post('/estudiantes/multiple', [EstudianteController::class, 'storeMultiple'])->middleware('can:crear estudiantes');
         Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver estudiantes');
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
-    
         
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
@@ -107,6 +107,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
         Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver administrativos');
         Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:crear administrativos');
+        Route::post('/administrativos/multiple', [AdministrativoController::class, 'storeMultiple'])->middleware('can:crear administrativos');
         Route::get('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'show'])->middleware('can:ver administrativos');
         Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:editar administrativos');
         Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:eliminar administrativos');
