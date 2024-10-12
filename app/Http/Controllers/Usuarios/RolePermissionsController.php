@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Usuarios;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -135,10 +136,15 @@ class RolePermissionsController extends Controller
 
     public function syncPermissions(Request $request)
     {
-        $validatedData = $request->validate([
-            'permissions' => 'required|array',
-            'usuario_id' => 'required|integer|exists:usuarios,id',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'permissions' => 'required|array',
+                'usuario_id' => 'required|integer|exists:usuarios,id',
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('usuarios')->error('Error al asignar permisos a usuario', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al asignar permisos a usuario' . $e->getMessage()], 420);
+        }
 
         $usuario = Usuario::find($validatedData['usuario_id']);
         if (!$usuario) {
