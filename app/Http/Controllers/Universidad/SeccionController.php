@@ -45,8 +45,6 @@ class SeccionController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'codigo' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
             'departamento_id' => 'required|integer|exists:departamentos,id',
         ]);
 
@@ -64,8 +62,6 @@ class SeccionController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'codigo' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
             'departamento_id' => 'required|integer|exists:departamentos,id',
         ]);
 
@@ -74,8 +70,6 @@ class SeccionController extends Controller
             return response()->json(['message' => 'Seccion no encontrada'], 404);
         }
         $seccion->nombre = $validatedData['nombre'];
-        $seccion->codigo = $validatedData['codigo'];
-        $seccion->descripcion = $validatedData['descripcion'];
         $seccion->departamento_id = $validatedData['departamento_id'];
         $seccion->save();
         return response()->json($seccion, 200);

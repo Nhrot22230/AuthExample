@@ -23,8 +23,6 @@ class SeccionFactory extends Factory
 
         return [
             'nombre' => $this->faker->word,
-            'descripcion' => $this->faker->sentence,
-            'codigoSeccion' => $this->faker->unique()->randomNumber(8),
             'departamento_id' => $random_departamento->id ?? Departamento::factory(),
         ];
     }

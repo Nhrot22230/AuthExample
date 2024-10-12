@@ -67,7 +67,6 @@ class EspecialidadController extends Controller
         }
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
             'facultad_id' => 'required|integer|exists:facultades,id',
         ]);
 
@@ -77,5 +76,16 @@ class EspecialidadController extends Controller
         $especialidad->save();
 
         return response()->json($especialidad, 200);
+    }
+
+    public function destroy($id)
+    {
+        $especialidad = Especialidad::find($id);
+        if (!$especialidad) {
+            return response()->json(['message' => 'Especialidad no encontrada'], 404);
+        }
+
+        $especialidad->delete();
+        return response()->json(['message' => 'Especialidad eliminada exitosamente'], 200);
     }
 }

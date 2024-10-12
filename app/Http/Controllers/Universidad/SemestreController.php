@@ -10,8 +10,18 @@ class SemestreController extends Controller
 {
     //
     public function index(){
-        $per_page = 10;
-        $semestres = Semestre::orderBy('fecha_inicio', 'desc')->paginate($per_page);
+        $per_page = request('per_page', 10);
+        $since = request('since', null);
+        $until = request('until', null);
+    
+        $semestres = Semestre::orderBy('fecha_inicio', 'desc')
+            ->when($since, function ($query) use ($since) {
+                return $query->where('fecha_inicio', '>=', $since);
+            })
+            ->when($until, function ($query) use ($until) {
+                return $query->where('fecha_inicio', '<=', $until);
+            })
+            ->paginate($per_page);
 
         return response()->json($semestres, 200);
     }

@@ -72,4 +72,15 @@ class AreaController extends Controller
 
         return response()->json($area, 200);
     }
+
+    public function destroy($id)
+    {
+        $area = Area::find($id);
+        if (!$area) {
+            return response()->json(['message' => 'Area no encontrada'], 404);
+        }
+
+        $area->delete();
+        return response()->json(['message' => 'Area eliminada exitosamente'], 200);
+    }
 }

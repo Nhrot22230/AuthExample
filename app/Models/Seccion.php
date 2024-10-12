@@ -14,8 +14,6 @@ class Seccion extends Model
 
     protected $fillable = [
         'nombre',
-        'descripcion',
-        'codigoSeccion',
         'departamento_id'
     ];
 

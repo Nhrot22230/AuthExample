@@ -56,7 +56,7 @@ class UsuarioModelTest extends TestCase
         $response = $controller->index();
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertCount(10, $response->getData()->usuarios->data);
+        $this->assertCount(10, $response->getData()->data);
     }
 
     #[Test]

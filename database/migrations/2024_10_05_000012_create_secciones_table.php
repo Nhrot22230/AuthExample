@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('secciones', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->text('descripcion')->nullable();
-            $table->string('codigoSeccion')->unique();
             $table->foreignId('departamento_id')->constrained('departamentos')->onDelete('cascade');
             $table->timestamps();
         });
