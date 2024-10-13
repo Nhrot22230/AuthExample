@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class LogMiddleware
 {
@@ -23,6 +24,14 @@ class LogMiddleware
             'user_agent' => $request->userAgent(),
             'request' => $request->all(),
         ]);
+        
+        try {
+            $user = JWTAuth::user();
+            Log::channel('http')->info($user);
+        }
+        catch (\Exception $e) {
+            Log::channel('http')->info('No se pudo obtener el usuario autenticado');
+        }
 
         return $next($request);
     }

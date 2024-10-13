@@ -50,8 +50,6 @@ class SeccionController extends Controller
 
         $seccion = new Seccion();
         $seccion->nombre = $validatedData['nombre'];
-        $seccion->codigoSeccion = $validatedData['codigo'];
-        $seccion->descripcion = $validatedData['descripcion'];
         $seccion->departamento_id = $validatedData['departamento_id'];
         $seccion->save();
 

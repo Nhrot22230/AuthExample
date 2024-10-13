@@ -44,7 +44,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware('can:ver facultades');
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
-
+        Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
@@ -60,6 +60,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/especialidades/{id}', [EspecialidadController::class, 'show'])->middleware('can:ver especialidades');
         Route::put('/especialidades/{id}', [EspecialidadController::class, 'update'])->middleware('can:editar especialidades');
         Route::delete('/especialidades/{id}', [EspecialidadController::class, 'destroy'])->middleware('can:eliminar especialidades');
+        Route::get('/especialidades/nombre/{nombre}', [EspecialidadController::class, 'showByName'])->middleware('can:ver especialidades');
     
         
         Route::get('/secciones', [SeccionController::class, 'indexAll'])->middleware('can:ver secciones');

@@ -36,6 +36,17 @@ class FacultadController extends Controller
         return response()->json($facultad, 200);
     }
 
+    public function showByName($nombre)
+    {
+        $facultad = Facultad::with('especialidades')->where('nombre', $nombre)->first();
+
+        if (!$facultad) {
+            return response()->json(['message' => 'Facultad no encontrada'], 404);
+        }
+
+        return response()->json($facultad, 200);
+    }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
