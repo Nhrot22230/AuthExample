@@ -36,6 +36,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/departamentos/{id}', [DepartamentoController::class, 'show'])->middleware('can:ver departamentos');
         Route::put('/departamentos/{id}', [DepartamentoController::class, 'update'])->middleware('can:editar departamentos');
         Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy'])->middleware('can:eliminar departamentos');
+        Route::get('/departamentos/nombre/{nombre}', [DepartamentoController::class, 'showByName'])->middleware('can:ver departamentos');
     
 
         Route::get('/facultades', [FacultadController::class, 'indexAll'])->middleware('can:ver facultades');

@@ -88,14 +88,15 @@ class FacultadController extends Controller
 
     public function destroy($id)
     {
-        $facultad = Facultad::find($id);
-
-        if (!$facultad) {
-            return response()->json(['message' => 'Facultad no encontrada'], 404);
+        try {
+            $facultad = Facultad::find($id);
+            if (!$facultad) {
+                return response()->json(['message' => 'Facultad no encontrada'], 404);
+            }
+            $facultad->delete();
+            return response()->json($facultad, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'No se puede eliminar la facultad, ya que tiene especialidades o departamentos asociados'], 400);
         }
-
-        $facultad->delete();
-
-        return response()->json($facultad, 200);
     }
 }

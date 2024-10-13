@@ -13,11 +13,13 @@ class CursoController extends Controller
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
-        $cursos = Curso::with('especialidad', 'planesEstudio')
-            ->where([
-                ['nombre', 'like', '%' . $search . '%'],
-                ['cod_curso', 'like', '%' . $search . '%'],
-            ])
+        $especialidad_id = request('especialidad_id', null);
+
+        $cursos = Curso::with('especialidad')
+            ->where('nombre', 'like', "%$search%")
+            ->when($especialidad_id, function ($query, $especialidad_id) {
+                return $query->where('especialidad_id', $especialidad_id);
+            })
             ->paginate($perPage);
 
         return response()->json(['cursos' => $cursos], 200);

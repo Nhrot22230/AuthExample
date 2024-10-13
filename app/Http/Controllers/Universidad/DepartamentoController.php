@@ -39,6 +39,16 @@ class DepartamentoController extends Controller
         return response()->json($departamento, 200);
     }
 
+    public function showByName($nombre)
+    {
+        $departamento = Departamento::with('facultad', 'secciones')->where('nombre', $nombre)->first();
+        if (!$departamento) {
+            return response()->json(['message' => 'Departamento no encontrado'], 404);
+        }
+
+        return response()->json($departamento, 200);
+    }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
