@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -13,11 +12,6 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class JWTMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
         try {
@@ -37,14 +31,22 @@ class JWTMiddleware
                 'request' => $request->all()
             ]);
         } catch (TokenExpiredException $e) {
-            return response()->json(['message' => 'No está autorizado al sistema: Token expirado'], 401);
+            return response()->json([
+                'message' => 'No está autorizado al sistema: Token expirado',
+                'error_code' => 'TOKEN_EXPIRED'
+            ], 401);
         } catch (TokenInvalidException $e) {
-            return response()->json(['message' => 'No está autorizado al sistema: Token inválido'], 401);
+            return response()->json([
+                'message' => 'No está autorizado al sistema: Token inválido',
+                'error_code' => 'TOKEN_INVALID'
+            ], 401);
         } catch (JWTException $e) {
-            return response()->json(['message' => 'No está autorizado al sistema: Token no proporcionado'], 401);
+            return response()->json([
+                'message' => 'No está autorizado al sistema: Token no proporcionado',
+                'error_code' => 'TOKEN_NOT_PROVIDED'
+            ], 401);
         }
 
-        // Continúa con la solicitud si todo está correcto
         return $next($request);
     }
 }

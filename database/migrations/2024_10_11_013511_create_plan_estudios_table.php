@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('codigo', 10)->unique();
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
-            $table->enum('estado', ['activo', 'inactivo'])->default('activo');
+            $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
             $table->timestamps();
         });
 

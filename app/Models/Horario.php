@@ -29,6 +29,11 @@ class Horario extends Model
 
     public function jefesPractica()
     {
-        return $this->belongsToMany(Usuario::class, 'jp_horario')->withTimestamps();
+        return $this->belongsToMany(Usuario::class, 'jp_horario');
+    }
+
+    public function docentes()
+    {
+        return $this->belongsToMany(Docente::class, 'docente_horario');
     }
 }

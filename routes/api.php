@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InstitucionController;
+use App\Http\Controllers\PlanEstudioController;
 use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
@@ -77,6 +78,14 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
         Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:editar cursos');
         Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:eliminar cursos');
+
+
+        Route::get('/planes-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
+        Route::get('/planes-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
+        Route::get('/planes-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
+        Route::post('/planes-estudio', [PlanEstudioController::class, 'store'])->middleware('can:crear planes de estudio');
+        Route::put('/planes-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
+        Route::get('/planes-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
 
         
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');

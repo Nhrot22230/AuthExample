@@ -21,20 +21,16 @@ class Usuario extends Authenticatable implements JWTSubject
         'apellido_paterno',
         'apellido_materno',
         'email',
-        'password',
         'estado',
-        'google_id',
         'picture',
-        'email_verified_at',
+        'google_id',
+        'password',
     ];
 
     protected $hidden = [
+        'google_id',
         'password',
         'remember_token',
-    ];
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
     ];
 
     public function docente()

@@ -63,6 +63,16 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar cursos', 'category' => 'cursos'],
             ['name' => 'eliminar cursos', 'category' => 'cursos'],
 
+            ['name' => 'ver planes de estudio', 'category' => 'planes de estudio'],
+            ['name' => 'crear planes de estudio', 'category' => 'planes de estudio'],
+            ['name' => 'editar planes de estudio', 'category' => 'planes de estudio'],
+            ['name' => 'eliminar planes de estudio', 'category' => 'planes de estudio'],
+
+            ['name' => 'ver horarios', 'category' => 'horarios'],
+            ['name' => 'crear horarios', 'category' => 'horarios'],
+            ['name' => 'editar horarios', 'category' => 'horarios'],
+            ['name' => 'eliminar horarios', 'category' => 'horarios'],
+
             ['name' => 'ver areas', 'category' => 'areas'],
             ['name' => 'crear areas', 'category' => 'areas'],
             ['name' => 'editar areas', 'category' => 'areas'],
@@ -109,34 +119,28 @@ class RolePermissionSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission['name'], 'category' => $permission['category']]);
         }
-        $administrativoRole = Role::findByName('administrativo');
-        $administrativoRole->givePermissionTo(Permission::all());
-        $secretarioRole = Role::findByName('secretarioAcademico');
-        $secretarioRole->givePermissionTo([
-            'ver usuarios',
-            'crear usuarios',
-            'editar usuarios',
-            'ver estudiantes',
-            'crear estudiantes',
-            'editar estudiantes',
-            'ver docentes',
-            'crear docentes',
-            'editar docentes',
-        ]);
-        
-        $docenteRole = Role::findByName('docente');
-        $permisos_ver = Permission::where('name', 'like', 'ver %')->get();
-        $docenteRole->givePermissionTo($permisos_ver);
 
-        $jefePracticaRole = Role::findByName('jefePractica');
-        $jefePracticaRole->givePermissionTo($permisos_ver);
+        $role = Role::findByName('administrativo');
+        $permissions = Permission::all();
+        $role->syncPermissions($permissions);
 
-        $estudianteRole = Role::findByName('estudiante');
-        $estudianteRole->givePermissionTo($permisos_ver);
+        $role = Role::findByName('secretarioAcademico');
+        $permissions = Permission::where('category', '=', 'planes de estudio')
+        ->orWhere('category', '=', 'horarios')
+        ->orWhere('category', '=', 'areas')
+        ->orWhere('category', '=', 'departamentos')
+        ->orWhere('category', '=', 'facultades');
+        $role->syncPermissions($permissions);
 
-        $admin = Usuario::find(1);
-        if ($admin) {
-            $admin->assignRole('administrativo');
-        }
+        $role = Role::findByName('docente');
+        $permissions = Permission::where('name', 'like', 'ver %')
+        ->orWhere('name', 'like', 'editar %')
+        ->get();
+        $role->syncPermissions($permissions);
+
+        $role = Role::findByName('estudiante');
+        $permissions = Permission::where('name', 'like', 'ver %')
+        ->get();
+        $role->syncPermissions($permissions);
     }
 }

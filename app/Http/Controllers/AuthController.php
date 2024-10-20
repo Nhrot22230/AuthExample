@@ -29,6 +29,7 @@ class AuthController extends Controller
                 'access_token' => JWTAuth::fromUser($usuario),
                 'token_type' => 'bearer',
                 'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                'message' => 'Inicio de sesión exitoso',
             ],
             200
         );
@@ -59,6 +60,7 @@ class AuthController extends Controller
                 'access_token' => JWTAuth::fromUser($usuario),
                 'token_type' => 'bearer',
                 'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                'message' => 'Registro exitoso',
             ],
             200
         );
@@ -84,6 +86,7 @@ class AuthController extends Controller
                     'access_token' => JWTAuth::fromUser($usuario),
                     'token_type' => 'bearer',
                     'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                    'message' => 'Inicio de sesión exitoso',
                 ],
                 200
             );
@@ -107,14 +110,20 @@ class AuthController extends Controller
             );
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401);
+        return response()->json(['message' => 'Usted no está autorizado'], 401);
     }
 
     public function refresh()
     {
         try {
             $token = JWTAuth::refresh(JWTAuth::getToken());
-            return response()->json($token, 200);
+            return response()->json([
+                'usuario' => JWTAuth::user(),
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                'message' => 'Sesión refrescada con éxito',
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al refrescar el token'], 400);
         }
@@ -169,6 +178,7 @@ class AuthController extends Controller
                 'email' => $email,
                 'google_id' => $google_id,
                 'picture' => $picture,
+                'estado' => 'activo',
             ]);
             $db_usuario->assignRole('estudiante');
             return $db_usuario;

@@ -21,15 +21,19 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
         Schema::create('jp_horario', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
-            
-            $table->primary(['horario_id', 'usuario_id']);
             $table->timestamps();
         });
 
+        Schema::create('docente_horario', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
+            $table->timestamps();
+        });        
     }
 
     /**
@@ -37,6 +41,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('docente_horario');
         Schema::dropIfExists('jp_horario');
         Schema::dropIfExists('horarios');
     }

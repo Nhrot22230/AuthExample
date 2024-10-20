@@ -21,7 +21,6 @@ return new class extends Migration
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->string('google_id')->nullable();
             $table->string('picture')->nullable();
-            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -20,6 +20,13 @@ return new class extends Migration
             $table->string('estado')->default('activo');
             $table->timestamps();
         });
+
+        Schema::create('docente_curso', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
+            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->timestamps();
+        });        
     }
 
     /**
@@ -27,6 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('docente_curso');
         Schema::dropIfExists('cursos');
     }
 };

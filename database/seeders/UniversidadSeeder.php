@@ -301,7 +301,14 @@ class UniversidadSeeder extends Seeder
         ];
 
         foreach ($pool_facultades as $nombreFacultad => $pool_departamentos) {
-            $facultad = Facultad::factory()->create(['nombre' => $nombreFacultad]);
+            $abreviatura = implode('', array_map(function($word) {
+                return strtoupper($word[0]);
+            }, explode(' ', $nombreFacultad)));
+        
+            $facultad = Facultad::factory()->create([
+                'nombre' => $nombreFacultad,
+                'abreviatura' => $abreviatura,
+            ]);
             foreach ($pool_departamentos[0] as $nombreDepartamento => $pool_secciones) {
                 $departamento = Departamento::factory()->create(['nombre' => $nombreDepartamento, 'facultad_id' => $facultad->id]);
                 foreach ($pool_secciones as $nombreSeccion) {

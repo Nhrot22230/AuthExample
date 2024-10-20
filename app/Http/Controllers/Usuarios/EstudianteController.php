@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
+use App\Models\Especialidad;
 use App\Models\Estudiante;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
@@ -148,8 +149,8 @@ class EstudianteController extends Controller
                 'estudiantes.*.Facultad' => 'required|string|exists:facultades,nombre',
             ]);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al validar los datos de los docentes', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Error al validar los datos de los docentes'], 400);
+            Log::channel('usuarios')->error('Error al validar los datos de los estudiantes', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al validar los datos de los estudiantes: ' . $e->getMessage()], 400);
         }
 
         DB::beginTransaction();
@@ -168,10 +169,11 @@ class EstudianteController extends Controller
                 $estudiante = new Estudiante();
                 $estudiante->usuario_id = $usuario->id;
                 $estudiante->codigoEstudiante = $estudianteData['Codigo'];
-                $estudiante->especialidad_id = $usuario->especialidades()->where('nombre', $estudianteData['Especialidad'])->first()->id;
+                $estudiante->especialidad_id = Especialidad::where('nombre', $estudianteData['Especialidad'])->first()->id;
                 $usuario->estudiante()->save($estudiante);
             }
             DB::commit();
+            Log::channel('usuarios')->info('Estudiantes guardados exitosamente', ['estudiantes' => $request->estudiantes]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::channel('usuarios')->error('Error al guardar los datos de los estudiantes', ['error' => $e->getMessage()]);
