@@ -13,7 +13,7 @@ Para instalar PHP 8.3 en sistemas basados en Linux (como Ubuntu), sigue los sigu
 ```bash
 add-apt-repository ppa:ondrej/php # Si apt no encuentra php8.3 por defecto
 apt update
-apt install php8.3 php8.3-zip php8.3-mysql php8.3-curl php8.3-cli php8.3-xml
+apt install php8.3 php8.3-zip php8.3-mysql php8.3-curl php8.3-cli php8.3-xml php8.3-mbstring
 ```
 
 ### Instalación de PHP en Windows
