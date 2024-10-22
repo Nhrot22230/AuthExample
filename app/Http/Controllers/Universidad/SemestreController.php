@@ -140,4 +140,18 @@ class SemestreController extends Controller
             return response()->json(['message' => 'Semestre no encontrado'], 404);
         }
     }
+
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->input('ids'); // Recibir una lista de IDs
+
+        if ($ids && is_array($ids)) {
+            // Eliminar todos los semestres que coincidan con los IDs
+            Semestre::whereIn('id', $ids)->delete();
+
+            return response()->json(['message' => 'Semestres eliminados con éxito'], 200);
+        } else {
+            return response()->json(['message' => 'IDs inválidos'], 400);
+        }
+    }
 }
