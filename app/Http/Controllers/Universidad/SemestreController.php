@@ -40,7 +40,10 @@ class SemestreController extends Controller
 
     public function getLastSemestre()
     {
-        $semestre = Semestre::latest()->first();
+        // Obtener el semestre con el año más reciente y el periodo más reciente
+        $semestre = Semestre::orderBy('anho', 'desc')
+            ->orderBy('periodo', 'desc')
+            ->first();
 
         if (!$semestre) {
             return response()->json(['message' => 'No se encontró el último semestre'], 404);
