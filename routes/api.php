@@ -92,6 +92,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');
         Route::get('/semestres/last', [SemestreController::class, 'getLastSemestre'])->middleware('can:ver semestres');
         Route::post('/semestres', [SemestreController::class, 'store'])->middleware('can:crear semestres');
+        Route::delete('/semestres/eliminarSemestres', [SemestreController::class, 'destroyMultiple']);
         Route::get('/semestres/{id}', [SemestreController::class, 'show'])->middleware('can:ver semestres');
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
