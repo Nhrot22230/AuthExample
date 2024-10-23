@@ -38,11 +38,19 @@ class AssignRolesAndPermissionsSeeder extends Seeder
         });
 
         $estudianteRole = Role::findByName('estudiante');
-        $jefePracticaRole = Role::findByName('jefePractica');
-        Estudiante::all()->each(function ($estudiante) use ($estudianteRole, $jefePracticaRole) {
+        Estudiante::all()->each(function ($estudiante) use ($estudianteRole) {
             $usuario = $estudiante->usuario;
             if ($usuario) {
-                $usuario->assignRole([$estudianteRole, $jefePracticaRole]);
+                $usuario->assignRole($estudianteRole);
+            }
+        });
+
+        $jefePracticaRole = Role::findByName('jefePractica');
+        $percentage = intval(Estudiante::count() * 0.2);
+        Estudiante::all()->random($percentage)->each(function ($estudiante) use ($jefePracticaRole) {
+            $usuario = $estudiante->usuario;
+            if ($usuario) {
+                $usuario->assignRole($jefePracticaRole);
             }
         });
     }
