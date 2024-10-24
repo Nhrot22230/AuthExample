@@ -15,7 +15,6 @@ class UsuarioController extends Controller
         $perPage = request('per_page', 10);
         $search = request('search', '');
         $tipo_usuario = request('tipo_usuario', '');
-        $roles = request('roles', []);
 
         $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
             ->where(function ($query) use ($search) {
@@ -24,7 +23,6 @@ class UsuarioController extends Controller
                     ->orWhere('apellido_materno', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%');
             })
-            // Filtro por tipo de usuario (opcional)
             ->when($tipo_usuario, function ($query) use ($tipo_usuario) {
                 switch ($tipo_usuario) {
                     case 'docente':
@@ -37,15 +35,8 @@ class UsuarioController extends Controller
                         $query->whereHas('administrativo');
                         break;
                     default:
-                        // Si no se especifica un tipo, no se aplica ningún filtro específico
                         break;
                 }
-            })
-            // Filtro por roles (opcional)
-            ->when(!empty($roles), function ($query) use ($roles) {
-                $query->whereHas('roles', function ($q) use ($roles) {
-                    $q->whereIn('name', $roles);
-                });
             })
             ->paginate($perPage);
 

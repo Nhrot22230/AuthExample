@@ -168,3 +168,9 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
         Route::post('/me', [AuthController::class, 'me']);
     });
 });
+
+
+use App\Http\Controllers\ImageController;
+
+Route::post('/images/upload', [ImageController::class, 'upload']);
+Route::get('/images/{filename}', [ImageController::class, 'get']);
