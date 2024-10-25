@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('plan_estudios', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 10)->unique();
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
             $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
@@ -27,20 +26,15 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('plan_estudio_curso', function (Blueprint $table) {
+        Schema::create('requisitos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('nivel');
+            $table->integer('nivel')->default(0); // 0 para los electivos 1+ para los cursos de la carrera
             $table->foreignId('curso_id')->constrained();
             $table->foreignId('plan_estudio_id')->constrained();
-            $table->timestamps();
-        });
-
-        Schema::create('curso_requisito', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
-            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
-            $table->foreignId('requisito_id')->constrained('cursos')->onDelete('cascade');
-            $table->string('tipo');
+            $table->foreignId('curso_requisito_id')->constrained('cursos')->nullable();
+            $table->string('tipo', 10)->nullable(); // tipo de requisito (llevar simultaneo, haber llevado, haber aprobado, cantidad de creditos)
+            $table->double('notaMinima')->default(0)->nullable();
+            $table->double('cantCreditos')->default(0)->nullable();
             $table->timestamps();
         });
     }
@@ -50,9 +44,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('curso_requisito');
+        Schema::dropIfExists('requisitos');
         Schema::dropIfExists('plan_estudio_semestre');
-        Schema::dropIfExists('plan_estudio_curso');
         Schema::dropIfExists('plan_estudios');
     }
 };

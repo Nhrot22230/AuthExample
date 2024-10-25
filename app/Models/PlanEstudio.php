@@ -10,8 +10,6 @@ class PlanEstudio extends Model
     use HasFactory;
 
     protected $fillable = [
-        'codigo',
-        'especialidad_id',
         'fecha_inicio',
         'fecha_fin',
         'estado',
@@ -25,11 +23,6 @@ class PlanEstudio extends Model
     public function semestres()
     {
         return $this->belongsToMany(Semestre::class, 'plan_estudio_semestre');
-    }
-
-    public function cursos()
-    {
-        return $this->belongsToMany(Curso::class, 'plan_estudio_curso');
     }
 
     public function requisitos()

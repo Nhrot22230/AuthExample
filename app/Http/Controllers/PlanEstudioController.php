@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Curso;
 use App\Models\PlanEstudio;
+use App\Models\Requisito;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +15,7 @@ class PlanEstudioController extends Controller
     //
     public function index()
     {
-        $planesEstudio = PlanEstudio::with('cursos')->get();
+        $planesEstudio = PlanEstudio::with('requisitos')->get();
         return response()->json($planesEstudio);
     }
 
@@ -23,7 +25,7 @@ class PlanEstudioController extends Controller
         $per_page = request('per_page', 10);
         $especialidad_id = request('especialidad_id', null);
 
-        $planesEstudio = PlanEstudio::with('cursos')
+        $planesEstudio = PlanEstudio::with('requisitos')
             ->orWhere('cod_curso', 'like', "%$search%")
             ->orWhere('nombre', 'like', "%$search%")
             ->when($especialidad_id, function ($query, $especialidad_id) {
@@ -36,7 +38,7 @@ class PlanEstudioController extends Controller
 
     public function currentByEspecialidad($especialidad_id)
     {
-        $planEstudio = PlanEstudio::with('cursos', 'semestres')
+        $planEstudio = PlanEstudio::with('requisitos', 'semestres')
             ->where('especialidad_id', $especialidad_id)
             ->where('estado', 'activo')
             ->first();
@@ -46,7 +48,7 @@ class PlanEstudioController extends Controller
 
     public function show($id)
     {
-        $planEstudio = PlanEstudio::with('cursos', 'semestres')->find($id);
+        $planEstudio = PlanEstudio::with('requisitos', 'semestres')->find($id);
         if ($planEstudio) {
             return response()->json($planEstudio, 200);
         } else {
@@ -58,74 +60,78 @@ class PlanEstudioController extends Controller
     {
         try {
             $request->validate([
-                'codigo' => 'required',
-                'especialidad_id' => 'required|exists:especialidades,id',
                 'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-                'estado' => 'required',
-                'cursos' => 'nullable|array',
-                'cursos.*.id' => 'required|exists:cursos,id',
-                'cursos.*.especialidad_id' => 'required|exists:especialidades,id',
-                'semestres' => 'nullable|array',
-                'semestres.*.id' => 'required|exists:semestres,id',
+                'fecha_fin' => 'required|date',
+                'estado' => 'required|in:activo,inactivo',
+                'especialidad_id' => 'required|exists:especialidades,id',
+                'semestres' => 'required|array',
+                'semestres.*' => 'exists:semestres,id',
+                'cursos' => 'required|array',
+                'cursos.*' => 'exists:cursos,id',
+                'cursos.*.requisitos' => 'nullable|array',
+                'cursos.*.requisitos.*.nivel' => 'required|integer',
+                'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
+                'cursos.*.requisitos.*.tipo' => 'required|string',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric',
+                'cursos.*.requisitos.*.cantCreditos' => 'nullable|numeric',
             ]);
-        } catch (\Exception $e) {
-            Log::channel('plan_estudio')->error('Error al validar los datos del plan de estudio', [
-                'message' => $e->getMessage(),
-                'request' => $request->all(),
-            ]);
-            return response()->json(['message' => 'Error al validar los datos: ' . $e->getMessage()], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos invalidos: ' . $e->getMessage()], 400);
         }
 
         DB::beginTransaction();
         try {
-            $planEstudio = PlanEstudio::create($request->only([
-                'codigo',
-                'especialidad_id',
-                'fecha_inicio',
-                'fecha_fin',
-                'estado'
-            ]));
+            $planEstudio = new PlanEstudio();
+            $planEstudio->fill($request->all());
+            $planEstudio->save();
 
-            if ($request->filled('cursos')) {
-                $planEstudio->cursos()->attach($request->cursos);
-            }
+            $planEstudio->semestres()->attach($request->semestres);
 
-            if ($request->filled('semestres')) {
-                $planEstudio->semestres()->attach($request->semestres);
+            foreach ($request->cursos as $curso) {
+                $cursoModel = Curso::find($curso['id']);
+                $planEstudio->cursos()->attach($cursoModel, ['nivel' => $curso['nivel']]);
+
+                foreach ($curso['requisitos'] as $requisito) {
+                    $requisitoModel = new Requisito();
+                    $requisitoModel->fill($requisito);
+                    $requisitoModel->curso_id = $cursoModel->id;
+                    $requisitoModel->plan_estudio_id = $planEstudio->id;
+                    $requisitoModel->save();
+                }
             }
 
             DB::commit();
             return response()->json($planEstudio, 201);
         } catch (QueryException $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            Log::channel('usuarios')->info('Error al guardar el plan de estudio', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al guardar el plan de estudio'], 500);
         }
     }
 
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         try {
             $request->validate([
-                'codigo' => 'required',
-                'especialidad_id' => 'required|exists:especialidades,id',
                 'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-                'estado' => 'required',
-                'cursos' => 'nullable|array',
-                'cursos.*.id' => 'required|exists:cursos,id',
-                'cursos.*.especialidad_id' => 'required|exists:especialidades,id',
-                'semestres' => 'nullable|array',
-                'semestres.*.id' => 'required|exists:semestres,id',
+                'fecha_fin' => 'required|date',
+                'estado' => 'required|in:activo,inactivo',
+                'especialidad_id' => 'required|exists:especialidades,id',
+                'semestres' => 'required|array',
+                'semestres.*' => 'exists:semestres,id',
+                'cursos' => 'required|array',
+                'cursos.*' => 'exists:cursos,id',
+                'cursos.*.requisitos' => 'nullable|array',
+                'cursos.*.requisitos.*.nivel' => 'required|integer',
+                'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
+                'cursos.*.requisitos.*.tipo' => 'required|string',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric',
+                'cursos.*.requisitos.*.cantCreditos' => 'nullable|numeric',
             ]);
-        } catch (\Exception $e) {
-            Log::channel('plan_estudio')->error('Error al validar los datos del plan de estudio', [
-                'message' => $e->getMessage(),
-                'request' => $request->all(),
-            ]);
-            return response()->json(['message' => 'Error al validar los datos: ' . $e->getMessage()], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos invalidos: ' . $e->getMessage()], 400);
         }
 
         $planEstudio = PlanEstudio::find($id);
@@ -135,30 +141,29 @@ class PlanEstudioController extends Controller
 
         DB::beginTransaction();
         try {
-            $planEstudio->update($request->only([
-                'codigo',
-                'especialidad_id',
-                'fecha_inicio',
-                'fecha_fin',
-                'estado'
-            ]));
+            $planEstudio->fill($request->all());
+            $planEstudio->save();
 
-            if ($request->filled('cursos')) {
-                $planEstudio->cursos()->sync($request->cursos);
+            $planEstudio->semestres()->sync($request->semestres);
+
+            $planEstudio->requisitos()->delete();
+
+            foreach ($request->cursos as $curso) {
+                $cursoModel = Curso::find($curso['id']);
+                $planEstudio->cursos()->attach($cursoModel, ['nivel' => $curso['nivel']]);
+
+                foreach ($curso['requisitos'] as $requisito) {
+                    $requisitoModel = new Requisito();
+                    $requisitoModel->fill($requisito);
+                    $requisitoModel->curso_id = $cursoModel->id;
+                    $requisitoModel->plan_estudio_id = $planEstudio->id;
+                    $requisitoModel->save();
+                }
             }
-
-            if ($request->filled('semestres')) {
-                $planEstudio->semestres()->sync($request->semestres);
-            }
-
-            DB::commit();
-            return response()->json($planEstudio, 200);
         } catch (QueryException $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            Log::channel('usuarios')->info('Error al guardar el plan de estudio', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al guardar el plan de estudio'], 500);
         }
     }
 }

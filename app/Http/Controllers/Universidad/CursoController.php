@@ -41,7 +41,7 @@ class CursoController extends Controller
             'especialidad_id' => 'required|exists:especialidades,id',
             'cod_curso' => 'required|string|max:6|unique:cursos,cod_curso',
             'nombre' => 'required|string|max:255',
-            'creditos' => 'required|integer|min:1',
+            'creditos' => 'required|double|min:0',
             'estado' => 'nullable|string|in:activo,inactivo',
         ]);
 
@@ -67,7 +67,7 @@ class CursoController extends Controller
             'especialidad_id' => 'required|exists:especialidades,id',
             'cod_curso' => 'required|string|max:6|unique:cursos,cod_curso,' . $curso->id,
             'nombre' => 'required|string|max:255',
-            'creditos' => 'required|integer|min:1',
+            'creditos' => 'required|double|min:0',
             'estado' => 'nullable|string|in:activo,inactivo',
         ]);
 

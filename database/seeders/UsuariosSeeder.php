@@ -30,8 +30,11 @@ class UsuariosSeeder extends Seeder
             'lugarTrabajo' => 'admin',
             'cargo' => 'admin',
         ]);
-        Docente::factory(80)->create();
-        Estudiante::factory(5000)->create();
-        Administrativo::factory(50)->create();
+
+        $factor = 2;
+
+        Docente::factory(8 * $factor)->create();
+        Estudiante::factory(50 * $factor)->create();
+        Administrativo::factory(1 *$factor)->create();
     }
 }
