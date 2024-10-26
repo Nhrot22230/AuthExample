@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class CursoController extends Controller
 {
     //
-    public function index()
+    public function indexPaginated()
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
@@ -23,6 +23,19 @@ class CursoController extends Controller
             ->paginate($perPage);
 
         return response()->json(['cursos' => $cursos], 200);
+    }
+
+    public function index()
+    {
+        $search = request('search', '');
+        $especialidad_id = request('especialidad_id', null);
+        $cursos = Curso::with('especialidad')
+            ->where('nombre', 'like', "%$search%")
+            ->when($especialidad_id, function ($query, $especialidad_id) {
+                return $query->where('especialidad_id', $especialidad_id);
+            })
+            ->get();
+        return response()->json($cursos, 200);
     }
 
     public function show($id)

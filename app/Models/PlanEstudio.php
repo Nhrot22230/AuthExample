@@ -25,8 +25,8 @@ class PlanEstudio extends Model
         return $this->belongsToMany(Semestre::class, 'plan_estudio_semestre');
     }
 
-    public function requisitos()
+    public function cursos()
     {
-        return $this->hasMany(Requisito::class);
+        return $this->belongsToMany(Curso::class, 'plan_estudio_curso');
     }
 }

@@ -29,10 +29,10 @@ class AssignRolesAndPermissionsSeeder extends Seeder
         });
 
         $administrativoRole = Role::findByName('administrativo');
-        Administrativo::all()->each(function ($administrativo) use ($administrativoRole) {
+        Administrativo::all()->each(function ($administrativo) use ($administrativoRole, $docenteRole) {
             $usuario = $administrativo->usuario;
             if ($usuario) {
-                $usuario->assignRole($administrativoRole);
+                $usuario->assignRole([$administrativoRole, $docenteRole]);
             }
         });
 

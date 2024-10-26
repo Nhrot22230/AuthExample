@@ -48,6 +48,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
 
+        
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
         Route::post('/areas', [AreaController::class, 'store'])->middleware('can:crear areas');
@@ -74,18 +75,20 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
 
         Route::get('/cursos', [CursoController::class, 'index'])->middleware('can:ver cursos');
+        Route::get('/cursos/paginated', [CursoController::class, 'indexPaginated'])->middleware('can:ver cursos');
         Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:crear cursos');
         Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
         Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:editar cursos');
         Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:eliminar cursos');
 
 
-        Route::get('/planes-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
-        Route::get('/planes-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
-        Route::get('/planes-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
-        Route::post('/planes-estudio', [PlanEstudioController::class, 'store'])->middleware('can:crear planes de estudio');
-        Route::put('/planes-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
-        Route::get('/planes-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
+        Route::get ('/plan-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
+        Route::get ('/plan-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
+        Route::get ('/plan-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
+        Route::post('/plan-estudio', [PlanEstudioController::class, 'store'])->middleware('can:crear planes de estudio');
+        Route::put ('/plan-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
+        Route::get ('/plan-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
+        Route::delete ('/plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:crear planes de estudio');
 
 
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
@@ -114,6 +117,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
 
+        
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
         Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:crear docentes');

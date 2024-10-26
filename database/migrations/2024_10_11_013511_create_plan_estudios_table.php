@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('plan_estudios', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
             $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
@@ -21,14 +22,21 @@ return new class extends Migration
 
         Schema::create('plan_estudio_semestre', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('plan_estudio_id')->constrained();
-            $table->foreignId('semestre_id')->constrained();
+            $table->foreignId('plan_estudio_id')->constrained()->onDelete('cascade');
+            $table->foreignId('semestre_id')->constrained('semestres')->onDelete('cascade');
+            $table->timestamps();
+        });
+        
+        Schema::create('plan_estudio_curso', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('plan_estudio_id')->constrained()->onDelete('cascade');
+            $table->foreignId('curso_id')->constrained()->onDelete('cascade');
+            $table->integer('nivel')->default(0);
             $table->timestamps();
         });
 
         Schema::create('requisitos', function (Blueprint $table) {
             $table->id();
-            $table->integer('nivel')->default(0); // 0 para los electivos 1+ para los cursos de la carrera
             $table->foreignId('curso_id')->constrained();
             $table->foreignId('plan_estudio_id')->constrained();
             $table->foreignId('curso_requisito_id')->constrained('cursos')->nullable();
@@ -45,6 +53,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('requisitos');
+        Schema::dropIfExists('plan_estudio_curso');
         Schema::dropIfExists('plan_estudio_semestre');
         Schema::dropIfExists('plan_estudios');
     }
