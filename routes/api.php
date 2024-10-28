@@ -151,6 +151,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
+        
+        Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
     });
 });
 
@@ -160,14 +162,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/login-google', [AuthController::class, 'googleLogin']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
-
-// Route::middleware(JWTMiddleware::class)->group(function () {
-//     Route::prefix('auth')->group(function () {
-//         Route::get('/me', [AuthController::class, 'me']);
-//         Route::get('/refresh', [AuthController::class, 'refresh']);
-//         Route::get('/logout', [AuthController::class, 'logout']);
-//     });
-// });
 
 Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     Route::prefix('auth')->group(function () {
