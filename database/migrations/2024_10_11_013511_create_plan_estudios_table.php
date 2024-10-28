@@ -39,7 +39,7 @@ return new class extends Migration
             $table->foreignId('curso_id')->constrained('cursos');
             $table->foreignId('plan_estudio_id')->constrained('plan_estudios');
             $table->foreignId('curso_requisito_id')->constrained('cursos');
-            $table->enum('tipo', ['simultaneo', 'cursado']);
+            $table->enum('tipo', ['simultaneo', 'llevado']);
             $table->double('notaMinima')->default(0);
             $table->timestamps();
         });

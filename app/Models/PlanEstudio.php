@@ -10,6 +10,7 @@ class PlanEstudio extends Model
     use HasFactory;
 
     protected $fillable = [
+        'especialidad_id',
         'estado',
     ];
 

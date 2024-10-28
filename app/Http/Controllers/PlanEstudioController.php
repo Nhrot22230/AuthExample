@@ -63,11 +63,11 @@ class PlanEstudioController extends Controller
                 'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
                 'semestres' => 'nullable|array',
-                'semestres.*' => 'exists:semestres,id',
+                'semestres.*.id' => 'exists:semestres,id',
                 'cursos' => 'nullable|array',
                 'cursos.*.id' => 'required|exists:cursos,id',
                 'cursos.*.nivel' => 'required|integer|min:0',
-                'cursos.*.creditos' => 'required|integer|min:0',
+                'cursos.*.creditosReq' => 'nullable|integer|min:0',
                 'cursos.*.requisitos' => 'nullable|array',
                 'cursos.*.requisitos.*.tipo' => 'required|string',
                 'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
@@ -85,7 +85,8 @@ class PlanEstudioController extends Controller
             ]);
 
             if ($request->has('semestres')) {
-                $planEstudio->semestres()->sync($request->semestres);
+                $semestreIds = array_column($request->semestres, 'id');
+                $planEstudio->semestres()->sync($semestreIds);
             }
 
             if ($request->has('cursos')) {
@@ -93,7 +94,7 @@ class PlanEstudioController extends Controller
                     $planEstudio->cursos()->attach($cursoData['id'], 
                     [
                         'nivel' => $cursoData['nivel'], 
-                        'creditos' => $cursoData['creditos']
+                        'creditos' => $cursoData['creditosReq'] ?? 0
                     ]);
                     
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
@@ -125,11 +126,11 @@ class PlanEstudioController extends Controller
                 'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
                 'semestres' => 'nullable|array',
-                'semestres.*' => 'exists:semestres,id',
+                'semestres.*.id' => 'exists:semestres,id',
                 'cursos' => 'nullable|array',
                 'cursos.*.id' => 'required|exists:cursos,id',
                 'cursos.*.nivel' => 'required|integer|min:0',
-                'cursos.*.creditos' => 'required|integer|min:0',
+                'cursos.*.creditosReq' => 'nullable|integer|min:0',
                 'cursos.*.requisitos' => 'nullable|array',
                 'cursos.*.requisitos.*.tipo' => 'required|string',
                 'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
@@ -152,7 +153,8 @@ class PlanEstudioController extends Controller
             ]);
 
             if ($request->has('semestres')) {
-                $planEstudio->semestres()->sync($request->semestres);
+                $semestreIds = array_column($request->semestres, 'id');
+                $planEstudio->semestres()->sync($semestreIds);
             }
 
             if ($request->has('cursos')) {
@@ -161,7 +163,7 @@ class PlanEstudioController extends Controller
                     $planEstudio->cursos()->attach($cursoData['id'], 
                     [
                         'nivel' => $cursoData['nivel'], 
-                        'creditos' => $cursoData['creditos']
+                        'creditos' => $cursoData['creditosReq'] ?? 0
                     ]);
 
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
