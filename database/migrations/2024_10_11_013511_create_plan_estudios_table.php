@@ -30,7 +30,7 @@ return new class extends Migration
             $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
             $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
             $table->integer('nivel')->default(0);
-            $table->integer('creditos')->default(0);
+            $table->double('creditosReq')->default(0);
             $table->timestamps();
         });
 

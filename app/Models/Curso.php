@@ -33,12 +33,7 @@ class Curso extends Model
 
     public function requisitos()
     {
-        return $this->belongsToMany(Curso::class, 'curso_requisito', 'curso_id', 'requisito_id');
-    }
-
-    public function esRequisitoDe()
-    {
-        return $this->belongsToMany(Curso::class, 'curso_requisito', 'requisito_id', 'curso_id');
+        return $this->hasMany(Requisito::class, 'curso_id', 'id');
     }
 
     public function horarios()

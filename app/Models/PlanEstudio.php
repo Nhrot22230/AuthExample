@@ -26,6 +26,8 @@ class PlanEstudio extends Model
 
     public function cursos()
     {
-        return $this->belongsToMany(Curso::class, 'plan_estudio_curso');
+        return $this->belongsToMany(Curso::class, 'plan_estudio_curso')
+                    ->withPivot('nivel', 'creditosReq');
+
     }
 }

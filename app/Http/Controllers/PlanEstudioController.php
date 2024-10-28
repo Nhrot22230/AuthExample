@@ -6,15 +6,16 @@ use App\Models\PlanEstudio;
 use App\Models\Requisito;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PlanEstudioController extends Controller
 {
     //
     public function index()
     {
-        $planesEstudio = PlanEstudio::with('cursos', 'semestres', 'especialidad')
-            ->get();
-        return response()->json($planesEstudio);
+        $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])->get();
+
+        return response()->json($planesEstudio, 200);
     }
 
     public function indexPaginated()
@@ -23,7 +24,7 @@ class PlanEstudioController extends Controller
         $per_page = request('per_page', 10);
         $especialidad_id = request('especialidad_id', null);
 
-        $planesEstudio = PlanEstudio::with('cursos', 'semestres', 'especialidad')
+        $planesEstudio = PlanEstudio::with('cursos', 'semestres')
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
             })
@@ -48,12 +49,9 @@ class PlanEstudioController extends Controller
 
     public function show($id)
     {
-        $planEstudio = PlanEstudio::with('cursos', 'semestres')->find($id);
-        if ($planEstudio) {
-            return response()->json($planEstudio, 200);
-        } else {
-            return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
-        }
+        $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])->find($id);
+
+        return response()->json($planesEstudio, 200);
     }
 
     public function store(Request $request)
@@ -91,12 +89,14 @@ class PlanEstudioController extends Controller
 
             if ($request->has('cursos')) {
                 foreach ($request->cursos as $cursoData) {
-                    $planEstudio->cursos()->attach($cursoData['id'], 
-                    [
-                        'nivel' => $cursoData['nivel'], 
-                        'creditos' => $cursoData['creditosReq'] ?? 0
-                    ]);
-                    
+                    $planEstudio->cursos()->attach(
+                        $cursoData['id'],
+                        [
+                            'nivel' => $cursoData['nivel'],
+                            'creditosReq' => $cursoData['creditosReq'] ?? 0
+                        ]
+                    );
+
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
                         foreach ($cursoData['requisitos'] as $requisitoData) {
                             Requisito::create([
@@ -160,11 +160,13 @@ class PlanEstudioController extends Controller
             if ($request->has('cursos')) {
                 $planEstudio->cursos()->detach();
                 foreach ($request->cursos as $cursoData) {
-                    $planEstudio->cursos()->attach($cursoData['id'], 
-                    [
-                        'nivel' => $cursoData['nivel'], 
-                        'creditos' => $cursoData['creditosReq'] ?? 0
-                    ]);
+                    $planEstudio->cursos()->attach(
+                        $cursoData['id'],
+                        [
+                            'nivel' => $cursoData['nivel'],
+                            'creditosReq' => $cursoData['creditosReq'] ?? 0
+                        ]
+                    );
 
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
                         foreach ($cursoData['requisitos'] as $requisitoData) {
