@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Curso;
 use App\Models\PlanEstudio;
 use App\Models\Requisito;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PlanEstudioController extends Controller
@@ -63,8 +60,6 @@ class PlanEstudioController extends Controller
     {
         try {
             $request->validate([
-                'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date',
                 'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
                 'semestres' => 'nullable|array',
@@ -72,11 +67,11 @@ class PlanEstudioController extends Controller
                 'cursos' => 'nullable|array',
                 'cursos.*.id' => 'required|exists:cursos,id',
                 'cursos.*.nivel' => 'required|integer|min:0',
+                'cursos.*.creditos' => 'required|integer|min:0',
                 'cursos.*.requisitos' => 'nullable|array',
                 'cursos.*.requisitos.*.tipo' => 'required|string',
                 'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
-                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric',
-                'cursos.*.requisitos.*.cantCreditos' => 'nullable|numeric',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
@@ -85,8 +80,6 @@ class PlanEstudioController extends Controller
 
         try {
             $planEstudio = PlanEstudio::create([
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
                 'estado' => $request->estado,
                 'especialidad_id' => $request->especialidad_id,
             ]);
@@ -97,8 +90,12 @@ class PlanEstudioController extends Controller
 
             if ($request->has('cursos')) {
                 foreach ($request->cursos as $cursoData) {
-                    $planEstudio->cursos()->attach($cursoData['id'], ['nivel' => $cursoData['nivel']]);
-
+                    $planEstudio->cursos()->attach($cursoData['id'], 
+                    [
+                        'nivel' => $cursoData['nivel'], 
+                        'creditos' => $cursoData['creditos']
+                    ]);
+                    
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
                         foreach ($cursoData['requisitos'] as $requisitoData) {
                             Requisito::create([
@@ -106,8 +103,7 @@ class PlanEstudioController extends Controller
                                 'plan_estudio_id' => $planEstudio->id,
                                 'curso_requisito_id' => $requisitoData['curso_requisito_id'],
                                 'tipo' => $requisitoData['tipo'],
-                                'notaMinima' => $requisitoData['notaMinima'] ?? null,
-                                'cantCreditos' => $requisitoData['cantCreditos'] ?? null,
+                                'notaMinima' => $requisitoData['notaMinima'],
                             ]);
                         }
                     }
@@ -126,20 +122,18 @@ class PlanEstudioController extends Controller
     {
         try {
             $request->validate([
-                'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date',
                 'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
                 'semestres' => 'nullable|array',
                 'semestres.*' => 'exists:semestres,id',
                 'cursos' => 'nullable|array',
-                'cursos.*' => 'exists:cursos,id',
+                'cursos.*.id' => 'required|exists:cursos,id',
                 'cursos.*.nivel' => 'required|integer|min:0',
+                'cursos.*.creditos' => 'required|integer|min:0',
                 'cursos.*.requisitos' => 'nullable|array',
                 'cursos.*.requisitos.*.tipo' => 'required|string',
                 'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
-                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric',
-                'cursos.*.requisitos.*.cantCreditos' => 'nullable|numeric',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
@@ -153,8 +147,6 @@ class PlanEstudioController extends Controller
 
         try {
             $planEstudio->update([
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
                 'estado' => $request->estado,
                 'especialidad_id' => $request->especialidad_id,
             ]);
@@ -166,7 +158,11 @@ class PlanEstudioController extends Controller
             if ($request->has('cursos')) {
                 $planEstudio->cursos()->detach();
                 foreach ($request->cursos as $cursoData) {
-                    $planEstudio->cursos()->attach($cursoData['id'], ['nivel' => $cursoData['nivel']]);
+                    $planEstudio->cursos()->attach($cursoData['id'], 
+                    [
+                        'nivel' => $cursoData['nivel'], 
+                        'creditos' => $cursoData['creditos']
+                    ]);
 
                     if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
                         foreach ($cursoData['requisitos'] as $requisitoData) {
@@ -175,8 +171,7 @@ class PlanEstudioController extends Controller
                                 'plan_estudio_id' => $planEstudio->id,
                                 'curso_requisito_id' => $requisitoData['curso_requisito_id'],
                                 'tipo' => $requisitoData['tipo'],
-                                'notaMinima' => $requisitoData['notaMinima'] ?? null,
-                                'cantCreditos' => $requisitoData['cantCreditos'] ?? null,
+                                'notaMinima' => $requisitoData['notaMinima']
                             ]);
                         }
                     }

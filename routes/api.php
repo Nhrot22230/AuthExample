@@ -76,6 +76,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
         Route::get('/cursos', [CursoController::class, 'index'])->middleware('can:ver cursos');
         Route::get('/cursos/paginated', [CursoController::class, 'indexPaginated'])->middleware('can:ver cursos');
+        Route::get('/cursos/{codigo}', [CursoController::class, 'getByCodigo'])->middleware('can:ver cursos');
         Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:crear cursos');
         Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
         Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:editar cursos');

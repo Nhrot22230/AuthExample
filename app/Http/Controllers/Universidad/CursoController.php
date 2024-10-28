@@ -17,6 +17,7 @@ class CursoController extends Controller
 
         $cursos = Curso::with('especialidad')
             ->where('nombre', 'like', "%$search%")
+            ->where('cod_curso', 'like', "%$search%")
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
             })
@@ -31,11 +32,22 @@ class CursoController extends Controller
         $especialidad_id = request('especialidad_id', null);
         $cursos = Curso::with('especialidad')
             ->where('nombre', 'like', "%$search%")
+            ->where('cod_curso', 'like', "%$search%")
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
             })
             ->get();
         return response()->json($cursos, 200);
+    }
+
+    public function getByCodigo($cod_curso)
+    {
+        $curso = Curso::with('especialidad')->where('cod_curso', $cod_curso)->first();
+        if ($curso) {
+            return response()->json($curso, 200);
+        } else {
+            return response()->json(['message' => 'Curso no encontrado'], 404);
+        }
     }
 
     public function show($id)

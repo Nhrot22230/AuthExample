@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('docentes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->unique()->constrained()->onDelete('cascade');
+            $table->foreignId('usuario_id')->constrained()->unique();
             $table->string('codigoDocente')->unique();
-            $table->enum('tipo', ['TPA', 'TC']);
-            $table->foreignId('area_id')->nullable()->constrained('areas')->onDelete('cascade');
-            $table->foreignId('seccion_id')->constrained('secciones')->onDelete('cascade');
-            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
+            $table->enum('tipo', ['TPA', 'TC', 'TCP']);
+            $table->foreignId('area_id')->constrained('areas')->nullable();
+            $table->foreignId('seccion_id')->constrained('secciones')->nullable();
+            $table->foreignId('especialidad_id')->constrained('especialidades')->nullable();
             $table->timestamps();
         });
     }

@@ -10,8 +10,6 @@ class PlanEstudio extends Model
     use HasFactory;
 
     protected $fillable = [
-        'fecha_inicio',
-        'fecha_fin',
         'estado',
     ];
 

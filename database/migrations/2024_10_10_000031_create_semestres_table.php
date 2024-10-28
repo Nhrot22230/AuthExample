@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('periodo');
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
-            $table->string('estado')->default('activo');
+            $table->string('estado')->default('inactivo');
             $table->unique(['anho', 'periodo']);
             $table->timestamps();
         });

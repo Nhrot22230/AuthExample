@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->text('descripcion')->nullable();
-            $table->foreignId('facultad_id')->constrained('facultades')->onDelete('cascade');
+            $table->foreignId('facultad_id')->constrained('facultades');
             $table->timestamps();
         });        
     }
