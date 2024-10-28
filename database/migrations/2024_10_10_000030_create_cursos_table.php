@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('nombre');
             $table->double('creditos');
             $table->string('estado')->default('inactivo');
+            $table->double('ct')->default(0);
+            $table->double('pa')->default(0);
+            $table->double('pb')->default(0);
+            $table->integer('me')->default(0);
             $table->timestamps();
         });
 

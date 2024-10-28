@@ -15,6 +15,10 @@ class Curso extends Model
         'nombre',
         'creditos',
         'estado',
+        'ct',
+        'pa',
+        'pb',
+        'me',
     ];
 
     public function especialidad()
