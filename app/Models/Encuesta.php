@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Encuesta extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'fecha_inicio',
