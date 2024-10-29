@@ -40,4 +40,8 @@ class Curso extends Model
     {
         return $this->hasMany(Horario::class);
     }
+    public function encuestas()
+    {
+        return $this->belongsToMany(Encuesta::class, 'encuesta_curso');
+    }
 }
