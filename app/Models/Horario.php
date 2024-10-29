@@ -27,13 +27,28 @@ class Horario extends Model
         return $this->belongsTo(Semestre::class);
     }
 
-    public function jefesPractica()
+    public function jefePracticas()
     {
-        return $this->belongsToMany(Usuario::class, 'jp_horario');
+        return $this->hasMany(JefePractica::class);
     }
 
     public function docentes()
     {
         return $this->belongsToMany(Docente::class, 'docente_horario');
+    }
+
+    public function usuarios()
+    {
+        return $this->hasManyThrough(Usuario::class, JefePractica::class, 'horario_id', 'id', 'id', 'usuario_id');
+    }
+
+    public function horarioEstudiantes()
+    {
+        return $this->hasMany(HorarioEstudiante::class);
+    }
+
+    public function estudiantes()
+    {
+        return $this->hasManyThrough(Estudiante::class, HorarioEstudiante::class, 'horario_id', 'id', 'id', 'estudiante_id');
     }
 }
