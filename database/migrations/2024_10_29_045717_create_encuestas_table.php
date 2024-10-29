@@ -23,7 +23,6 @@ return new class extends Migration
             $table->id();
             $table->enum('tipo_respuesta', ['likert', 'porcentaje', 'texto']);
             $table->string('texto_pregunta');
-            $table->enum('tipo_encuesta', ['docente', 'jefe_practica']);
             $table->timestamps();
         });
 
@@ -44,9 +43,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('encuestas');
-        Schema::dropIfExists('preguntas');
         Schema::dropIfExists('encuesta_pregunta');
         Schema::dropIfExists('encuesta_curso');
+        Schema::dropIfExists('encuestas');
+        Schema::dropIfExists('preguntas');
     }
 };
