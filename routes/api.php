@@ -142,7 +142,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
         Route::get('/roles', [RolePermissionsController::class, 'indexRoles'])->middleware('can:ver roles');
         Route::get('/roles/paginated', [RolePermissionsController::class, 'indexRolesPaginated'])->middleware('can:ver roles');
-        Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
+        Route::post('/r oles', [RolePermissionsController::class, 'storeRole'])->middleware('can:crear roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
         Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->middleware('can:editar roles');
         Route::delete('/roles/{id}', [RolePermissionsController::class, 'destroyRole'])->middleware('can:eliminar roles');
@@ -180,8 +180,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
 
+Route::get('/encuesta/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+
 
 Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocente']);
 
 
 Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
+
+
+

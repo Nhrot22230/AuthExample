@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Curso;
 use App\Models\Encuesta;
+use App\Models\Horario;
 use App\Models\Semestre;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class EncuestaController extends Controller
@@ -18,7 +21,7 @@ class EncuestaController extends Controller
 //            'curso_id' => 'required|array|min:1',
 //            'curso_id.*' => 'integer|exists:cursos,id',
 //        ]);
-        $encuestas = Encuesta::where('tipo_encuesta', 'docente')->select('id', 'fecha_inicio', 'fecha_fin')->get();
+        $encuestas = Encuesta::where('tipo_encuesta', 'docente')->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')->get();
         return response()->json($encuestas);
 
 
@@ -45,8 +48,32 @@ class EncuestaController extends Controller
 //        ], 201);
 
     }
-    public function indexEncuestaJefePractica(Request $request){
-        $encuestas = Encuesta::where('tipo_encuesta', 'jefe_practica')->select('id', 'fecha_inicio', 'fecha_fin')->get();
+
+    public function indexEncuestaJefePractica(Request $request): JsonResponse {
+        $encuestas = Encuesta::where('tipo_encuesta', 'jefe_practica')->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')->get();
         return response()->json($encuestas);
+    }
+
+    public function indexCursoSemestreEspecialidad(Request $request): JsonResponse {
+        $validatedData = $request->validate([
+            'especialidad_id' => 'required|integer|exists:especialidades,id'
+            ]);
+        //$semestre_id = Semestre::where('estado', 'activo')->first()->id;
+        //$cursos_id = Horario::where('semestre_id', $semestre_id)->distinct()->pluck('curso_id');
+        //$cursos = Curso::whereIn('id', $cursos_id)->where('especialidad_id', $validatedData['especialidad_id'])->select('id', 'nombre','cod_curso')->get();
+        //return response()->json($cursos);
+
+        $semestre_id = Semestre::where('estado', 'activo')->first()->id;
+
+        $cursos = Curso::where('especialidad_id', $validatedData['especialidad_id'])
+            ->whereHas('horarios', function ($query) use ($semestre_id) {
+                $query->where('semestre_id', $semestre_id);
+            })
+            ->select('id', 'nombre', 'cod_curso')
+            ->get();
+
+        return response()->json($cursos);
+
+        return response()->json($cursos);
     }
 }
