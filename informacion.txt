@@ -1,0 +1,8 @@
+ESTUDIANTE RESPONDE ENCUESTAS
+- horarios y/cursos del estudiante SI
+- cantidad de jp's evaluados y nombres de los jps SI
+- preguntas y alternativas SI
+
+DIRECTOR DE CARRERA VE LAS ENCUESTAS
+- todas las encuestas
+
