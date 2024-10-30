@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PlanEstudioController;
 use App\Http\Controllers\HorarioController;
@@ -49,7 +50,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
 
-        
+
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
         Route::post('/areas', [AreaController::class, 'store'])->middleware('can:crear areas');
@@ -119,7 +120,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
 
-        
+
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
         Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:crear docentes');
@@ -152,7 +153,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
-        
+
         Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
     });
 });
@@ -182,3 +183,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
+
+Route::get('/encuesta', [EncuestaController::class, 'indexEncuesta']);
+Route::get('/encuesta/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+
+Route::get('/encuesta/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+
+
+
+
+
+
+

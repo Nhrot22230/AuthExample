@@ -15,7 +15,8 @@ class Encuesta extends Model
         'fecha_fin',
         'nombre_encuesta',
         'tipo_encuesta',
-        'disponible'
+        'disponible',
+        'especialidad_id'
     ];
 
     public function horario(): BelongsToMany {
@@ -24,5 +25,10 @@ class Encuesta extends Model
 
     public function pregunta(): BelongsToMany {
         return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta');
+    }
+
+    public function especialidad()
+    {
+        return $this->belongsTo(Especialidad::class);
     }
 }
