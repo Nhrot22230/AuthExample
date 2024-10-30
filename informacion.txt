@@ -5,4 +5,8 @@ ESTUDIANTE RESPONDE ENCUESTAS
 
 DIRECTOR DE CARRERA VE LAS ENCUESTAS
 - todas las encuestas
+- fechas, cantidad participantes, tasa de participacion de la encuesta seleccionada
+- si la encuesta esta disponible para notificar
+-
+
 
