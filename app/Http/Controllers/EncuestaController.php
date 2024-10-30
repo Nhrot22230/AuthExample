@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class EncuestaController extends Controller
 {
-    public function indexEncuestaDocente(Request $request){
+    public function indexEncuesta(Request $request){
 //        $validatedData = $request->validate([
 //            'fecha_inicio' => 'required|date|before_or_equal:fecha_fin',
 //            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
@@ -21,7 +21,14 @@ class EncuestaController extends Controller
 //            'curso_id' => 'required|array|min:1',
 //            'curso_id.*' => 'integer|exists:cursos,id',
 //        ]);
-        $encuestas = Encuesta::where('tipo_encuesta', 'docente')->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')->get();
+        $validatedData = $request->validate([
+            'tipo_encuesta' => 'required|in:docente,jefe_practica'
+        ]);
+
+        $encuestas = Encuesta::where('tipo_encuesta', $validatedData['tipo_encuesta'])
+            ->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')
+            ->get();
+
         return response()->json($encuestas);
 
 
@@ -49,11 +56,6 @@ class EncuestaController extends Controller
 
     }
 
-    public function indexEncuestaJefePractica(Request $request): JsonResponse {
-        $encuestas = Encuesta::where('tipo_encuesta', 'jefe_practica')->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')->get();
-        return response()->json($encuestas);
-    }
-
     public function indexCursoSemestreEspecialidad(Request $request): JsonResponse {
         $validatedData = $request->validate([
             'especialidad_id' => 'required|integer|exists:especialidades,id'
@@ -73,7 +75,22 @@ class EncuestaController extends Controller
             ->get();
 
         return response()->json($cursos);
+    }
 
-        return response()->json($cursos);
+    public function countPreguntasLatestEncuesta (Request $request): JsonResponse {
+        // Validar el tipo de encuesta
+        $validatedData = $request->validate([
+            'tipo_encuesta' => 'required|in:docente,jefe_practica',
+        ]);
+
+        $ultimaEncuesta = Encuesta::where('tipo_encuesta', $validatedData['tipo_encuesta'])->latest()->first();
+
+        if (!$ultimaEncuesta) {
+            return response()->json(['message' => 'No hay encuestas de este tipo creadas.'], 404);
+        }
+
+        $cantidadPreguntas = $ultimaEncuesta->preguntas()->count();
+
+        return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
 }

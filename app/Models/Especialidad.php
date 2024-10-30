@@ -37,4 +37,9 @@ class Especialidad extends Model
     {
         return $this->hasMany(Area::class);
     }
+
+    public function encuestas()
+    {
+        return $this->hasMany(Encuesta::class);
+    }
 }
