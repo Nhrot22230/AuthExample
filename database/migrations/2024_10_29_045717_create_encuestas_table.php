@@ -33,10 +33,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('encuesta_curso', function (Blueprint $table) {
+        Schema::create('encuesta_horario', function (Blueprint $table) {
             $table->id();
             $table->foreignId('encuesta_id')->constrained('encuestas')->onDelete('cascade');
-            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -44,7 +44,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('encuesta_pregunta');
-        Schema::dropIfExists('encuesta_curso');
+        Schema::dropIfExists('encuesta_horario');
         Schema::dropIfExists('encuestas');
         Schema::dropIfExists('preguntas');
     }

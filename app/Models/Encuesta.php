@@ -18,8 +18,8 @@ class Encuesta extends Model
         'disponible'
     ];
 
-    public function curso(): BelongsToMany {
-        return $this->belongsToMany(Curso::class, 'encuesta_curso');
+    public function horario(): BelongsToMany {
+        return $this->belongsToMany(Horario::class, 'encuesta_horario');
     }
 
     public function pregunta(): BelongsToMany {

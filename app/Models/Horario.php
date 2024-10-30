@@ -51,4 +51,10 @@ class Horario extends Model
     {
         return $this->hasManyThrough(Estudiante::class, HorarioEstudiante::class, 'horario_id', 'id', 'id', 'estudiante_id');
     }
+
+    public function encuestas()
+    {
+        return $this->belongsToMany(Encuesta::class, 'encuesta_horario');
+    }
+
 }

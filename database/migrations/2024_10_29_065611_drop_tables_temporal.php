@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('docente_horario');
-        Schema::dropIfExists('estudiante_horario_jp');
-        Schema::dropIfExists('estudiante_horario');
-        Schema::dropIfExists('jp_horario');
-        Schema::dropIfExists('horarios');
+        //Schema::dropIfExists('docente_horario');
+        //Schema::dropIfExists('estudiante_horario_jp');
+        //Schema::dropIfExists('estudiante_horario');
+        //Schema::dropIfExists('jp_horario');
+        //Schema::dropIfExists('horarios');
     }
 
 
