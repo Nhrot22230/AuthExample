@@ -31,7 +31,9 @@ class UsuariosSeeder extends Seeder
             'codigoAdministrativo' => 'admin',
             'lugarTrabajo' => 'admin',
             'cargo' => 'admin',
+            'facultad_id' => null, // Relación opcional
         ]);
+        
 
         // Secretario de la facultad de ingeniería
         $secretario = Usuario::create([
@@ -48,6 +50,7 @@ class UsuariosSeeder extends Seeder
             'codigoAdministrativo' => 'secretario',
             'lugarTrabajo' => 'secretario',
             'cargo' => 'Secretario',
+            'facultad_id' => 5, // Relación opcional
         ]);
 
         // Director de carrera ingeniería en sistemas
