@@ -304,7 +304,7 @@ class UniversidadSeeder extends Seeder
             $abreviatura = implode('', array_map(function($word) {
                 return strtoupper($word[0]);
             }, explode(' ', $nombreFacultad)));
-        
+
             $facultad = Facultad::factory()->create([
                 'nombre' => $nombreFacultad,
                 'abreviatura' => $abreviatura,
@@ -357,6 +357,6 @@ class UniversidadSeeder extends Seeder
         }
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
 
-        Curso::factory(5000)->create();
+        Curso::factory(50)->create();
     }
 }

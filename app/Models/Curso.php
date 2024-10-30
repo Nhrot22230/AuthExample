@@ -40,4 +40,5 @@ class Curso extends Model
     {
         return $this->hasMany(Horario::class);
     }
+
 }
