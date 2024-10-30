@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PlanEstudioController;
+use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
@@ -170,6 +171,9 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
         Route::post('/me', [AuthController::class, 'me']);
     });
 });
+
+Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
+Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
 
 
 use App\Http\Controllers\ImageController;

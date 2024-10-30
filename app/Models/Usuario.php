@@ -54,7 +54,7 @@ class Usuario extends Authenticatable implements JWTSubject
     }
     public function jefePracticas()
     {
-        return $this->hasMany(JefePractica::class);
+        return $this->hasMany(JefePractica::class, 'usuario_id', 'id');
     }
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
