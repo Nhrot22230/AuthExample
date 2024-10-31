@@ -184,8 +184,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
 
-Route::get('/encuesta', [EncuestaController::class, 'indexEncuesta']);
-Route::get('/encuesta/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
+Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+
 
 Route::get('/encuesta/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
 
