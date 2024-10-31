@@ -179,7 +179,6 @@ Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']
 use App\Http\Controllers\ImageController;
 
 Route::prefix('v1')->group(function () {
-
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
@@ -188,6 +187,7 @@ Route::prefix('v1')->group(function () {
 Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
 //Cantidad de preguntas de la última encuesta creada de una especialidad y un tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta-latest/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+
 
 //Muestra todos los cursos de una especialidad en el semestre activo
 Route::get('/encuesta-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
