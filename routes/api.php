@@ -180,15 +180,18 @@ Route::get('/encuestas/{encuestaId}', [EncuestaController::class, 'obtenerDetall
 use App\Http\Controllers\ImageController;
 
 Route::prefix('v1')->group(function () {
-
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
 
-Route::get('/encuesta', [EncuestaController::class, 'indexEncuesta']);
-Route::get('/encuesta/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+//Listar todas las encuestas de una especialidad y un tipo de encuesta(docente/jefe_practica)
+Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
+//Cantidad de preguntas de la última encuesta creada de una especialidad y un tipo de encuesta(docente/jefe_practica)
+Route::get('/encuesta-latest/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
 
-Route::get('/encuesta/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+
+//Muestra todos los cursos de una especialidad en el semestre activo
+Route::get('/encuesta-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
 
 
 
