@@ -12,11 +12,21 @@ class PlanEstudioController extends Controller
 {
     //
     public function index()
-    {
-        $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])->get();
+{
+    $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
+        ->get()
+        ->map(function ($plan) {
+            $plan->cursos = $plan->cursos->map(function ($curso) {
+                $curso->nivel = $curso->pivot->nivel;
+                $curso->creditosReq = $curso->pivot->creditosReq;
+                unset($curso->pivot);
+                return $curso;
+            });
+            return $plan;
+        });
 
-        return response()->json($planesEstudio, 200);
-    }
+    return response()->json($planesEstudio, 200);
+}
 
     public function indexPaginated()
     {
@@ -24,7 +34,7 @@ class PlanEstudioController extends Controller
         $per_page = request('per_page', 10);
         $especialidad_id = request('especialidad_id', null);
 
-        $planesEstudio = PlanEstudio::with('cursos', 'semestres')
+        $planesEstudio = PlanEstudio::with('cursos', 'semestres', 'cursos.requisitos')
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
             })

@@ -10,9 +10,7 @@ use Spatie\Permission\Models\Role;
 
 class AssignRolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+
     public function run(): void
     {
         $docenteRole = Role::findByName('docente');

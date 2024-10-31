@@ -50,9 +50,12 @@ class Usuario extends Authenticatable implements JWTSubject
 
     public function horarios()
     {
-        return $this->belongsToMany(Horario::class, 'jp_horario')->withTimestamps();
+        return $this->hasManyThrough(Horario::class, JefePractica::class, 'usuario_id', 'id', 'id', 'horario_id');
     }
-
+    public function jefePracticas()
+    {
+        return $this->hasMany(JefePractica::class);
+    }
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *

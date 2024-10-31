@@ -11,13 +11,11 @@ class Requisito extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nivel',
         'curso_id',
         'curso_requisito_id',
         'plan_estudio_id',
         'tipo',
         'notaMinima',
-        'cantCreditos',
     ];
 
     public function curso()

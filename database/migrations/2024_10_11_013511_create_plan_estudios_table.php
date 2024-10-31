@@ -6,13 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('plan_estudios', function (Blueprint $table) {
             $table->id();
+            $table->integer('cantidad_semestres')->default(10);
             $table->foreignId('especialidad_id')->constrained('especialidades');
             $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
             $table->timestamps();
@@ -24,7 +22,7 @@ return new class extends Migration
             $table->foreignId('semestre_id')->constrained('semestres')->onDelete('cascade');
             $table->timestamps();
         });
-        
+
         Schema::create('plan_estudio_curso', function (Blueprint $table) {
             $table->id();
             $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');

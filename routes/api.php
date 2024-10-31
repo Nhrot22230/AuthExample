@@ -185,3 +185,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
 
+
+Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocente']);
+
+
+Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
