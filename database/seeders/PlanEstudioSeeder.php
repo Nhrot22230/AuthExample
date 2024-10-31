@@ -30,13 +30,14 @@ class PlanEstudioSeeder extends Seeder
             );
         }
 
-        $rand_nivel = rand(0, $plan_estudio->cantidad_semestres);
-        $plan_estudio->cursos()->attach($cursos, [ 
-                'nivel' => $rand_nivel,
-                'creditosReq' => rand(20 * max($rand_nivel - 1, 0), 20 * ($rand_nivel + 1)),          
-        ]);
+        foreach ($cursos as $curso) {
+            $plan_estudio->cursos()->attach($curso, [
+                'nivel' => random_int(0, 10),
+                'creditosReq' => random_int(1, 20),
+            ]);
+        }
 
-        $semestres = Semestre::random(8)->pluck('id') ?? Semestre::factory(8)->create()->pluck('id');
+        $semestres = Semestre::inRandomOrder()->limit(random_int(1,4))->get() ?? Semestre::factory(4)->create();
         $plan_estudio->semestres()->attach($semestres);
     }
 }
