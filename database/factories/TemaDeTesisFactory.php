@@ -15,14 +15,17 @@ class TemaDeTesisFactory extends Factory
     public function definition(): array
     {
         // Obtiene una especialidad aleatoria o usa el ID 28 (Ingeniería de Sistemas)
-        $especialidadId = random_int(0, 1) ? 28 : Especialidad::inRandomOrder()->first()->id;
+        $especialidadId = random_int(0, 1) ? 28 : Especialidad::where('facultad_id', 5)->inRandomOrder()->first()->id;
 
         // Obtiene un estado aleatorio
         $estado = $this->faker->randomElement(['aprobado', 'pendiente', 'desaprobado']);
 
         // Obtiene un estado de jurado aleatorio
-        $estadoJurado = $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']);
-
+        if ($estado == 'aprobado') {
+            $estadoJurado = $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']);
+        } else {
+            $estadoJurado = 'no enviado';
+        }
 
         return [
             'titulo' => $this->faker->sentence(),
@@ -39,6 +42,7 @@ class TemaDeTesisFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (TemaDeTesis $tema) {
+
             // Filtra estudiantes que pertenezcan a la misma especialidad del tema de tesis
             $estudiantes = Estudiante::where('especialidad_id', $tema->especialidad_id)
                 ->inRandomOrder()
