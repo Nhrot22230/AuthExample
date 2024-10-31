@@ -98,10 +98,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar docentes', 'category' => 'docentes'],
             ['name' => 'eliminar docentes', 'category' => 'docentes'],
 
-            ['name' => 'ver tema de tesis', 'category' => 'tema de tesis'],
-            ['name' => 'crear tema de tesis', 'category' => 'tema de tesis'],
-            ['name' => 'editar tema de tesis', 'category' => 'tema de tesis'],
-            ['name' => 'eliminar tema de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'ver temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'crear temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'editar temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'eliminar temas de tesis', 'category' => 'tema de tesis'],
 
             ['name' => 'ver horarios', 'category' => 'horarios'],
             ['name' => 'crear horarios', 'category' => 'horarios'],

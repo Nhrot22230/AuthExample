@@ -17,12 +17,19 @@ class TemaDeTesisFactory extends Factory
         // Obtiene una especialidad aleatoria o usa el ID 28 (Ingeniería de Sistemas)
         $especialidadId = random_int(0, 1) ? 28 : Especialidad::inRandomOrder()->first()->id;
 
+        // Obtiene un estado aleatorio
+        $estado = $this->faker->randomElement(['aprobado', 'pendiente', 'desaprobado']);
+
+        // Obtiene un estado de jurado aleatorio
+        $estadoJurado = $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']);
+
+
         return [
             'titulo' => $this->faker->sentence(),
             'resumen' => $this->faker->paragraph(),
             'documento' => null,  // Documento vacío
-            'estado' => $this->faker->randomElement(['aprobado', 'pendiente', 'desaprobado']),
-            'estado_jurado' => $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']),
+            'estado' => $estado,
+            'estado_jurado' => $estadoJurado,
             'fecha_enviado' => $this->faker->date(),
             'especialidad_id' => $especialidadId,
         ];
@@ -44,11 +51,13 @@ class TemaDeTesisFactory extends Factory
                 ->take(random_int(1, 2))
                 ->pluck('id');
 
-            // Filtra docentes que pertenezcan a la misma especialidad para jurados
-            $jurados = Docente::where('especialidad_id', $tema->especialidad_id)
-                ->inRandomOrder()
-                ->take(random_int(2, 3))
-                ->pluck('id');
+            $jurados = [];
+            if (in_array($tema->estado_jurado, ['aprobado', 'desaprobado', 'pendiente'])) {
+                $jurados = Docente::where('especialidad_id', $tema->especialidad_id)
+                    ->inRandomOrder()
+                    ->take(3)
+                    ->pluck('id');
+            }
 
             // Asigna estudiantes, asesores y jurados al tema de tesis
             $tema->estudiantes()->attach($estudiantes);
