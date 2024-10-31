@@ -16,15 +16,18 @@ class TemaDeTesisController extends Controller
         $facultad_id = $request->input('facultad_id', null);
         $especialidad_id = $request->input('especialidad_id', null);
 
-        $query = TemaDeTesis::with(['especialidad', 'jurados', 'asesores', 'estudiantes'])
+        $query = TemaDeTesis::with([
+                'especialidad',
+                'jurados.usuario',      // Cargar los datos del usuario de cada jurado
+                'asesores.usuario',     // Cargar los datos del usuario de cada asesor
+                'estudiantes.usuario'   // Cargar los datos del usuario de cada estudiante
+            ])
             ->when($facultad_id, function ($query) use ($facultad_id) {
-                // Filtra los temas por la facultad de la especialidad
                 $query->whereHas('especialidad', function ($q) use ($facultad_id) {
                     $q->where('facultad_id', $facultad_id);
                 });
             })
             ->when($especialidad_id, function ($query) use ($especialidad_id) {
-                // Filtra los temas por especialidad específica
                 $query->where('especialidad_id', $especialidad_id);
             })
             ->where(function ($query) use ($search) {
@@ -40,7 +43,13 @@ class TemaDeTesisController extends Controller
     // Método para mostrar un tema de tesis específico
     public function show($id)
     {
-        $temaDeTesis = TemaDeTesis::with(['especialidad', 'jurados', 'asesores', 'estudiantes', 'observaciones'])
+        $temaDeTesis = TemaDeTesis::with([
+                'especialidad',
+                'jurados.usuario',      // Cargar los datos del usuario de cada jurado
+                'asesores.usuario',     // Cargar los datos del usuario de cada asesor
+                'estudiantes.usuario',  // Cargar los datos del usuario de cada estudiante
+                'observaciones'
+            ])
             ->findOrFail($id);
 
         return response()->json($temaDeTesis, 200);
