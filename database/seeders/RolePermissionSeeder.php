@@ -16,6 +16,7 @@ class RolePermissionSeeder extends Seeder
         $roles = [
             'administrativo',
             'secretarioAcademico',
+            'directorCarrera',
             'estudiante',
             'docente',
             'jefePractica',
@@ -97,6 +98,36 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar docentes', 'category' => 'docentes'],
             ['name' => 'eliminar docentes', 'category' => 'docentes'],
 
+            ['name' => 'ver tema de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'crear tema de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'editar tema de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'eliminar tema de tesis', 'category' => 'tema de tesis'],
+
+            ['name' => 'ver horarios', 'category' => 'horarios'],
+            ['name' => 'crear horarios', 'category' => 'horarios'],
+            ['name' => 'editar horarios', 'category' => 'horarios'],
+            ['name' => 'eliminar horarios', 'category' => 'horarios'],
+
+            ['name' => 'ver jurados', 'category' => 'jurados'],
+            ['name' => 'crear jurados', 'category' => 'jurados'],
+            ['name' => 'editar jurados', 'category' => 'jurados'],
+            ['name' => 'eliminar jurados', 'category' => 'jurados'],
+
+            ['name' => 'ver asesores', 'category' => 'asesores'],
+            ['name' => 'crear asesores', 'category' => 'asesores'],
+            ['name' => 'editar asesores', 'category' => 'asesores'],
+            ['name' => 'eliminar asesores', 'category' => 'asesores'],
+
+            ['name' => 'ver jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'crear jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'editar jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'eliminar jefes de práctica', 'category' => 'jefes de práctica'],
+
+            ['name' => 'ver observaciones', 'category' => 'observaciones'],
+            ['name' => 'crear observaciones', 'category' => 'observaciones'],
+            ['name' => 'editar observaciones', 'category' => 'observaciones'],
+            ['name' => 'eliminar observaciones', 'category' => 'observaciones'],
+
             ['name' => 'ver roles', 'category' => 'roles'],
             ['name' => 'crear roles', 'category' => 'roles'],
             ['name' => 'editar roles', 'category' => 'roles'],
@@ -128,7 +159,8 @@ class RolePermissionSeeder extends Seeder
         ->orWhere('category', '=', 'horarios')
         ->orWhere('category', '=', 'areas')
         ->orWhere('category', '=', 'departamentos')
-        ->orWhere('category', '=', 'facultades');
+        ->orWhere('category', '=', 'facultades')
+        ->orWhere('category', '=', 'temaDeTesis');
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('docente');

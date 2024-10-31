@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PlanEstudioController;
+use App\Http\Controllers\TemaDeTesisController;
 use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
@@ -48,7 +49,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
 
-        
+
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
         Route::post('/areas', [AreaController::class, 'store'])->middleware('can:crear areas');
@@ -83,13 +84,13 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:eliminar cursos');
 
 
-        Route::get ('/plan-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
-        Route::get ('/plan-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
-        Route::get ('/plan-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
+        Route::get('/plan-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
+        Route::get('/plan-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
+        Route::get('/plan-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
         Route::post('/plan-estudio', [PlanEstudioController::class, 'store'])->middleware('can:crear planes de estudio');
-        Route::put ('/plan-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
-        Route::get ('/plan-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
-        Route::delete ('/plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:crear planes de estudio');
+        Route::put('/plan-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
+        Route::get('/plan-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
+        Route::delete('/plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:crear planes de estudio');
 
 
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
@@ -118,7 +119,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:editar estudiantes');
         Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:eliminar estudiantes');
 
-        
+
         Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
         Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:crear docentes');
         Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:crear docentes');
@@ -151,8 +152,12 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
-        
+
         Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
+
+        Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
+        Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
+        Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
     });
 });
 
