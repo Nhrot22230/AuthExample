@@ -163,6 +163,16 @@ class RolePermissionSeeder extends Seeder
         ->orWhere('category', '=', 'temaDeTesis');
         $role->syncPermissions($permissions);
 
+
+        $role = Role::findByName('directorCarrera');
+        $permissions = Permission::where('category', '=', 'planes de estudio')
+        ->orWhere('category', '=', 'horarios')
+        ->orWhere('category', '=', 'areas')
+        ->orWhere('category', '=', 'departamentos')
+        ->orWhere('category', '=', 'facultades')
+        ->orWhere('category', '=', 'temaDeTesis');
+        $role->syncPermissions($permissions);
+
         $role = Role::findByName('docente');
         $permissions = Permission::where('name', 'like', 'ver %')
         ->orWhere('name', 'like', 'editar %')

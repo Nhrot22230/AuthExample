@@ -10,6 +10,7 @@ use App\Models\Area;
 use App\Models\Especialidad;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UsuariosSeeder extends Seeder
 {
@@ -27,6 +28,11 @@ class UsuariosSeeder extends Seeder
             'password' => Hash::make('12345678'),
             'estado' => 'activo',
         ]);
+
+        // asignar roles de administrativo y docente a admin
+        $administrativoRole = Role::findByName('administrativo');
+        $docenteRole = Role::findByName('docente');
+        $admin->assignRole([$administrativoRole, $docenteRole]);
 
         Administrativo::create([
             'usuario_id' => $admin->id,
@@ -53,6 +59,10 @@ class UsuariosSeeder extends Seeder
             'cargo' => 'Secretario',
             'facultad_id' => 5,
         ]);
+
+        // Asignar el rol de secretario académico
+        $secretarioRole = Role::findByName('secretarioAcademico');
+        $secretario->assignRole($secretarioRole);
 
         // Crear usuario director de carrera
         $director = Usuario::create([
