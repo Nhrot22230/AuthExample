@@ -187,10 +187,10 @@ Route::prefix('v1')->group(function () {
 //Listar todas las encuestas de una especialidad y un tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
 //Cantidad de preguntas de la última encuesta creada de una especialidad y un tipo de encuesta(docente/jefe_practica)
-Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+Route::get('/encuesta-latest/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
 
 //Muestra todos los cursos de una especialidad en el semestre activo
-Route::get('/encuesta/{especialidad_id}/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+Route::get('/encuesta-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
 
 
 

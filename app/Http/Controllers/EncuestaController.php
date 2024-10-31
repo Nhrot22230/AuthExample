@@ -65,7 +65,7 @@ class EncuestaController extends Controller
             return response()->json(['message' => 'No hay encuestas de este tipo para la especialidad especificada.'], 404);
         }
 
-        $cantidadPreguntas = $ultimaEncuesta->preguntas()->count();
+        $cantidadPreguntas = $ultimaEncuesta->pregunta()->count();
 
         return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
