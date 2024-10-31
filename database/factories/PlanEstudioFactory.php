@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Especialidad;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,9 @@ class PlanEstudioFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'cantidad_semestres' => 10,
+            'especialidad_id' => Especialidad::inRandomOrder()->first() ?? Especialidad::factory()->create(),
+            'estado' => 'inactivo',
         ];
     }
 }

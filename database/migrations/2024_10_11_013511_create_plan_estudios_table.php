@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('plan_estudios', function (Blueprint $table) {
             $table->id();
+            $table->integer('cantidad_semestres')->default(10);
             $table->foreignId('especialidad_id')->constrained('especialidades');
             $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
             $table->timestamps();

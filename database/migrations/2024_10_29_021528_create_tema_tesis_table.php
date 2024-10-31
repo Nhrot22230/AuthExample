@@ -51,7 +51,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tema_tesis_autores');
+        Schema::dropIfExists('tema_tesis_autor');
         Schema::dropIfExists('tema_tesis_asesor');
         Schema::dropIfExists('tema_tesis_jurado');
         Schema::dropIfExists('tema_tesis');
