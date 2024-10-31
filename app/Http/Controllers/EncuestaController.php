@@ -30,18 +30,14 @@ class EncuestaController extends Controller
         return response()->json($encuestas);
     }
 
-    public function indexCursoSemestreEspecialidad(Request $request): JsonResponse {
-        $validatedData = $request->validate([
-            'especialidad_id' => 'required|integer|exists:especialidades,id'
-            ]);
-        //$semestre_id = Semestre::where('estado', 'activo')->first()->id;
-        //$cursos_id  $semestre_id)->distinct()->pluck('curso_id');
-        //$cursos = Curso::whereIn('id', $cursos_id)->where('especialidad_id', $validatedData['especialidad_id'])->select('id', 'nombre','cod_curso')->get();
-        //return response()->json($cursos);
-
+    public function indexCursoSemestreEspecialidad(int $especialidad_id): JsonResponse {
+        if (!Especialidad::where('id', $especialidad_id)->exists()) {
+            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        }
+        echo "Hola";
         $semestre_id = Semestre::where('estado', 'activo')->first()->id;
 
-        $cursos = Curso::where('especialidad_id', $validatedData['especialidad_id'])
+        $cursos = Curso::where('especialidad_id', $especialidad_id)
             ->whereHas('horarios', function ($query) use ($semestre_id) {
                 $query->where('semestre_id', $semestre_id);
             })

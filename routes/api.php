@@ -184,11 +184,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
 
+//Listar todas las encuestas de una especialidad y un tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
+//Cantidad de preguntas de la última encuesta creada de una especialidad y un tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}/latest-cant-preguntas', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
 
-
-Route::get('/encuesta/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+//Muestra todos los cursos de una especialidad en el semestre activo
+Route::get('/encuesta/{especialidad_id}/cursos', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
 
 
 

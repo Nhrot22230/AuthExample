@@ -20,5 +20,6 @@ class DatabaseSeeder extends Seeder
         $this->call(EncuestaSeeder::class);
         $this->call(PreguntaSeeder::class);
         $this->call(EncuestaPreguntaSeeder::class);
+        $this->call(HorarioSeeder::class);
     }
 }
