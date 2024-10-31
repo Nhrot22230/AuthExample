@@ -32,7 +32,6 @@ class HorarioController extends Controller
   
         // Mapear la información de los cursos para la respuesta
         $cursos = $horarios->map(function ($horario) use ($estudianteId) {
-            // Filtrar los horarioEstudiantes para el estudiante actual y contar sus JPs evaluados
             $jpsEvaluados = $horario->horarioEstudiantes
                 ->where('estudiante_id', $estudianteId) // Filtra el estudiante específico
                 ->flatMap(function ($horarioEstudiante) {
@@ -71,6 +70,46 @@ class HorarioController extends Controller
                 'nombre' => $horario->curso->nombre,
             ],
             'jefes_practica' => $jps,
+        ]);
+    }
+
+    public function obtenerEncuestasDocentesEstudiante($estudianteId)
+    {
+        $anioActual = 2024;
+        $periodoActual = 2;
+
+        $horarios = Horario::whereHas('semestre', function ($query) use ($anioActual, $periodoActual) {
+            $query->where('anho', $anioActual)
+                ->where('periodo', $periodoActual)
+                ->whereIn('estado', ['activo', 1]);
+        })
+        ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
+            $query->where('estudiante_id', $estudianteId);
+        })
+        ->with(['curso', 'horarioEstudiantes' => function ($query) use ($estudianteId) {
+            $query->where('estudiante_id', $estudianteId)
+                ->select('horario_id', 'estudiante_id', 'encuestaDocente');
+        }])
+        ->get();
+
+    // Mapear la información de los cursos para la respuesta
+    $cursos = $horarios->map(function ($horario) {
+        $encuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
+        $encuestas = $horario->encuestas->map(function ($encuesta) {
+            return $encuesta->id;
+        });
+
+        return [
+            'horario_id' => $horario->id,
+            'curso_id' => $horario->curso->id,
+            'curso_nombre' => $horario->curso->nombre,
+            'estado_encuesta' => $encuesta ? 'Completada' : 'Pendiente',
+            'encuestas' => $encuestas, // Agregar IDs de encuestas asociadas
+        ];
+    });
+
+    return response()->json([
+        'cursos' => $cursos,
         ]);
     }
 }

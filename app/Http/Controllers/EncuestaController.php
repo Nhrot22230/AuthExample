@@ -93,4 +93,36 @@ class EncuestaController extends Controller
 
         return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
+    
+    function obtenerDetalleEncuesta($encuestaId)
+    {
+        $encuesta = Encuesta::with(['pregunta','horario.docentes.usuario', 'horario.jefePracticas.usuario'])->findOrFail($encuestaId);
+        $tipoEncuesta = $encuesta->tipo_encuesta;
+        $nombreResponsable = null;
+        if ($tipoEncuesta === 'docente' && $encuesta->horario->docentes->isNotEmpty()) {
+            $nombreResponsable = $encuesta->horario->docentes->first()->usuario->nombre;
+        } elseif ($tipoEncuesta === 'jefePractica' && $encuesta->horario->jefePracticas->isNotEmpty()) {
+            $nombreResponsable = $encuesta->horario->jefePracticas->first()->usuario->nombre;
+        }
+        // Formatear la respuesta para incluir solo los campos necesarios
+        $detalleEncuesta = [
+            'id' => $encuesta->id,
+            'nombre_encuesta' => $encuesta->nombre_encuesta,
+            'fecha_inicio' => $encuesta->fecha_inicio,
+            'fecha_fin' => $encuesta->fecha_fin,
+            'tipo_encuesta' => $tipoEncuesta === 'docente' ? 'Encuesta Docente' : 'Encuesta Jefe de Práctica',
+            'disponible' => $encuesta->disponible,
+            'nombre_responsable' => $nombreResponsable,
+            'preguntas' => $encuesta->pregunta->map(function ($pregunta) {
+                return [
+                    'id' => $pregunta->id,
+                    'tipo_respuesta' => $pregunta->tipo_respuesta,
+                    'texto_pregunta' => $pregunta->texto_pregunta,
+                    'fecha_creacion' => $pregunta->fecha_creacion,
+                ];
+            }),
+        ];
+
+        return response()->json($detalleEncuesta);
+    }
 }
