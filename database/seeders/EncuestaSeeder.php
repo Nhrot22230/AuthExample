@@ -14,23 +14,6 @@ class EncuestaSeeder extends Seeder
 
     public function run(): void
     {
-        //Encuesta::factory(5)->create();
-        $horarios = Horario::all();
-        $encuestas = Encuesta::all();
-
-        // Asociar encuestas a horarios en la tabla pivote
-        foreach ($horarios as $horario) {
-            // Asociar entre 1 y 3 encuestas aleatorias por horario
-            $encuestasAleatorias = $encuestas->random(rand(1, 3));
-
-            foreach ($encuestasAleatorias as $encuesta) {
-                DB::table('encuesta_horario')->insert([
-                    'encuesta_id' => $encuesta->id,
-                    'horario_id' => $horario->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+        Encuesta::factory(5)->create();
     }
 }

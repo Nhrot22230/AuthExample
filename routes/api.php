@@ -175,7 +175,7 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
 Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
 Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
 Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
-Route::get('/encuestas/{encuestaId}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
+Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
 use App\Http\Controllers\ImageController;
 

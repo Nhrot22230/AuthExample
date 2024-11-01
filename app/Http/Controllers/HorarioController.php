@@ -30,7 +30,6 @@ class HorarioController extends Controller
             ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps'])
             ->get();
   
-        // Mapear la información de los cursos para la respuesta
         $cursos = $horarios->map(function ($horario) use ($estudianteId) {
             $jpsEvaluados = $horario->horarioEstudiantes
                 ->where('estudiante_id', $estudianteId) // Filtra el estudiante específico
@@ -53,25 +52,41 @@ class HorarioController extends Controller
     }
     public function obtenerJps($horarioId)
     {
-        $horario = Horario::with(['curso', 'jefePracticas.usuario'])->findOrFail($horarioId);
+        // Cargar el horario junto con las relaciones necesarias
+        $horario = Horario::with([
+            'curso',
+            'horarioEstudiantes.horarioEstudianteJps',
+            'jefePracticas.usuario'
+        ])->findOrFail($horarioId);
 
-        $jps = $horario->jefePracticas->map(function ($jp) {
+        // Mapear la información de los jefes de práctica asociados al horario
+        $jps = $horario->jefePracticas->map(function ($jp) use ($horario) {
             return [
                 'id' => $jp->id,
                 'nombre' => $jp->usuario->nombre,
-                'apellido' => $jp->usuario->apellido_paterno,
-                'estado' => $jp->horarioEstudianteJps->isEmpty() ? 'RESPONDER' : 'COMPLETADA'
+                'apellido_paterno' => $jp->usuario->apellido_paterno,
+                'apellido_materno' => $jp->usuario->apellido_materno,
+                'estado' => $horario->horarioEstudiantes
+                    ->flatMap(function ($horarioEstudiante) use ($jp) {
+                        return $horarioEstudiante->horarioEstudianteJps
+                            ->where('jp_horario_id', $jp->id)
+                            ->pluck('encuestaJP');
+                    })
+                    ->first(), 
             ];
         });
 
-        return response()->json([
+        $detalleHorario = [
             'curso' => [
                 'id' => $horario->curso->id,
                 'nombre' => $horario->curso->nombre,
             ],
-            'jefes_practica' => $jps,
-        ]);
+            'jefes_practica' => $jps
+        ];
+
+        return response()->json($detalleHorario);
     }
+
 
     public function obtenerEncuestasDocentesEstudiante($estudianteId)
     {
@@ -92,7 +107,6 @@ class HorarioController extends Controller
         }])
         ->get();
 
-    // Mapear la información de los cursos para la respuesta
     $cursos = $horarios->map(function ($horario) {
         $encuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
         $encuestas = $horario->encuestas->map(function ($encuesta) {
@@ -103,8 +117,8 @@ class HorarioController extends Controller
             'horario_id' => $horario->id,
             'curso_id' => $horario->curso->id,
             'curso_nombre' => $horario->curso->nombre,
-            'estado_encuesta' => $encuesta ? 'Completada' : 'Pendiente',
-            'encuestas' => $encuestas, // Agregar IDs de encuestas asociadas
+            'estado_encuesta' => $horario->horarioEstudiantes->first()->encuestaDocente,
+            'encuestas' => $encuestas,
         ];
     });
 

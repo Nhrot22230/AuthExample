@@ -70,19 +70,56 @@ class EncuestaController extends Controller
         return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
     
-    function obtenerDetalleEncuesta($encuestaId)
+    public function obtenerDetalleEncuesta($encuestaId, $horarioId, $jpId=null)
     {
-        $encuesta = Encuesta::with(['pregunta','horario.docentes.usuario', 'horario.jefePracticas.usuario'])->findOrFail($encuestaId);
+        $horario = Horario::with(['curso'])->findOrFail($horarioId);
+
+        $encuesta = Encuesta::findOrFail($encuestaId);
         $tipoEncuesta = $encuesta->tipo_encuesta;
+
         $nombreResponsable = null;
-        if ($tipoEncuesta === 'docente' && $encuesta->horario->docentes->isNotEmpty()) {
-            $nombreResponsable = $encuesta->horario->docentes->first()->usuario->nombre;
-        } elseif ($tipoEncuesta === 'jefePractica' && $encuesta->horario->jefePracticas->isNotEmpty()) {
-            $nombreResponsable = $encuesta->horario->jefePracticas->first()->usuario->nombre;
+
+        if ($tipoEncuesta === 'docente') {
+            $encuesta->load(['horario.docentes.usuario']);
+            
+            $horario = $horarioId ? $encuesta->horario->firstWhere('id', $horarioId) : null;
+    
+            if ($horario) {
+                $docente = $horario->docentes->first();
+                if ($docente && $docente->usuario) {
+                    $nombreResponsable = $docente->usuario->nombre . " " .
+                    $docente->usuario->apellido_paterno . " " .$docente->usuario->apellido_materno;
+                }
+            } else {
+                return response()->json(['error' => 'Horario no encontrado'], 404);
+            }
+        } elseif ($tipoEncuesta === 'jefe_practica') {
+            $encuesta->load(['horario.jefePracticas.usuario']);
+            
+            $horario = $horarioId ? $encuesta->horario->firstWhere('id', $horarioId) : null;
+        
+            if ($horario) {
+                $jefePractica = $horario->jefePracticas->firstWhere('usuario_id', $jpId);
+                if ($jefePractica) {
+                    $nombreResponsable = $jefePractica->usuario->nombre." ".
+                    $jefePractica->usuario->apellido_paterno." ".$jefePractica->usuario->apellido_materno;
+                } elseif ($jpId===null){
+
+                }
+                else{
+                    return response()->json(['error' => 'JP no encontrado'], 404);
+                }
+            }else {
+                return response()->json(['error' => 'Horario no encontrado'], 404);
+            }
         }
-        // Formatear la respuesta para incluir solo los campos necesarios
+
         $detalleEncuesta = [
             'id' => $encuesta->id,
+            'curso' => [
+                'id' => $horario->curso->id,
+                'nombre' => $horario->curso->nombre,
+            ],
             'nombre_encuesta' => $encuesta->nombre_encuesta,
             'fecha_inicio' => $encuesta->fecha_inicio,
             'fecha_fin' => $encuesta->fecha_fin,
@@ -94,11 +131,11 @@ class EncuestaController extends Controller
                     'id' => $pregunta->id,
                     'tipo_respuesta' => $pregunta->tipo_respuesta,
                     'texto_pregunta' => $pregunta->texto_pregunta,
-                    'fecha_creacion' => $pregunta->fecha_creacion,
                 ];
             }),
         ];
 
         return response()->json($detalleEncuesta);
     }
+
 }

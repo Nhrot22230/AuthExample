@@ -7,7 +7,12 @@ use App\Models\Estudiante;
 use App\Models\HorarioEstudiante;
 use App\Models\HorarioEstudianteJp;
 use App\Models\JefePractica;
+use App\Models\Docente;
 use App\Models\Usuario;
+use App\Models\Encuesta;
+
+use Illuminate\Support\Facades\DB;
+
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -23,6 +28,21 @@ class HorarioSeeder extends Seeder
 
         $horarios = Horario::all();
         $estudiantes = Estudiante::all();
+
+        $encuestas = Encuesta::all();
+
+        foreach ($horarios as $horario) {
+            $encuestasAleatorias = $encuestas->random(rand(1, 3));
+
+            foreach ($encuestasAleatorias as $encuesta) {
+                DB::table('encuesta_horario')->insert([
+                    'encuesta_id' => $encuesta->id,
+                    'horario_id' => $horario->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         foreach ($horarios as $horario) {
             $assignedEstudiantes = $estudiantes->random(5);
@@ -62,6 +82,19 @@ class HorarioSeeder extends Seeder
                     'encuestaJP' => true,
                 ]);
             }
+        }
+
+        $docentes = Docente::all();
+
+        foreach ($horarios as $horario) {
+            $docente = $docentes->random();
+
+            DB::table('docente_horario')->insert([
+                'docente_id' => $docente->id,
+                'horario_id' => $horario->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }
