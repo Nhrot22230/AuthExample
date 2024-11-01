@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('cursos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
+            $table->foreignId('especialidad_id')->constrained('especialidades');
             $table->string('cod_curso');
             $table->string('nombre');
             $table->double('creditos');
-            $table->string('estado')->default('activo');
+            $table->string('estado')->default('inactivo');
+            $table->double('ct')->default(0);
+            $table->double('pa')->default(0);
+            $table->double('pb')->default(0);
+            $table->integer('me')->default(0);
             $table->timestamps();
         });
 

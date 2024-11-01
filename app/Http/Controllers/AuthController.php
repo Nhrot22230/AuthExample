@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Google\Client as GoogleClient;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class AuthController extends Controller
 {
@@ -20,7 +22,7 @@ class AuthController extends Controller
             ->first();
 
         if (!$usuario || !Hash::check($credentials['password'], $usuario->password)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Las credenciales son incorrectas o el usuario no existe'], 401);
         }
 
         return response()->json(
@@ -99,24 +101,63 @@ class AuthController extends Controller
         }
     }
 
+    public function getMyUnidades() {
+        try {
+            $usuario = JWTAuth::user();
+            if (!$usuario) {
+                return response()->json(['message' => 'No se pudo encontrar el usuario. Inicie sesión nuevamente.'], 401);
+            }
+            
+            $docente = $usuario->docente;
+            if (!$docente) {
+                return response()->json(['message' => 'El usuario no es docente.'], 400);
+            }
+
+            $facultades = $docente->especialidad->facultad ? [$docente->especialidad->facultad] : [];
+            $departamentos = $facultades[0]->departamentos ?? [];
+            $secciones = $docente->seccion ? [$docente->seccion] : [];
+            $especialidades = $docente->especialidad ? [$docente->especialidad] : [];
+            $areas = $docente->area ? [$docente->area] : [];
+
+            $resp = compact('facultades', 'departamentos', 'secciones', 'especialidades', 'areas');
+            
+            return response()->json($resp, 200);
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'El token ha expirado. Por favor, inicie sesión nuevamente.'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'El token no es válido.'], 401);
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'No se pudo procesar el token.'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Ocurrió un error inesperado al obtener las unidades del usuario: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function me()
     {
-        $usuario = JWTAuth::user();
-
-        if ($usuario) {
-            return response()->json(
-                $usuario->load('estudiante', 'administrativo', 'docente'),
-                200
-            );
+        try {
+            $usuario = JWTAuth::user();
+            if (!$usuario) {
+                return response()->json(['message' => 'No se pudo encontrar el usuario. Inicie sesión nuevamente.'], 401);
+            }
+            $usuario->load('permissions', 'roles.permissions', 'estudiante', 'administrativo', 'docente');
+            return response()->json($usuario, 200);
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'El token ha expirado. Por favor, inicie sesión nuevamente.'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'El token no es válido.'], 401);
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'No se pudo procesar el token.'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Ocurrió un error inesperado al obtener el usuario.', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'Usted no está autorizado'], 401);
     }
 
     public function refresh()
     {
         try {
             $token = JWTAuth::refresh(JWTAuth::getToken());
+
             return response()->json([
                 'usuario' => JWTAuth::user(),
                 'access_token' => $token,
@@ -124,8 +165,15 @@ class AuthController extends Controller
                 'expires_in' => JWTAuth::factory()->getTTL() * 60,
                 'message' => 'Sesión refrescada con éxito',
             ], 200);
+
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'El token ha expirado y no se puede refrescar. Inicie sesión nuevamente.'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'El token no es válido.'], 401);
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Error al refrescar el token.'], 400);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al refrescar el token'], 400);
+            return response()->json(['message' => 'Ocurrió un error inesperado al refrescar el token.', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -133,11 +181,17 @@ class AuthController extends Controller
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
-            return response()->json(['message' => 'Sesión cerrada'], 200);
+
+            return response()->json(['message' => 'Sesión cerrada con éxito'], 200);
+
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'El token ya ha expirado.'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'El token no es válido. No se pudo cerrar la sesión.'], 400);
         } catch (JWTException $e) {
-            return response()->json(['message' => 'Sesión ya estaba cerrada'], 200);
+            return response()->json(['message' => 'La sesión ya estaba cerrada o el token no es válido.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al cerrar la sesión'], 400);
+            return response()->json(['message' => 'Error al cerrar la sesión.', 'error' => $e->getMessage()], 500);
         }
     }
 

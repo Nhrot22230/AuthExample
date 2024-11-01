@@ -29,14 +29,12 @@ return new class extends Migration
             $table->bigIncrements('id'); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            
+            $table->timestamps();
+            $table->unique(['name', 'guard_name']);
+
             /* Custom fields */
             $table->string('category')->nullable();
             /* End custom fields */
-
-            $table->timestamps();
-
-            $table->unique(['name', 'guard_name']);
         });
 
         Schema::create($tableNames['roles'], function (Blueprint $table) use ($teams, $columnNames) {
@@ -54,6 +52,10 @@ return new class extends Migration
             } else {
                 $table->unique(['name', 'guard_name']);
             }
+
+            /* Custom fields */
+            $table->foreignId('scope_id')->nullable()->constrained('scopes')->onDelete('set null');
+            /* End custom fields */
         });
 
         Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {

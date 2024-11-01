@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('administrativos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->unique()->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId('usuario_id')->constrained('usuarios')->unique();
             $table->string('codigoAdministrativo')->unique();
             $table->string('cargo');
             $table->string('lugarTrabajo');

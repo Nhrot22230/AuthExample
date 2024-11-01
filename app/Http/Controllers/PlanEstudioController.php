@@ -3,19 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\PlanEstudio;
-use Illuminate\Database\QueryException;
+use App\Models\Requisito;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PlanEstudioController extends Controller
 {
     //
     public function index()
-    {
-        $planesEstudio = PlanEstudio::with('cursos')->get();
-        return response()->json($planesEstudio);
-    }
+{
+    $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
+        ->get()
+        ->map(function ($plan) {
+            $plan->cursos = $plan->cursos->map(function ($curso) {
+                $curso->nivel = $curso->pivot->nivel;
+                $curso->creditosReq = $curso->pivot->creditosReq;
+                unset($curso->pivot);
+                return $curso;
+            });
+            return $plan;
+        });
+
+    return response()->json($planesEstudio, 200);
+}
 
     public function indexPaginated()
     {
@@ -23,11 +34,13 @@ class PlanEstudioController extends Controller
         $per_page = request('per_page', 10);
         $especialidad_id = request('especialidad_id', null);
 
-        $planesEstudio = PlanEstudio::with('cursos')
-            ->orWhere('cod_curso', 'like', "%$search%")
-            ->orWhere('nombre', 'like', "%$search%")
+        $planesEstudio = PlanEstudio::with('cursos', 'semestres', 'cursos.requisitos')
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
+            })
+            ->where(function ($query) use ($search) {
+                $query->orWhere('cod_curso', 'like', "%$search%")
+                    ->orWhere('nombre', 'like', "%$search%");
             })
             ->paginate($per_page);
 
@@ -46,86 +59,96 @@ class PlanEstudioController extends Controller
 
     public function show($id)
     {
-        $planEstudio = PlanEstudio::with('cursos', 'semestres')->find($id);
-        if ($planEstudio) {
-            return response()->json($planEstudio, 200);
-        } else {
-            return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
-        }
+        $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])->find($id);
+
+        return response()->json($planesEstudio, 200);
     }
 
     public function store(Request $request)
     {
         try {
             $request->validate([
-                'codigo' => 'required',
+                'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
-                'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-                'estado' => 'required',
+                'semestres' => 'nullable|array',
+                'semestres.*.id' => 'exists:semestres,id',
                 'cursos' => 'nullable|array',
                 'cursos.*.id' => 'required|exists:cursos,id',
-                'cursos.*.especialidad_id' => 'required|exists:especialidades,id',
-                'semestres' => 'nullable|array',
-                'semestres.*.id' => 'required|exists:semestres,id',
+                'cursos.*.nivel' => 'required|integer|min:0',
+                'cursos.*.creditosReq' => 'nullable|integer|min:0',
+                'cursos.*.requisitos' => 'nullable|array',
+                'cursos.*.requisitos.*.tipo' => 'required|string',
+                'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
-        } catch (\Exception $e) {
-            Log::channel('plan_estudio')->error('Error al validar los datos del plan de estudio', [
-                'message' => $e->getMessage(),
-                'request' => $request->all(),
-            ]);
-            return response()->json(['message' => 'Error al validar los datos: ' . $e->getMessage()], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
         }
 
-        DB::beginTransaction();
         try {
-            $planEstudio = PlanEstudio::create($request->only([
-                'codigo',
-                'especialidad_id',
-                'fecha_inicio',
-                'fecha_fin',
-                'estado'
-            ]));
+            $planEstudio = PlanEstudio::create([
+                'estado' => $request->estado,
+                'especialidad_id' => $request->especialidad_id,
+            ]);
 
-            if ($request->filled('cursos')) {
-                $planEstudio->cursos()->attach($request->cursos);
+            if ($request->has('semestres')) {
+                $semestreIds = array_column($request->semestres, 'id');
+                $planEstudio->semestres()->sync($semestreIds);
             }
 
-            if ($request->filled('semestres')) {
-                $planEstudio->semestres()->attach($request->semestres);
+            if ($request->has('cursos')) {
+                foreach ($request->cursos as $cursoData) {
+                    $planEstudio->cursos()->attach(
+                        $cursoData['id'],
+                        [
+                            'nivel' => $cursoData['nivel'],
+                            'creditosReq' => $cursoData['creditosReq'] ?? 0
+                        ]
+                    );
+
+                    if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
+                        foreach ($cursoData['requisitos'] as $requisitoData) {
+                            Requisito::create([
+                                'curso_id' => $cursoData['id'],
+                                'plan_estudio_id' => $planEstudio->id,
+                                'curso_requisito_id' => $requisitoData['curso_requisito_id'],
+                                'tipo' => $requisitoData['tipo'],
+                                'notaMinima' => $requisitoData['notaMinima'],
+                            ]);
+                        }
+                    }
+                }
             }
 
-            DB::commit();
-            return response()->json($planEstudio, 201);
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Plan de estudio creado exitosamente', 'plan_estudio' => $planEstudio], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            Log::channel('usuarios')->error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al crear el plan de estudio: ' . $e->getMessage()], 500);
         }
     }
 
-    public function update(Request $request, $id) {
+
+    public function update(Request $request, $id)
+    {
         try {
             $request->validate([
-                'codigo' => 'required',
+                'estado' => 'required|in:activo,inactivo',
                 'especialidad_id' => 'required|exists:especialidades,id',
-                'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-                'estado' => 'required',
+                'semestres' => 'nullable|array',
+                'semestres.*.id' => 'exists:semestres,id',
                 'cursos' => 'nullable|array',
                 'cursos.*.id' => 'required|exists:cursos,id',
-                'cursos.*.especialidad_id' => 'required|exists:especialidades,id',
-                'semestres' => 'nullable|array',
-                'semestres.*.id' => 'required|exists:semestres,id',
+                'cursos.*.nivel' => 'required|integer|min:0',
+                'cursos.*.creditosReq' => 'nullable|integer|min:0',
+                'cursos.*.requisitos' => 'nullable|array',
+                'cursos.*.requisitos.*.tipo' => 'required|string',
+                'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
+                'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
-        } catch (\Exception $e) {
-            Log::channel('plan_estudio')->error('Error al validar los datos del plan de estudio', [
-                'message' => $e->getMessage(),
-                'request' => $request->all(),
-            ]);
-            return response()->json(['message' => 'Error al validar los datos: ' . $e->getMessage()], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos invalidos: ' . $e->getMessage()], 400);
         }
 
         $planEstudio = PlanEstudio::find($id);
@@ -133,32 +156,57 @@ class PlanEstudioController extends Controller
             return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
         }
 
-        DB::beginTransaction();
         try {
-            $planEstudio->update($request->only([
-                'codigo',
-                'especialidad_id',
-                'fecha_inicio',
-                'fecha_fin',
-                'estado'
-            ]));
+            $planEstudio->update([
+                'estado' => $request->estado,
+                'especialidad_id' => $request->especialidad_id,
+            ]);
 
-            if ($request->filled('cursos')) {
-                $planEstudio->cursos()->sync($request->cursos);
+            if ($request->has('semestres')) {
+                $semestreIds = array_column($request->semestres, 'id');
+                $planEstudio->semestres()->sync($semestreIds);
             }
 
-            if ($request->filled('semestres')) {
-                $planEstudio->semestres()->sync($request->semestres);
+            if ($request->has('cursos')) {
+                $planEstudio->cursos()->detach();
+                foreach ($request->cursos as $cursoData) {
+                    $planEstudio->cursos()->attach(
+                        $cursoData['id'],
+                        [
+                            'nivel' => $cursoData['nivel'],
+                            'creditosReq' => $cursoData['creditosReq'] ?? 0
+                        ]
+                    );
+
+                    if (isset($cursoData['requisitos']) && is_array($cursoData['requisitos'])) {
+                        foreach ($cursoData['requisitos'] as $requisitoData) {
+                            Requisito::create([
+                                'curso_id' => $cursoData['id'],
+                                'plan_estudio_id' => $planEstudio->id,
+                                'curso_requisito_id' => $requisitoData['curso_requisito_id'],
+                                'tipo' => $requisitoData['tipo'],
+                                'notaMinima' => $requisitoData['notaMinima']
+                            ]);
+                        }
+                    }
+                }
             }
 
-            DB::commit();
-            return response()->json($planEstudio, 200);
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Plan de estudio actualizado exitosamente', 'plan_estudio' => $planEstudio], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            Log::channel('usuarios')->error('Error al actualizar el plan de estudio', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error al actualizar el plan de estudio: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function destroy($id)
+    {
+        $planEstudio = PlanEstudio::find($id);
+        if (!$planEstudio) {
+            return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
+        }
+
+        $planEstudio->delete();
+        return response()->json(['message' => 'Plan de estudio eliminado correctamente'], 200);
     }
 }

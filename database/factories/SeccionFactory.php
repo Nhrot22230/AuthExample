@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Departamento;
-use App\Models\Docente;
-use App\Models\Seccion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,11 +17,14 @@ class SeccionFactory extends Factory
      */
     public function definition(): array
     {
-        $random_departamento = Departamento::inRandomOrder()->first();
+        $random_departamento = Departamento::inRandomOrder()->first() ?? Departamento::factory()->create();
+
+        $nombre_seccion = $this->faker->randomElement(['Sección', 'Grupo', 'Clase']) . ' ' . 
+                          $this->faker->randomElement(['A', 'B', 'C', 'D', '1', '2', '3', '4']);
 
         return [
-            'nombre' => $this->faker->word,
-            'departamento_id' => $random_departamento->id ?? Departamento::factory(),
+            'nombre' => $nombre_seccion,
+            'departamento_id' => $random_departamento->id,
         ];
     }
 }

@@ -28,6 +28,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('estudiante_horario', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade');
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->boolean('encuestaDocente')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('estudiante_horario_jp', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('estudiante_horario_id')->constrained('estudiante_horario')->onDelete('cascade');
+            $table->foreignId('jp_horario_id')->constrained('jp_horario')->onDelete('cascade');
+            $table->boolean('encuestaJP')->default(false);
+            $table->timestamps();
+        });
+
         Schema::create('docente_horario', function (Blueprint $table) {
             $table->id();
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
@@ -42,6 +58,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('docente_horario');
+        Schema::dropIfExists('estudiante_horario_jp');
+        Schema::dropIfExists('estudiante_horario');
         Schema::dropIfExists('jp_horario');
         Schema::dropIfExists('horarios');
     }

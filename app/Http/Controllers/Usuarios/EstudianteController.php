@@ -144,7 +144,7 @@ class EstudianteController extends Controller
                 'estudiantes.*.Nombre' => 'required|string',
                 'estudiantes.*.ApellidoPaterno' => 'nullable|string',
                 'estudiantes.*.ApellidoMaterno' => 'nullable|string',
-                'estudiantes.*.Email' => 'required|email:rfc,dns',
+                'estudiantes.*.Email' => 'required|email|unique:usuarios,email',
                 'estudiantes.*.Especialidad' => 'required|string|exists:especialidades,nombre',
                 'estudiantes.*.Facultad' => 'required|string|exists:facultades,nombre',
             ]);

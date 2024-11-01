@@ -27,9 +27,4 @@ class Requisito extends Model
     {
         return $this->belongsTo(Curso::class);
     }
-
-    public function planEstudio()
-    {
-        return $this->belongsTo(PlanEstudio::class);
-    }
 }

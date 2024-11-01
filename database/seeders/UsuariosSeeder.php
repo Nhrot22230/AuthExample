@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Administrativo;
+use App\Models\Area;
 use App\Models\Docente;
+use App\Models\Especialidad;
 use App\Models\Estudiante;
+use App\Models\Seccion;
 use App\Models\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -30,8 +33,18 @@ class UsuariosSeeder extends Seeder
             'lugarTrabajo' => 'admin',
             'cargo' => 'admin',
         ]);
-        Docente::factory(30)->create();
-        Estudiante::factory(50)->create();
-        Administrativo::factory(5)->create();
+        Docente::create([
+            'usuario_id' => $admin->id,
+            'codigoDocente' => 'admin',
+            'tipo' => 'TPA',
+            'especialidad_id' => Especialidad::inRandomOrder()->first()->id,
+            'seccion_id' => Seccion::inRandomOrder()->first()->id,
+            'area_id' => Area::inRandomOrder()->first()->id,
+        ]);
+
+        $factor = 2;
+        Docente::factory(8 * $factor)->create();
+        Estudiante::factory(50 * $factor)->create();
+        Administrativo::factory(1 *$factor)->create();
     }
 }

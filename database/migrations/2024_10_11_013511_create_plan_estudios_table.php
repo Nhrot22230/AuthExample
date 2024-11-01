@@ -6,41 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('plan_estudios', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 10)->unique();
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin');
+            $table->integer('cantidad_semestres')->default(10);
+            $table->foreignId('especialidad_id')->constrained('especialidades');
             $table->enum('estado', ['activo', 'inactivo'])->default('inactivo');
             $table->timestamps();
         });
 
         Schema::create('plan_estudio_semestre', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('plan_estudio_id')->constrained();
-            $table->foreignId('semestre_id')->constrained();
+            $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
+            $table->foreignId('semestre_id')->constrained('semestres')->onDelete('cascade');
             $table->timestamps();
         });
 
         Schema::create('plan_estudio_curso', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('nivel');
-            $table->foreignId('curso_id')->constrained();
-            $table->foreignId('plan_estudio_id')->constrained();
+            $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
+            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->integer('nivel')->default(0);
+            $table->double('creditosReq')->default(0);
             $table->timestamps();
         });
 
-        Schema::create('curso_requisito', function (Blueprint $table) {
+        Schema::create('requisitos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('plan_estudio_id')->constrained('plan_estudios')->onDelete('cascade');
-            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
-            $table->foreignId('requisito_id')->constrained('cursos')->onDelete('cascade');
-            $table->string('tipo');
+            $table->foreignId('curso_id')->constrained('cursos');
+            $table->foreignId('plan_estudio_id')->constrained('plan_estudios');
+            $table->foreignId('curso_requisito_id')->constrained('cursos');
+            $table->enum('tipo', ['simultaneo', 'llevado']);
+            $table->double('notaMinima')->default(0);
             $table->timestamps();
         });
     }
@@ -50,9 +48,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('curso_requisito');
-        Schema::dropIfExists('plan_estudio_semestre');
+        Schema::dropIfExists('requisitos');
         Schema::dropIfExists('plan_estudio_curso');
+        Schema::dropIfExists('plan_estudio_semestre');
         Schema::dropIfExists('plan_estudios');
     }
 };
