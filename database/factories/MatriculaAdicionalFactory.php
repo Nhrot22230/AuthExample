@@ -5,6 +5,8 @@ namespace Database\Factories;
 use App\Models\MatriculaAdicional;
 use App\Models\Estudiante;
 use App\Models\Especialidad;
+use App\Models\Curso;
+use App\Models\Horario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MatriculaAdicional>
@@ -28,7 +30,15 @@ class MatriculaAdicionalFactory extends Factory
             'especialidad_id' => function (array $attributes) {
                 return Estudiante::find($attributes['estudiante_id'])->especialidad_id;
             },
+            'horario_id' => function (array $attributes) {
+                $horario = Horario::inRandomOrder()->first();
+                return $horario->id;
+            },
+            'curso_id' => function (array $attributes) {
+                return Horario::find($attributes['horario_id'])->curso_id;
+            },
 
+         
             'motivo' => $this->faker->sentence(),
             'justificacion' => $this->faker->paragraph(),
             'estado' => $this->faker->randomElement(['pendiente', 'pendiente1','aprobado', 'rechazado']),

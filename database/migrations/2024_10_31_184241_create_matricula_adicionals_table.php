@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade'); // Relación con la tabla estudiantes
             $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade'); // Relación con la tabla especialidades
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade'); // Relación con la tabla estudiantes
+            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade'); // Relación con la tabla especialidades
             $table->string('motivo');
+       
             $table->text('justificacion');
             $table->enum('estado', ['pendiente', 'pendiente1', 'rechazado','aprobado']);
             $table->string('motivo_rechazo')->nullable();

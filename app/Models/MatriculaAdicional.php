@@ -15,7 +15,9 @@ class MatriculaAdicional extends Model
         'motivo', 
         'justificacion', 
         'estado', 
-        'motivo_rechazo'
+        'motivo_rechazo',
+        'curso_id',
+        'horario_id'
     ];
 
     public function estudiante()
@@ -26,5 +28,15 @@ class MatriculaAdicional extends Model
     public function especialidad()
     {
         return $this->belongsTo(Especialidad::class, 'especialidad_id');
+    }
+
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class, 'curso_id');
+    }
+
+    public function horario()
+    {
+        return $this->belongsTo(Horario::class, 'horario_id');
     }
 }

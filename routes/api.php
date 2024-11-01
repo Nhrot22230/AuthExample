@@ -50,6 +50,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
+        Route::get('/matriculas-adicionales/facultad/{facultadId}', [MatriculaAdicionalController::class, 'getByFacultad'])->middleware('can:ver mis matriculas_adicionales');
 
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
