@@ -90,7 +90,9 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/planes-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
 
         Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:crear matriculas_adicionales');
-
+        Route::get('/matriculas-adicionales', [MatriculaAdicionalController::class, 'getAll'])->middleware('can:ver matriculas_adicionales');
+        Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_adicionales');
+        Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes eliminar el middleware si no deseas autorización
         
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');

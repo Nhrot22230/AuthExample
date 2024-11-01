@@ -38,4 +38,31 @@ class MatriculaAdicionalController extends Controller
         // Retornar la respuesta
         return response()->json($matricula, 201);
     }
+
+    public function getAll()
+    {
+        // Carga ansiosa para obtener los datos relacionados
+        $matriculas = MatriculaAdicional::with(['estudiante.usuario', 'especialidad'])->get();
+        return response()->json($matriculas);
+    }
+
+    public function getByEspecialidad($id)
+    {
+        // Cargar las solicitudes filtradas por especialidad, junto con las relaciones necesarias
+        $matriculas = MatriculaAdicional::with(['estudiante.usuario', 'especialidad'])
+            ->where('especialidad_id', $id)
+            ->get();
+
+        return response()->json($matriculas);
+    }
+
+    public function getByEstudiante($estudianteId)
+    {
+        
+        $matriculas = MatriculaAdicional::with(['estudiante.usuario', 'especialidad'])
+            ->where('estudiante_id', $estudianteId)
+            ->get();
+
+        return response()->json($matriculas);
+    }
 }

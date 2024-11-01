@@ -113,7 +113,9 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'eliminar permisos', 'category' => 'permisos'],
 
             ['name' => 'crear matriculas_adicionales', 'category' => 'permisos'],
-
+            ['name' => 'ver matriculas_adicionales', 'category' => 'permisos'],
+            ['name' => 'ver mis matriculas_adicionales', 'category' => 'permisos'],
+            
             
         ];
 
