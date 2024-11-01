@@ -111,6 +111,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'asignar permisos', 'category' => 'permisos'],
             ['name' => 'revocar permisos', 'category' => 'permisos'],
             ['name' => 'eliminar permisos', 'category' => 'permisos'],
+
+            ['name' => 'crear matriculas_adicionales', 'category' => 'permisos'],
+
+            
         ];
 
         foreach ($roles as $role) {

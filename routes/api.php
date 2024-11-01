@@ -17,6 +17,8 @@ use App\Http\Controllers\Usuarios\UsuarioController;
 use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
+use App\Http\Controllers\MatriculaAdicionalController;
+
 
 Route::get('/test', function () {
     return response()->json([
@@ -87,6 +89,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/planes-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:editar planes de estudio');
         Route::get('/planes-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
 
+        Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:crear matriculas_adicionales');
+
         
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');
@@ -144,6 +148,9 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
+
+
+
     });
 });
 
