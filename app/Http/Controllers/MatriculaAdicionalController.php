@@ -47,34 +47,34 @@ class MatriculaAdicionalController extends Controller
     }
 
     public function getByEspecialidad($id)
-{
-    // Cargar las solicitudes filtradas por especialidad, junto con las relaciones necesarias
-    $matriculas = MatriculaAdicional::with([
-        'estudiante.usuario', 
-        'especialidad', 
-        'curso', 
-        'horario', 
-        'horario.docentes.usuario:id,nombre,apellido_paterno' // Incluye los docentes a través de horario
-    ])
-    ->where('especialidad_id', $id)
-    ->get();
+    {
+            // Cargar las solicitudes filtradas por especialidad, junto con las relaciones necesarias
+            $matriculas = MatriculaAdicional::with([
+                'estudiante.usuario', 
+                'especialidad', 
+                'curso', 
+                'horario', 
+                'horario.docentes.usuario:id,nombre,apellido_paterno' // Incluye los docentes a través de horario
+            ])
+            ->where('especialidad_id', $id)
+            ->get();
 
-    // Procesar los resultados para adaptarlos a la estructura deseada
-    $result = $matriculas->map(function ($matricula) {
-        $estudiante = $matricula->estudiante;
-        return [
-            'codigo' => $estudiante->codigoEstudiante, // Código del estudiante
-            'nombres' => $estudiante->usuario->nombre . ' ' . $estudiante->usuario->apellido_paterno . ' ' . $estudiante->usuario->apellido_materno, // Nombres completos
-            'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'), // Formato día-mes-año
-            'curso' => $matricula->curso->nombre, // Nombre del curso
-            'horario' => $matricula->horario->nombre, // Nombre del horario
-            
-            'estado' => $matricula->estado, // Estado
-        ];
-    });
+            // Procesar los resultados para adaptarlos a la estructura deseada
+            $result = $matriculas->map(function ($matricula) {
+                $estudiante = $matricula->estudiante;
+                return [
+                    'codigo' => $estudiante->codigoEstudiante, // Código del estudiante
+                    'nombres' => $estudiante->usuario->nombre . ' ' . $estudiante->usuario->apellido_paterno . ' ' . $estudiante->usuario->apellido_materno, // Nombres completos
+                    'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'), // Formato día-mes-año
+                    'curso' => $matricula->curso->nombre, // Nombre del curso
+                    'horario' => $matricula->horario->nombre, // Nombre del horario
+                    
+                    'estado' => $matricula->estado, // Estado
+                ];
+            });
 
-    return response()->json($result);
-}
+            return response()->json($result);
+    }
     
     public function getByEstudiante($estudianteId)
     {

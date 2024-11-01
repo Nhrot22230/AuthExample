@@ -50,7 +50,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:editar facultades');
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:eliminar facultades');
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
-        Route::get('/matriculas-adicionales/facultad/{facultadId}', [MatriculaAdicionalController::class, 'getByFacultad'])->middleware('can:ver mis matriculas_adicionales');
+        Route::get('/matriculas-adicionales/facultad/{facultadId}', [MatriculaAdicionalController::class, 'getByFacultad'])->middleware('can:ver matriculas_facultad');
 
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
@@ -97,8 +97,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
 
         Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:crear matriculas_adicionales');
-        Route::get('/matriculas-adicionales', [MatriculaAdicionalController::class, 'getAll'])->middleware('can:ver matriculas_adicionales');
-        Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_adicionales');
+        //Route::get('/matriculas-adicionales', [MatriculaAdicionalController::class, 'getAll'])->middleware('can:ver matriculas_adicionales');
+        Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_especialidad');
         Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes eliminar el middleware si no deseas autorización
         
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
