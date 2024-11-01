@@ -47,68 +47,67 @@ class MatriculaAdicionalController extends Controller
     }
 
     public function getByEspecialidad($id)
-    {
-            // Cargar las solicitudes filtradas por especialidad, junto con las relaciones necesarias
-            $matriculas = MatriculaAdicional::with([
-                'estudiante.usuario', 
-                'especialidad', 
-                'curso', 
-                'horario', 
-                'horario.docentes.usuario:id,nombre,apellido_paterno' // Incluye los docentes a través de horario
-            ])
-            ->where('especialidad_id', $id)
-            ->get();
+{
+    $matriculas = MatriculaAdicional::with([
+        'estudiante.usuario', 
+        'especialidad', 
+        'curso', 
+        'horario', 
+        'horario.docentes.usuario:id,nombre,apellido_paterno'
+    ])
+    ->where('especialidad_id', $id)
+    ->get();
 
-            // Procesar los resultados para adaptarlos a la estructura deseada
-            $result = $matriculas->map(function ($matricula) {
-                $estudiante = $matricula->estudiante;
-                return [
-                    'codigo' => $estudiante->codigoEstudiante, // Código del estudiante
-                    'nombres' => $estudiante->usuario->nombre . ' ' . $estudiante->usuario->apellido_paterno . ' ' . $estudiante->usuario->apellido_materno, // Nombres completos
-                    'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'), // Formato día-mes-año
-                    'curso' => $matricula->curso->nombre, // Nombre del curso
-                    'horario' => $matricula->horario->nombre, // Nombre del horario
-                    
-                    'estado' => $matricula->estado, // Estado
-                ];
-            });
-
-            return response()->json($result);
-    }
-    
-    public function getByEstudiante($estudianteId)
-    {
-        $matriculas = MatriculaAdicional::with([
-            'estudiante.usuario', 
-            'especialidad', 
-            'curso', 
-            'horario', 
-            'horario.docentes.usuario:id,nombre,apellido_paterno',// Incluye los docentes a través de horario
-        ])
-        ->where('estudiante_id', $estudianteId)
-        ->get();
-    
-        $result = $matriculas->map(function ($matricula) {
+    $result = $matriculas->map(function ($matricula) {
+        $estudiante = $matricula->estudiante;
         return [
-            'clave' => $matricula->curso->cod_curso,
+            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'codigo' => $estudiante->codigoEstudiante,
+            'nombres' => $estudiante->usuario->nombre . ' ' . $estudiante->usuario->apellido_paterno . ' ' . $estudiante->usuario->apellido_materno,
+            'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'),
             'curso' => $matricula->curso->nombre,
             'horario' => $matricula->horario->nombre,
-            'profesor' => isset($matricula->horario->docentes->first()->usuario) 
-    ? $matricula->horario->docentes->first()->usuario->nombre . ' ' . $matricula->horario->docentes->first()->usuario->apellido_paterno : 'Sin Profesor',
-
-            'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'), // Formato día-mes-año
             'estado' => $matricula->estado,
         ];
     });
 
     return response()->json($result);
-    }
+}
+    
+public function getByEstudiante($estudianteId)
+{
+    $matriculas = MatriculaAdicional::with([
+        'estudiante.usuario', 
+        'especialidad', 
+        'curso', 
+        'horario', 
+        'horario.docentes.usuario:id,nombre,apellido_paterno',
+    ])
+    ->where('estudiante_id', $estudianteId)
+    ->get();
 
-    public function getByFacultad($facultadId)
+    $result = $matriculas->map(function ($matricula) {
+        return [
+            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'clave' => $matricula->curso->cod_curso,
+            'curso' => $matricula->curso->nombre,
+            'horario' => $matricula->horario->nombre,
+            'profesor' => isset($matricula->horario->docentes->first()->usuario) 
+                ? $matricula->horario->docentes->first()->usuario->nombre . ' ' . $matricula->horario->docentes->first()->usuario->apellido_paterno 
+                : 'Sin Profesor',
+            'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'),
+            'estado' => $matricula->estado,
+        ];
+    });
+
+    return response()->json($result);
+}
+
+public function getByFacultad($facultadId)
 {
     $matriculas = MatriculaAdicional::with([
         'estudiante.usuario',
-        'especialidad', // Asegúrate de incluir especialidad
+        'especialidad',
         'curso',
         'horario',
         'horario.docentes.usuario',
@@ -120,12 +119,13 @@ class MatriculaAdicionalController extends Controller
 
     $result = $matriculas->map(function ($matricula) {
         return [
-            'codigo' => $matricula->estudiante->codigoEstudiante, // Código del estudiante
-            'nombres' => $matricula->estudiante->usuario->nombre . ' ' . $matricula->estudiante->usuario->apellido_paterno, // Nombre completo
-            'ultimaModificacion' => $matricula->updated_at->format('d/m/Y'), // Formato de fecha
-            'curso' => $matricula->curso->nombre, // Nombre del curso
-            'especialidad' => $matricula->especialidad->nombre, // Nombre de la especialidad
-            'estado' => $matricula->estado, // Estado de la solicitud
+            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'codigo' => $matricula->estudiante->codigoEstudiante,
+            'nombres' => $matricula->estudiante->usuario->nombre . ' ' . $matricula->estudiante->usuario->apellido_paterno,
+            'ultimaModificacion' => $matricula->updated_at->format('d/m/Y'),
+            'curso' => $matricula->curso->nombre,
+            'especialidad' => $matricula->especialidad->nombre,
+            'estado' => $matricula->estado,
         ];
     });
 
