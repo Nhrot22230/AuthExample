@@ -177,6 +177,9 @@ Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']
 Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
 Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
+Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
+
+
 use App\Http\Controllers\ImageController;
 
 Route::prefix('v1')->group(function () {

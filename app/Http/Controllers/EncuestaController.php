@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+
+
 use App\Models\Curso;
 use App\Models\Encuesta;
 use App\Models\Especialidad;
 use App\Models\Horario;
 use App\Models\Semestre;
+use App\Models\RespuestasPreguntaDocente;
+use App\Models\HorarioEstudiante;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Psy\Util\Json;
+
 
 class EncuestaController extends Controller
 {
@@ -136,6 +143,85 @@ class EncuestaController extends Controller
         ];
 
         return response()->json($detalleEncuesta);
+    }
+
+    public function registrarRespuestas(Request $request, $encuestaId, $horarioId)
+    {
+        $encuesta = Encuesta::with('horario', 'pregunta')->findOrFail($encuestaId);
+        
+        if (!$encuesta->horario->contains('id', $horarioId)) {
+            return response()->json(['error' => 'El horario no está asociado a esta encuesta'], 400);
+        }
+        
+        try {
+            $data = $request->validate([
+                'estudiante_id' => 'required|exists:estudiantes,id', // ID del estudiante
+                'respuestas' => 'required|array',
+                'respuestas.*.pregunta_id' => 'required|exists:preguntas,id',
+                'respuestas.*.respuesta' => 'required|integer|min:1|max:5', // Escala de 1 a 5
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        $estudianteMatriculado = HorarioEstudiante::where('horario_id', $horarioId)
+            ->where('estudiante_id', $data['estudiante_id'])
+            ->exists();
+
+        if (!$estudianteMatriculado) {
+            return response()->json(['error' => 'El estudiante no está matriculado en el horario especificado'], 400);
+        }
+                
+        try {
+            if ($encuesta->tipo_encuesta === 'docente') {
+                $this->registrarRespuestasDocente($data, $encuesta, $horarioId);
+                HorarioEstudiante::where('horario_id', $horarioId)
+                    ->where('estudiante_id', $data['estudiante_id'])
+                    ->update(['encuestaDocente' => true]);
+                return response()->json(['message' => 'Respuestas de docente registradas exitosamente'], 200);
+            } elseif ($encuesta->tipo_encuesta === 'jefe_practica') {
+                return response()->json(['error' => 'No implementada la encuesta JP'], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    protected function registrarRespuestasDocente($data, $encuesta, $horarioId)
+    {
+        foreach ($data['respuestas'] as $respuesta) {
+            $preguntaId = $respuesta['pregunta_id'];
+            $valorRespuesta = $respuesta['respuesta'];
+
+            $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
+            
+            if (!$encuestaPregunta) {
+                throw new \Exception('La pregunta no está asociada a esta encuesta');
+            }
+            $respuestaDocente = RespuestasPreguntaDocente::firstOrCreate(
+                [
+                    'horario_id' => (int) $horarioId,
+                    'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
+                ],
+                ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
+            );
+    
+            if (!$respuestaDocente) {
+                throw new \Exception('No se pudo crear o encontrar el registro en RespuestasPreguntaDocente');
+            }
+
+            if ($valorRespuesta === 1) {
+                $respuestaDocente->increment('cant1');
+            } elseif ($valorRespuesta === 2) {
+                $respuestaDocente->increment('cant2');
+            } elseif ($valorRespuesta === 3) {
+                $respuestaDocente->increment('cant3');
+            } elseif ($valorRespuesta === 4) {
+                $respuestaDocente->increment('cant4');
+            } elseif ($valorRespuesta === 5) {
+                $respuestaDocente->increment('cant5');
+            }
+        }
     }
 
 }
