@@ -18,6 +18,7 @@ use App\Http\Controllers\Usuarios\UsuarioController;
 use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
+use App\Http\Controllers\EstudianteRiesgoController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -185,3 +186,5 @@ Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocent
 
 
 Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
+
+Route::get('/estudiantesRiesgo/especialidad/{codigoEspecialidad}', [EstudianteRiesgoController::class, 'listar_por_especialidad']);

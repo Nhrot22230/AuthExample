@@ -41,4 +41,9 @@ class Curso extends Model
         return $this->hasMany(Horario::class);
     }
 
+    public function estudiantesRiesgo()
+    {
+        return $this->hasMany(EstudianteRiesgo::class, 'codigo_curso', 'id');
+    }
+
 }

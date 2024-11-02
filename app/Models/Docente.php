@@ -43,4 +43,9 @@ class Docente extends Model
     {
         return $this->belongsToMany(Horario::class, 'docente_horario');
     }
+
+    public function estudiantesRiesgo()
+    {
+        return $this->hasMany(EstudianteRiesgo::class, 'codigo_docente', 'codigoDocente');
+    }
 }

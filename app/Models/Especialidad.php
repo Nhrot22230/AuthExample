@@ -37,4 +37,9 @@ class Especialidad extends Model
     {
         return $this->hasMany(Area::class);
     }
+
+    public function estudiantesRiesgo()
+    {
+        return $this->hasMany(EstudianteRiesgo::class, 'codigo_especialidad', 'id');
+    }
 }
