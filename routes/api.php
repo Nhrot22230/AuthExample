@@ -172,11 +172,24 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     });
 });
 
+//Ruta que con el id del estudiante te saca todos los cursos en los que esta matriculado el semestre actual
+// !!!Falta revisar lo del semestre actual (esta hardcodeado)
 Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
+
+//Ruta que con el id de horario (obtenido de la previa ruta) te da un listado de los Jps para evaluar
 Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
+
+//Ruta que con el id del estudiante puede listar el curso y los docentes que esta matriculado el semestre actual
+// !!!Falta revisar lo del semestre actual (esta hardcodeado)
 Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
+
+//Ruta que te muestra los datos de una encuesta, las preguntas asociadas, si fuera JP te pide el idJP, si fuera docente no necesita
+// !!!Creo que no he pasado previamente encuestaId (Pendiente de revisar) 
 Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
+//Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
+//Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado
+//Actualmente solo sirve para guardar respuestas de docentes que no sean texto
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
 
