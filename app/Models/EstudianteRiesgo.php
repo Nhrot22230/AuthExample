@@ -45,4 +45,9 @@ class EstudianteRiesgo extends Model
     {
         return $this->belongsTo(Especialidad::class, 'codigo_especialidad', 'id');
     }
+
+    public function informes()
+    {
+        return $this->hasMany(InformeRiesgo::class, 'codigo_alumno_riesgo', 'id');
+    }
 }

@@ -19,11 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('codigo_especialidad');
             $table->string('horario')->nullable();
             $table->string('riesgo')->nullable();
-            $table->string('estado')->nullable();
             $table->date('fecha')->nullable();
-            $table->string('desempenho')->nullable();
-            $table->text('observaciones')->nullable();
-            $table->string('nombre')->nullable();
             $table->timestamps();
 
             // Definición de llaves foráneas
