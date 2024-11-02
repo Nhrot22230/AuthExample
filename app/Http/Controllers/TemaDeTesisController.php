@@ -17,11 +17,11 @@ class TemaDeTesisController extends Controller
         $especialidad_id = $request->input('especialidad_id', null);
 
         $query = TemaDeTesis::with([
-                'especialidad',
-                'jurados.usuario',      // Cargar los datos del usuario de cada jurado
-                'asesores.usuario',     // Cargar los datos del usuario de cada asesor
-                'estudiantes.usuario'   // Cargar los datos del usuario de cada estudiante
-            ])
+            'especialidad',
+            'jurados.usuario',
+            'asesores.usuario',
+            'estudiantes.usuario'
+        ])
             ->when($facultad_id, function ($query) use ($facultad_id) {
                 $query->whereHas('especialidad', function ($q) use ($facultad_id) {
                     $q->where('facultad_id', $facultad_id);
@@ -29,13 +29,18 @@ class TemaDeTesisController extends Controller
             })
             ->when($especialidad_id, function ($query) use ($especialidad_id) {
                 $query->where('especialidad_id', $especialidad_id);
-            })
-            ->where(function ($query) use ($search) {
-                $query->where('titulo', 'like', "%$search%")
-                    ->orWhere('resumen', 'like', "%$search%");
             });
 
+        // Asegúrate de que esta cláusula where esté separada de las demás para aplicar la búsqueda correctamente
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('titulo', 'like', "%$search%")
+                    ->orWhere('resumen', 'like', "%$search%");
+            });
+        }
+
         $temasDeTesis = $query->paginate($per_page);
+
 
         return response()->json($temasDeTesis, 200);
     }
@@ -44,12 +49,12 @@ class TemaDeTesisController extends Controller
     public function show($id)
     {
         $temaDeTesis = TemaDeTesis::with([
-                'especialidad',
-                'jurados.usuario',      // Cargar los datos del usuario de cada jurado
-                'asesores.usuario',     // Cargar los datos del usuario de cada asesor
-                'estudiantes.usuario',  // Cargar los datos del usuario de cada estudiante
-                'observaciones'
-            ])
+            'especialidad',
+            'jurados.usuario',      // Cargar los datos del usuario de cada jurado
+            'asesores.usuario',     // Cargar los datos del usuario de cada asesor
+            'estudiantes.usuario',  // Cargar los datos del usuario de cada estudiante
+            'observaciones'
+        ])
             ->findOrFail($id);
 
         return response()->json($temaDeTesis, 200);
