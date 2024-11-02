@@ -19,6 +19,7 @@ use App\Http\Controllers\Usuarios\UsuarioController;
 use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
+use App\Http\Controllers\ImageController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -172,19 +173,19 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     });
 });
 
-//Ruta que con el id del estudiante te saca todos los cursos en los que esta matriculado el semestre actual
+//Ruta que con el ID del estudiante te saca todos los cursos en los que esta matriculado el semestre actual
 // !!!Falta revisar lo del semestre actual (esta hardcodeado)
 Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
 
-//Ruta que con el id de horario (obtenido de la previa ruta) te da un listado de los Jps para evaluar
+//Ruta que con el ID de horario (obtenido de la previa ruta) te da un listado de los Jps para evaluar
 Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
 
-//Ruta que con el id del estudiante puede listar el curso y los docentes que esta matriculado el semestre actual
+//Ruta que con el ID del estudiante puede listar el curso y los docentes que está matriculado el semestre actual
 // !!!Falta revisar lo del semestre actual (esta hardcodeado)
 Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
 
 //Ruta que te muestra los datos de una encuesta, las preguntas asociadas, si fuera JP te pide el idJP, si fuera docente no necesita
-// !!!Creo que no he pasado previamente encuestaId (Pendiente de revisar) 
+// !!!Creo que no he pasado previamente encuestaId (Pendiente de revisar)
 Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
 //Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
@@ -193,8 +194,6 @@ Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaCont
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
 
-use App\Http\Controllers\ImageController;
-
 Route::prefix('v1')->group(function () {
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
@@ -202,7 +201,7 @@ Route::prefix('v1')->group(function () {
 
 //Listar todas las encuestas de una especialidad y un tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
-//Cantidad de preguntas de la última encuesta creada de una especialidad y un tipo de encuesta(docente/jefe_practica)
+//Cantidad de preguntas de la última encuesta según la especialidad y el tipo de encuesta(docente/jefe_practica)
 Route::get('/encuesta-latest/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
 
 
