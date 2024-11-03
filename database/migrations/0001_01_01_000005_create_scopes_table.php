@@ -31,6 +31,7 @@ return new class extends Migration
             $table->foreignId('scope_id')->constrained('scopes')->onDelete('cascade');
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
             $table->unsignedBigInteger('entity_id'); // ID de la entidad específica
+            $table->string('entity_type'); // Tipo de entidad (clase)
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Authorization\Permission;
 use App\Models\Authorization\RoleScope;
 use App\Models\Authorization\Scope;
 use App\Models\Authorization\Role;
@@ -43,14 +44,14 @@ class RoleSeeder extends Seeder
             Role::firstOrCreate(['name' => $role]);
         }
 
-        $role_director = Role::firstOrCreate(['name' => 'Director']);
-        $role_director->syncPermissions([
-            'ver especialidades',
-            'crear especialidades',
-            'editar especialidades',
-            'eliminar especialidades',
-        ]);
+        $role_director = Role::where('name', 'Director de Carrera')->first();
+        $role_director->syncPermissions(
+            Permission::orWhere('name', 'like', '%especialidades%')
+            ->orWhere('name', 'like', '%facultades%')
+            ->get()
+        );
 
+        $role_director->scopes()->attach(Scope::where('name', 'Especialidad')->first());
         $role_director->scopes()->attach(Scope::where('name', 'Facultad')->first());
     }
 }

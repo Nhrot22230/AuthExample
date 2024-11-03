@@ -19,7 +19,7 @@ class Usuario extends Authenticatable implements JWTSubject
 
     public function roleScopeUsuarios()
     {
-        return $this->hasMany(RoleScopeUsuario::class, 'usuario_id');
+        return $this->hasMany(RoleScopeUsuario::class, 'usuario_id')->with('entity');
     }
 
     protected $fillable = [
