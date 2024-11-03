@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use mysql_xdevapi\Exception;
 use DateTime;
-use Nette\Schema\ValidationException;
+use Illuminate\Validation\ValidationException;
 use function PHPUnit\Framework\isEmpty;
 
 class EstudianteRiesgoController extends Controller
@@ -270,6 +270,78 @@ class EstudianteRiesgoController extends Controller
             }
         }
         return response()->json("",201);
+    }
+
+    public function obtener_estadisticas_informes(Request $request)
+    {
+        try {
+            $especialidad = $request->IdEspecialidad;
+            // Verifica si el ID de especialidad se recibe
+            if (is_null($especialidad)) {
+                return response()->json(['error' => 'IdEspecialidad is required'], 400);
+            }
+            // Obtener todos los estudiantes en riesgo para la especialidad dada
+            $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)->get();
+
+            // Estructura de datos para almacenar los informes agrupados
+            $dataPorInforme = [];
+            $desempenhoLabels = ['Mal', 'Regular', 'Bien'];
+
+            // Recopilar todos los informes de los estudiantes en riesgo
+            $informes = collect();
+            foreach ($estudiantesRiesgo as $estudiante) {
+                $informes = $informes->merge($estudiante->informes);
+            }
+
+            // Agrupar los informes por semana y ordenar las semanas
+            $informesPorSemana = $informes->groupBy('semana')->sortKeys();
+
+            // Recorrer cada grupo de informes (por semana)
+            $semanaIndex = 1;
+            foreach ($informesPorSemana as $semana => $informesDeSemana) {
+                // Contar estadísticas de desempeño
+                $estadisticas = [
+                    'Mal' => $informesDeSemana->where('desempenho', 'Mal')->count(),
+                    'Regular' => $informesDeSemana->where('desempenho', 'Regular')->count(),
+                    'Bien' => $informesDeSemana->where('desempenho', 'Bien')->count(),
+                ];
+                $total = array_sum($estadisticas);
+
+                // Crear datos para el gráfico de pastel
+                $pieData = [
+                    'labels' => $desempenhoLabels,
+                    'datasets' => [
+                        [
+                            'data' => array_values($estadisticas),
+                        ]
+                    ]
+                ];
+
+                // Calcular completitud como el porcentaje de informes respondidos
+                $totalInformes = $informesDeSemana->count();
+                $totalRespondidos = $informesDeSemana->where('estado', 'Respondida')->count();
+                $completitud = $totalInformes > 0 ? ($totalRespondidos / $totalInformes) * 100 : 0;
+
+                // Almacenar los datos en la estructura final
+                $dataPorInforme['informe' . ($semanaIndex)] = [
+                    'estadisticas' => [
+                        ['label' => 'Mal', 'value' => $estadisticas['Mal']],
+                        ['label' => 'Regular', 'value' => $estadisticas['Regular']],
+                        ['label' => 'Bien', 'value' => $estadisticas['Bien']],
+                        ['label' => 'Total', 'value' => $total],
+                    ],
+                    'pieData' => $pieData,
+                    'completitud' => round($completitud, 0) // Redondear el porcentaje de completitud a entero
+                ];
+
+                $semanaIndex++;
+            }
+
+            // Convertir $dataPorInforme en JSON
+            return response()->json($dataPorInforme);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
     }
     /**
      * Show the form for creating a new resource.

@@ -21,6 +21,10 @@ return new class extends Migration
             $table->string('riesgo')->nullable();
             $table->date('fecha')->nullable();
             $table->string('ciclo')->nullable();
+            $table->string('estado')->default('Activo');
+            $table->string('desempenho')->nullable();
+            $table->string('nombre')->nullable();
+            $table->string('observaciones')->nullable();
             $table->timestamps();
 
             // Definición de llaves foráneas
