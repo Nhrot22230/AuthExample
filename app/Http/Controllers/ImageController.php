@@ -13,7 +13,7 @@ class ImageController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
-                'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
         } catch (\Exception $e) {
             Log::channel('usuarios')->error($e->getMessage());

@@ -6,21 +6,13 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class RolePermissionSeeder extends Seeder
+class PermissionSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $roles = [
-            'administrativo',
-            'secretarioAcademico',
-            'estudiante',
-            'docente',
-            'jefePractica',
-        ];
-
         $permissions = [
             ['name' => 'ver instituciones', 'category' => 'instituciones'],
             ['name' => 'crear instituciones', 'category' => 'instituciones'],
@@ -71,12 +63,7 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'crear horarios', 'category' => 'horarios'],
             ['name' => 'editar horarios', 'category' => 'horarios'],
             ['name' => 'eliminar horarios', 'category' => 'horarios'],
-
-            ['name' => 'ver areas', 'category' => 'areas'],
-            ['name' => 'crear areas', 'category' => 'areas'],
-            ['name' => 'editar areas', 'category' => 'areas'],
-            ['name' => 'eliminar areas', 'category' => 'areas'],
-
+            
             ['name' => 'ver administrativos', 'category' => 'administrativos'],
             ['name' => 'crear administrativos', 'category' => 'administrativos'],
             ['name' => 'editar administrativos', 'category' => 'administrativos'],
@@ -112,34 +99,8 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'eliminar permisos', 'category' => 'permisos'],
         ];
 
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
-        }
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission['name'], 'category' => $permission['category']]);
+            Permission::create($permission);
         }
-
-        $role = Role::findByName('administrativo');
-        $permissions = Permission::all();
-        $role->syncPermissions($permissions);
-
-        $role = Role::findByName('secretarioAcademico');
-        $permissions = Permission::where('category', '=', 'planes de estudio')
-        ->orWhere('category', '=', 'horarios')
-        ->orWhere('category', '=', 'areas')
-        ->orWhere('category', '=', 'departamentos')
-        ->orWhere('category', '=', 'facultades');
-        $role->syncPermissions($permissions);
-
-        $role = Role::findByName('docente');
-        $permissions = Permission::where('name', 'like', 'ver %')
-        ->orWhere('name', 'like', 'editar %')
-        ->get();
-        $role->syncPermissions($permissions);
-
-        $role = Role::findByName('estudiante');
-        $permissions = Permission::where('name', 'like', 'ver %')
-        ->get();
-        $role->syncPermissions($permissions);
     }
 }

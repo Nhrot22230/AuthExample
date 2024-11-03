@@ -54,7 +54,7 @@ return new class extends Migration
             }
 
             /* Custom fields */
-            $table->foreignId('scope_id')->nullable()->constrained('scopes')->onDelete('set null');
+            // $table->foreignId('scope_id')->nullable()->constrained('scopes')->onDelete('set null');
             /* End custom fields */
         });
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Authorization\RoleScopeUsuario;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
@@ -15,6 +16,11 @@ class Usuario extends Authenticatable implements JWTSubject
     Notifiable, 
     HasRoles, 
     HasPermissions;
+
+    public function roleScopeUsuarios()
+    {
+        return $this->hasMany(RoleScopeUsuario::class, 'usuario_id');
+    }
 
     protected $fillable = [
         'nombre',
@@ -73,9 +79,10 @@ class Usuario extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
-        return [
-            'roles' => $this->getRoleNames(),
-            'permissions' => $this->getAllPermissions()->pluck('name'),
-        ];
+        // return [
+        //     'roles' => $this->getRoleNames(),
+        //     'permissions' => $this->getAllPermissions()->pluck('name'),
+        // ];
+        return [];
     }
 }

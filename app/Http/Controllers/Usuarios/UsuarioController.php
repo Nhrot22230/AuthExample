@@ -13,31 +13,37 @@ class UsuarioController extends Controller
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
-        $tipo_usuario = request('tipo_usuario', '');
+        $tipoUsuario = request('tipo_usuario', null);
 
-        $usuarios = Usuario::with('estudiante', 'docente', 'administrativo', 'roles', 'permissions')
+        $usuarios = Usuario::with('docente', 'estudiante', 'administrativo', 'roles.scopes')
             ->where(function ($query) use ($search) {
-                $query->where('nombre', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
+                $query->where('nombre', 'like', "%$search%")
+                    ->orWhere('apellido_paterno', 'like', "%$search%")
+                    ->orWhere('apellido_materno', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
             })
-            ->when($tipo_usuario, function ($query) use ($tipo_usuario) {
-                switch ($tipo_usuario) {
-                    case 'docente':
-                        $query->whereHas('docente');
-                        break;
-                    case 'estudiante':
-                        $query->whereHas('estudiante');
-                        break;
-                    case 'administrativo':
-                        $query->whereHas('administrativo');
-                        break;
-                    default:
-                        break;
-                }
-            })
+            ->when($tipoUsuario, fn($query) => $query->whereHas($tipoUsuario))
             ->paginate($perPage);
+
+        $simplifiedUsers = collect($usuarios->items())->map(function ($usuario) {
+            return [
+                // obtener los datos de usuario sin sus relaciones
+                'usuario' => $usuario->only(['id', 'nombre', 'apellido_paterno', 'apellido_materno', 'email', 'estado', 'google_id', 'picture']),
+                'docente' => $usuario->docente,
+                'estudiante' => $usuario->estudiante,
+                'administrativo' => $usuario->administrativo,
+                'roles' => $usuario->roles->map(function ($role) use ($usuario) {
+                    $roleScopeUsuario = $usuario->roleScopeUsuarios->where('role_id', $role->id)->first();
+                    return [
+                        'scope' => $roleScopeUsuario?->scope->name,
+                        'nombre' => $role->name,
+                        'entidad' => $roleScopeUsuario?->entity,
+                    ];
+                })
+            ];
+        });
+
+        $usuarios->items($simplifiedUsers);
 
         return response()->json($usuarios, 200);
     }

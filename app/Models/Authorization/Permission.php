@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Authorization;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Models\Permission as SpatiePermission;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Authorization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -13,8 +13,8 @@ class Role extends SpatieRole
         'guard_name',
     ];
 
-    public function scope()
+    public function scopes()
     {
-        return $this->belongsTo(Scope::class);
+        return $this->belongsToMany(Scope::class, 'role_scopes', 'role_id', 'scope_id');
     }
 }
