@@ -28,7 +28,7 @@ class EstudianteRiesgoController extends Controller
         $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
     }
 
-    public function listar_por_especialidad_director(Request $request)
+    /*public function listar_por_especialidad_director(Request $request)
     {
         $request = $request->IdEspecialidad;
         $ciclo = Semestre::where('estado', 'activo')->first();
@@ -52,7 +52,7 @@ class EstudianteRiesgoController extends Controller
             ];
         }
         return response()->json($resultado);
-    }
+    }*/
 
     public function listar_informes_estudiante(Request $request)
     {
@@ -72,12 +72,70 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
+    public function listar_por_especialidad_director(Request $request)
+    {
+        // Obtiene la especialidad del request
+        $especialidadId = $request->IdEspecialidad;
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+
+        // Crea la consulta base
+        $query = EstudianteRiesgo::where('codigo_especialidad', $especialidadId)
+            ->where('ciclo', $periodo);
+
+        // Filtro por nombre o código de alumno
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery->whereHas('alumno_riesgo.estudiante', function ($q) use ($searchTerm) {
+                    $q->where('codigoEstudiante', 'like', '%' . $searchTerm . '%')
+                        ->orWhereHas('usuario', function ($q) use ($searchTerm) {
+                            $q->where('nombre', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('apellido_paterno', 'like', '%' . $searchTerm . '%');
+                        });
+                });
+            });
+        }
+
+        // Filtro por riesgo
+        if ($request->has('riesgo') && !empty($request->riesgo)) {
+            $query->where('riesgo', $request->riesgo);
+        }
+
+        // Filtro por número de semana
+        if ($request->has('semana') && !empty($request->semana)) {
+            $query->whereHas('informes_riesgo', function ($q) use ($request) {
+                $q->where('semana', $request->semana);
+            });
+        }
+
+        $estudiantesRiesgo = $query->get();
+        $resultado = [];
+
+        foreach ($estudiantesRiesgo as $estudiante) {
+            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+
+            $resultado[] = [
+                'Id' => $estudiante->id,
+                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
+                'Codigo' => $estudiante->codigo_estudiante,
+                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                'CodigoCurso' => $estudiante->codigo_curso,
+                'Horario' => $estudiante->horario,
+                'Riesgo' => $estudiante->riesgo,
+                'Fecha' => $estudiante->fecha
+            ];
+        }
+        return response()->json($resultado);
+    }
+
     public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
         InformeRiesgo::create([
+            'semana' => $numero_semana,
             'estado' => 'Pendiente',
             'fecha' => $fechaInicio,
             'codigo_alumno_riesgo' => $IdAlumnoRiesgo,
@@ -252,16 +310,21 @@ class EstudianteRiesgoController extends Controller
         }
         $ciclo = Semestre::where('estado', 'activo')->first();
         foreach ($request->alumnos as $alumno){
-            Log::channel('usuarios')->info($alumno);
-            EstudianteRiesgo::create([
-                'codigo_estudiante' => $alumno['Codigo'],
-                'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
-                'codigo_especialidad' => $request->Especialidad,
-                'horario' => $alumno['Horario'],
-                'riesgo' => $alumno['Riesgo'],
-                'fecha' => $alumno['Fecha'],
-                'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
-            ]);
+            try {
+                EstudianteRiesgo::create([
+                    'codigo_estudiante' => $alumno['Codigo'],
+                    'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
+                    'codigo_especialidad' => $request->Especialidad,
+                    'horario' => $alumno['Horario'],
+                    'riesgo' => $alumno['Riesgo'],
+                    'fecha' => $alumno['Fecha'],
+                    'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
+                ]);
+            }catch (ValidationException $e){
+                Log::channel('usuarios')->info('Error al cargar el alumno', ['error' => $e->errors()]);
+                return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+                continue;
+            }
         }
         return response()->json("",201);
     }
