@@ -27,8 +27,8 @@ class EstudianteRiesgoController extends Controller
         $especialidadId = request('especialidad_id', null); // Obtener el ID de la especialidad
         $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
     }
-
-    /*public function listar_por_especialidad_director(Request $request)
+    
+    public function listar_por_especialidad_director(Request $request)
     {
         $request = $request->IdEspecialidad;
         $ciclo = Semestre::where('estado', 'activo')->first();
@@ -52,7 +52,7 @@ class EstudianteRiesgoController extends Controller
             ];
         }
         return response()->json($resultado);
-    }*/
+    }
 
     public function listar_informes_estudiante(Request $request)
     {
@@ -72,7 +72,7 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
-    public function listar_por_especialidad_director(Request $request)
+    /*public function listar_por_especialidad_director(Request $request)
     {
         // Obtener el ID de la especialidad
         $idEspecialidad = $request->IdEspecialidad;
@@ -138,7 +138,7 @@ class EstudianteRiesgoController extends Controller
         }
 
         return response()->json($resultado);
-    }
+    }*/
 
     public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
