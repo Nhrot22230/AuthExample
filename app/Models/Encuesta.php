@@ -34,4 +34,5 @@ class Encuesta extends Model
     {
         return $this->belongsTo(Especialidad::class);
     }
+    
 }
