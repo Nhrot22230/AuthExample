@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Authorization\RoleScopeUsuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -105,27 +106,27 @@ class AuthController extends Controller
         }
     }
 
-    public function getMyUnidades() {
+    public function obtenerMisUnidades() {
         try {
             $usuario = JWTAuth::user();
             if (!$usuario) {
                 return response()->json(['message' => 'No se pudo encontrar el usuario. Inicie sesión nuevamente.'], 401);
             }
+
+            $roleScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id);
             
-            $docente = $usuario->docente;
-            if (!$docente) {
-                return response()->json(['message' => 'El usuario no es docente.'], 400);
+            if (!$roleScopeUsuario) {
+                return response()->json(['message' => 'No se encontraron unidades para el usuario.'], 404);
             }
-
-            $facultades = $docente->especialidad->facultad ? [$docente->especialidad->facultad] : [];
-            $departamentos = $facultades[0]->departamentos ?? [];
-            $secciones = $docente->seccion ? [$docente->seccion] : [];
-            $especialidades = $docente->especialidad ? [$docente->especialidad] : [];
-            $areas = $docente->area ? [$docente->area] : [];
-
-            $resp = compact('facultades', 'departamentos', 'secciones', 'especialidades', 'areas');
             
-            return response()->json($resp, 200);
+            $unidades = $roleScopeUsuario->get()->map(function ($roleScopeUsuario) {
+                return [
+                    'entity_type' => $roleScopeUsuario->entity_type,
+                    'entity' => $roleScopeUsuario->entity
+                ];
+            });
+
+            return response()->json($unidades, 200);
         } catch (TokenExpiredException $e) {
             return response()->json(['message' => 'El token ha expirado. Por favor, inicie sesión nuevamente.'], 401);
         } catch (TokenInvalidException $e) {

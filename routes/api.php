@@ -154,7 +154,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:manage permisos');
 
-        Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
+        Route::get('/mis-unidades', [AuthController::class, 'obtenerMisUnidades']);
 
         Route::get('/estudiantesRiesgo/listar_profesor', [EstudianteRiesgoController::class, 'listar_por_especialidad_profesor']);
         Route::get('/estudiantesRiesgo/listar_director', [EstudianteRiesgoController::class, 'listar_por_especialidad_director']);

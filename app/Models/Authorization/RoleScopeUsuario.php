@@ -28,6 +28,6 @@ class RoleScopeUsuario extends Model
 
     public function entity()
     {
-        return $this->morphTo();
+        return $this->morphTo()->withDefault();
     }
 }
