@@ -169,7 +169,7 @@ class EstudianteRiesgoController extends Controller
         $periodo = $ciclo->anho . "-" . $ciclo->periodo;
         $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)->where('ciclo', $periodo)->get();
         foreach ($estudiantesRiesgo as $est){
-            $this->agregar_informe_estudiante($numero_semana, $est->id);a
+            $this->agregar_informe_estudiante($numero_semana, $est->id);
         }
     }
 
