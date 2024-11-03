@@ -27,7 +27,7 @@ class EstudianteRiesgoController extends Controller
         $especialidadId = request('especialidad_id', null); // Obtener el ID de la especialidad
         $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
     }
-    
+
     public function listar_por_especialidad_director(Request $request)
     {
         $request = $request->IdEspecialidad;
@@ -71,74 +71,6 @@ class EstudianteRiesgoController extends Controller
         }
         return response()->json($resultado);
     }
-
-    /*public function listar_por_especialidad_director(Request $request)
-    {
-        // Obtener el ID de la especialidad
-        $idEspecialidad = $request->IdEspecialidad;
-
-        // Obtener el ciclo activo
-        $ciclo = Semestre::where('estado', 'activo')->first();
-        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
-
-        // Iniciar la consulta con filtros básicos de especialidad y ciclo
-        $query = EstudianteRiesgo::where('codigo_especialidad', $idEspecialidad)
-            ->where('ciclo', $periodo);
-
-        // Aplicar filtros adicionales si están presentes en la solicitud
-
-        // Filtro por nombre de estudiante (buscando en la tabla de Usuario relacionada)
-        if ($request->filled('nombre')) {
-            $nombre = $request->nombre;
-            $query->whereHas('alumno', function ($query) use ($nombre) {
-                $query->where('nombre', 'LIKE', "%{$nombre}%");
-            });
-        }
-
-        // Filtro por código de estudiante
-        if ($request->filled('codigo')) {
-            $codigo = $request->codigo;
-            $query->where('codigo_estudiante', $codigo);
-        }
-
-        // Filtro por nivel de riesgo
-        if ($request->filled('riesgo')) {
-            $riesgo = $request->riesgo;
-            if (in_array($riesgo, ['Cuarta', 'Tercera', 'Otros'])) {
-                $query->where('riesgo', $riesgo);
-            }
-        }
-
-        // Filtro por número de semana (buscando en la relación InformeRiesgo)
-        if ($request->filled('semana')) {
-            $semana = $request->semana;
-            $query->whereHas('informes', function ($query) use ($semana) {
-                $query->where('semana', $semana);
-            });
-        }
-
-        // Obtener los estudiantes filtrados
-        $estudiantesRiesgo = $query->get();
-
-        // Procesar los resultados para construir el arreglo de respuesta
-        $resultado = [];
-        foreach ($estudiantesRiesgo as $estudiante) {
-            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
-
-            $resultado[] = [
-                'Id' => $estudiante->id,
-                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
-                'Codigo' => $estudiante->codigo_estudiante,
-                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
-                'CodigoCurso' => $estudiante->codigo_curso,
-                'Horario' => $estudiante->horario,
-                'Riesgo' => $estudiante->riesgo,
-                'Fecha' => $estudiante->fecha,
-            ];
-        }
-
-        return response()->json($resultado);
-    }*/
 
     public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
