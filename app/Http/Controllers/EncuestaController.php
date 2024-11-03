@@ -458,6 +458,7 @@ class EncuestaController extends Controller
             }
         }
     }
+
     protected function registrarRespuestasJefePractica($data, $encuesta, $jpHorarioId)
     {
         foreach ($data['respuestas'] as $respuesta) {
@@ -498,7 +499,7 @@ class EncuestaController extends Controller
             }
         }
     }
-    
+
     public function obtenerCursosEncuesta($encuestaId)
     {
         $encuesta = Encuesta::with(['horario.curso'])->findOrFail($encuestaId);
@@ -518,9 +519,6 @@ class EncuestaController extends Controller
         return response()->json($cursosEncuesta);
     }
 
-    
-
-
     public function obtenerResultadosDetalleDocente($encuestaId, $horarioId)
     {
         // Obtener la información del horario y docente
@@ -530,7 +528,7 @@ class EncuestaController extends Controller
             return response()->json(['error' => 'Docente no encontrado para el horario'], 404);
         }
         $usuario = $docente->usuario;
-        
+
         // Obtener preguntas y respuestas usando consultas directas, filtrando por horario
         $preguntasConRespuestas = DB::table('encuesta_pregunta')
             ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
@@ -549,7 +547,7 @@ class EncuestaController extends Controller
             )
             ->where('encuesta_pregunta.encuesta_id', $encuestaId)
             ->get();
-        
+
         // Estructurar las preguntas y sus respuestas en el formato deseado
         $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) {
             return [
@@ -576,8 +574,4 @@ class EncuestaController extends Controller
 
         return response()->json($resultadoEncuesta);
     }
-
-
-    
-
 }
