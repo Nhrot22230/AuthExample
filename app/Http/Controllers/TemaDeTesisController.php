@@ -53,7 +53,7 @@ class TemaDeTesisController extends Controller
             'jurados.usuario',      // Cargar los datos del usuario de cada jurado
             'asesores.usuario',     // Cargar los datos del usuario de cada asesor
             'estudiantes.usuario',  // Cargar los datos del usuario de cada estudiante
-            'observaciones'
+            // 'observaciones'
         ])
             ->findOrFail($id);
 
