@@ -16,6 +16,8 @@ class TemaDeTesisController extends Controller
         $facultad_id = $request->input('facultad_id', null);
         $especialidad_id = $request->input('especialidad_id', null);
 
+
+
         $query = TemaDeTesis::with([
             'especialidad',
             'jurados.usuario',
@@ -31,16 +33,30 @@ class TemaDeTesisController extends Controller
                 $query->where('especialidad_id', $especialidad_id);
             });
 
-        // Asegúrate de que esta cláusula where esté separada de las demás para aplicar la búsqueda correctamente
+
+
+        // Si hay términos de búsqueda, dividir y aplicar cada término en los campos correspondientes
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('titulo', 'like', "%$search%")
-                    ->orWhere('resumen', 'like', "%$search%");
-            });
+            $terms = explode(' ', $search);
+
+            foreach ($terms as $term) {
+                $query->where(function ($q) use ($term) {
+                    $q->where('titulo', 'like', "%$term%")
+                        ->orWhere('resumen', 'like', "%$term%")
+                        ->orWhere('estado_jurado', 'like', "%$term%") // Búsqueda en el campo estado_jurado
+                        ->orWhereHas('estudiantes', function ($q) use ($term) {
+                            $q->where('codigoEstudiante', 'like', "%$term%")
+                                ->orWhereHas('usuario', function ($q) use ($term) {
+                                    $q->where('nombre', 'like', "%$term%")
+                                        ->orWhere('apellido_paterno', 'like', "%$term%")
+                                        ->orWhere('apellido_materno', 'like', "%$term%");
+                                });
+                        });
+                });
+            }
         }
 
         $temasDeTesis = $query->paginate($per_page);
-
 
         return response()->json($temasDeTesis, 200);
     }
@@ -70,18 +86,17 @@ class TemaDeTesisController extends Controller
             'jurados.*' => 'exists:docentes,id',
             'comentarios' => 'nullable|string', // Validación de comentarios
         ]);
-    
+
         $temaDeTesis = TemaDeTesis::findOrFail($id);
-    
+
         // Actualización de estado, estado_jurado y comentarios
         $temaDeTesis->update($request->only('estado', 'estado_jurado', 'comentarios'));
-    
+
         // Actualización de jurados, si se proveen
         if ($request->has('jurados')) {
             $temaDeTesis->jurados()->sync($request->jurados);
         }
-    
+
         return response()->json(['message' => 'Tema de Tesis actualizado exitosamente', 'tema' => $temaDeTesis], 200);
     }
-    
 }
