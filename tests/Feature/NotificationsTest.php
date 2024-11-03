@@ -34,9 +34,8 @@ class NotificationsTest extends TestCase
             'message_type' => 'info',
             'usuarios' => [$user2->id, $user3->id]
         ];
-
-        $response = $this->postJson('/api/v1/notifications/notify', $data);
         
+        $response = $this->postJson('/api/v1/notifications/notify', $data);
         $response->assertStatus(200);
         $response->assertJsonCount(2);
 

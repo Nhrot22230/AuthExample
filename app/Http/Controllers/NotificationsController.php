@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notifications;
 use Illuminate\Http\Request;
 
 class NotificationsController extends Controller
@@ -59,7 +60,7 @@ class NotificationsController extends Controller
 
         $notifications = [];
         foreach ($request->usuarios as $usuario_id) {
-            $notification = $request->authUser->notifications()->create([
+            $notification = Notifications::create([
                 'title' => $request->title,
                 'message' => $request->message,
                 'message_type' => $request->message_type,
