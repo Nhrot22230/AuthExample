@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('semana')->nullable();
             $table->string('desempenho')->nullable();
             $table->text('observaciones')->nullable();
-            $table->string('estado')->nullable();
+            $table->string('estado')->default('Pendiente')->nullable();
             $table->string('nombre_profesor')->nullable();
             $table->timestamps();
 

@@ -83,26 +83,39 @@ class EstudianteRiesgoController extends Controller
         }
         $estudiantesRiesgo = $estudiantesRiesgo->get();
         $resultado = [];
-        foreach($estudiantesRiesgo as $estudiantes)
+        foreach($estudiantesRiesgo as $estudiante)
         {
-            $cod_alumno = $estudiantes->id;
+            $cod_alumno = $estudiante->id;
+            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
             $informes = InformeRiesgo::where('codigo_alumno_riesgo', $cod_alumno);
             if ($n_informes !== 'Todos') {
                 $informes->where('semana', intval($n_informes));
             }
             $informes = $informes->get();
+            $informes_estudiante = [];
             foreach ($informes as $i)
             {
                 if($i->estado == 'Pendiente') continue;
                 $resultado[] = [ //Agrega el número de informe con el estudiante al informe
-                    'IdEstudiante' => $estudiantes->id,
-                    'Estado' => $i->estado,
-                    'Fecha' => $i->fecha,
-                    'Desempeño' => $i->desempenho,
-                    'Observaciones' => $i->observaciones,
-                    'Docente' => $i->nombre
+                    'IdInforme' => $i->id,
+                    'NumInforme' => $i->semana,
+                    'Informe' => $i->desempenho,
+                    'FechaInforme' => $i->fecha,
+                    'Docente' => $i->nombre,
+                    'Descripcion' => $i->observaciones,
                 ];
             }
+            $resultado[] = [
+                'Id' => $estudiante->id,
+                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
+                'Codigo' => $estudiante->codigo_estudiante,
+                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                'CodigoCurso' => $estudiante->codigo_curso,
+                'Horario' => $estudiante->horario,
+                'Riesgo' => $estudiante->riesgo,
+                'Fecha' => $estudiante->fecha,
+                'Informes' => $informes_estudiante
+            ];
         }
         return response()->json($resultado);
     }
@@ -115,6 +128,7 @@ class EstudianteRiesgoController extends Controller
         foreach($informes as $i){
             if($i->estado == 'Pendiente') continue;
             $resultado[] = [
+                'IdInforme' => $i->id,
                 'Estado' => $i->estado,
                 'Fecha' => $i->fecha,
                 'Desempeño' => $i->desempenho,
