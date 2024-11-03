@@ -239,7 +239,7 @@ class EstudianteRiesgoController extends Controller
             return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
         }
         $ciclo = Semestre::where('estado', 'activo')->first();
-        foreach ($request as $alumno){
+        foreach ($request->alumnos as $alumno){
             $estudianteRiesgo = new EstudianteRiesgo();
             $estudianteRiesgo->codigo_estudiante = $alumno->Codigo;
             $estudianteRiesgo->codigo_curso = Curso::where('cod_curso', $alumno->CodigoCurso)->first()->id;
