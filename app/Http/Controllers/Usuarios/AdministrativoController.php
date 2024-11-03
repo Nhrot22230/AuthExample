@@ -55,6 +55,7 @@ class AdministrativoController extends Controller
             'lugarTrabajo' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
             'codigoAdministrativo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo,' . $administrativo->id,
+            'facultad_id' => 'nullable|exists:facultades,id',
         ]);
 
         DB::transaction(function () use ($validatedData, $administrativo) {
@@ -72,6 +73,7 @@ class AdministrativoController extends Controller
                 'lugarTrabajo' => $validatedData['lugarTrabajo'],
                 'cargo' => $validatedData['cargo'],
                 'codigoAdministrativo' => $validatedData['codigoAdministrativo'],
+                'facultad_id' => $validatedData['facultad_id'] ?? null,
             ]);
         });
 
@@ -90,7 +92,9 @@ class AdministrativoController extends Controller
             'codigoAdministrativo' => 'required|string|max:50|unique:administrativos,codigoAdministrativo',
             'lugarTrabajo' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
+            'facultad_id' => 'nullable|exists:facultades,id', // Validación opcional de facultad_id
         ]);
+
         $usuario = Usuario::firstOrCreate(
             ['email' => $validatedData['email']],
             [
@@ -100,24 +104,18 @@ class AdministrativoController extends Controller
                 'password' => Hash::make($validatedData['codigoAdministrativo']),
             ]
         );
+
         $administrativo = new Administrativo();
         $administrativo->usuario_id = $usuario->id;
         $administrativo->codigoAdministrativo = $validatedData['codigoAdministrativo'];
         $administrativo->lugarTrabajo = $validatedData['lugarTrabajo'];
         $administrativo->cargo = $validatedData['cargo'];
+        $administrativo->facultad_id = $validatedData['facultad_id'] ?? null; // Asignación de facultad_id si está presente
         $usuario->administrativo()->save($administrativo);
+
         return response()->json(['message' => 'Administrativo creado exitosamente', 'administrativo' => $administrativo], 201);
     }
 
-    public function destroy($codigo)
-    {
-        $administrativo = Administrativo::where('codigoAdministrativo', $codigo)->first();
-        if (!$administrativo) {
-            return response()->json(['message' => 'Administrativo no encontrado'], 404);
-        }
-        $administrativo->delete();
-        return response()->json(['message' => 'Administrativo eliminado exitosamente'], 200);
-    }
 
 
     public function storeMultiple(Request $request)
@@ -132,9 +130,9 @@ class AdministrativoController extends Controller
                 'administrativos.*.Email' => 'required|string|email|max:255',
                 'administrativos.*.LugarTrabajo' => 'required|string|max:255',
                 'administrativos.*.Cargo' => 'required|string|max:255',
+                'administrativos.*.facultad_id' => 'nullable|exists:facultades,id', // Validación opcional de facultad_id
             ]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::channel('usuarios')->error('Error al validar los datos para crear múltiples administrativos: ' . $e->getMessage());
             return response()->json(['message' => 'Error al procesar la solicitud'], 422);
         }
@@ -157,12 +155,12 @@ class AdministrativoController extends Controller
                 $administrativo->codigoAdministrativo = $administrativoData['Codigo'];
                 $administrativo->lugarTrabajo = $administrativoData['LugarTrabajo'];
                 $administrativo->cargo = $administrativoData['Cargo'];
+                $administrativo->facultad_id = $administrativoData['facultad_id'] ?? null; // Asignación opcional de facultad_id
                 $usuario->administrativo()->save($administrativo);
             }
             DB::commit();
             return response()->json(['message' => 'Administrativos creados exitosamente'], 201);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             Log::channel('usuarios')->error('Error al crear múltiples administrativos: ' . $e->getMessage());
             return response()->json(['message' => 'Error al procesar la solicitud'], 420);

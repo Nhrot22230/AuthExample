@@ -26,13 +26,13 @@ class AssignRolesAndPermissionsSeeder extends Seeder
             }
         });
 
-        $administrativoRole = Role::findByName('administrativo');
-        Administrativo::all()->each(function ($administrativo) use ($administrativoRole, $docenteRole) {
-            $usuario = $administrativo->usuario;
-            if ($usuario) {
-                $usuario->assignRole([$administrativoRole, $docenteRole]);
-            }
-        });
+        // $administrativoRole = Role::findByName('administrativo');
+        // Administrativo::all()->each(function ($administrativo) use ($administrativoRole, $docenteRole) {
+        //     $usuario = $administrativo->usuario;
+        //     if ($usuario) {
+        //         $usuario->assignRole([$administrativoRole, $docenteRole]);
+        //     }
+        // });
 
         $estudianteRole = Role::findByName('estudiante');
         Estudiante::all()->each(function ($estudiante) use ($estudianteRole) {

@@ -15,10 +15,16 @@ class Administrativo extends Model
         'codigoAdministrativo',
         'lugarTrabajo',
         'cargo',
+        'facultad_id',
     ];
 
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
+    }
+
+    public function facultad()
+    {
+        return $this->belongsTo(Facultad::class);
     }
 }
