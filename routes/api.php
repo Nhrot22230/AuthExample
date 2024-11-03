@@ -29,7 +29,7 @@ use App\Models\Especialidad;
 use App\Models\Facultad;
 use App\Models\Seccion;
 use App\Http\Controllers\MatriculaAdicionalController;
-
+use App\Http\Controllers\NotificationsController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -189,6 +189,12 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
         Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
         Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
+
+
+        Route::post('/notifications/notify', [NotificationsController::class, 'notifyToUsers']);
+        Route::get('/notifications/myNotifications', [NotificationsController::class, 'notifications']);
+        Route::put('/notifications/{id}', [NotificationsController::class, 'update']);
+        Route::delete('/notifications/{id}', [NotificationsController::class, 'destroy']);
     });
 });
 

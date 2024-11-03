@@ -22,6 +22,11 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasMany(RoleScopeUsuario::class, 'usuario_id')->with('entity');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notifications::class);
+    }
+
     protected $fillable = [
         'nombre',
         'apellido_paterno',
