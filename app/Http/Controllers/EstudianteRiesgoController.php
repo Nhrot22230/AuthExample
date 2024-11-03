@@ -40,7 +40,7 @@ class EstudianteRiesgoController extends Controller
         {
             $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
 
-            if($periodo != $estudiante->ciclo) continue;
+            //if($periodo != $estudiante->ciclo) continue;
 
             $resultado[] = [
                 'Id' => $estudiante->id,
