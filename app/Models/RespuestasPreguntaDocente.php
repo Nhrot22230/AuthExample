@@ -21,7 +21,6 @@ class RespuestasPreguntaDocente extends Model
         'cant5',
     ];
 
-    // Relación con EncuestaPregunta
     public function encuestaPregunta()
     {
         return $this->belongsTo(EncuestaPregunta::class, 'encuesta_pregunta_id');
