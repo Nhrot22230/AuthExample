@@ -21,6 +21,8 @@ class Curso extends Model
         'me',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function especialidad()
     {
         return $this->belongsTo(Especialidad::class);

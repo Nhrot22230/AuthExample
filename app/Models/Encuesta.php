@@ -19,12 +19,15 @@ class Encuesta extends Model
         'especialidad_id'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
+
     public function horario(): BelongsToMany {
         return $this->belongsToMany(Horario::class, 'encuesta_horario');
     }
 
     public function pregunta(): BelongsToMany {
-        return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta');
+        return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta') -> withPivot('es_modificacion');
     }
 
     public function especialidad()

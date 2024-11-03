@@ -200,13 +200,30 @@ Route::prefix('v1')->group(function () {
 });
 
 //Listar todas las encuestas de una especialidad y un tipo de encuesta(docente/jefe_practica)
-Route::get('/encuesta/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
-//Cantidad de preguntas de la última encuesta según la especialidad y el tipo de encuesta(docente/jefe_practica)
-Route::get('/encuesta-latest/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+Route::get('/encuestas/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
 
-
+//PARA CREAR ENCUESTA - ESPECÍFICAMENTE
 //Muestra todos los cursos de una especialidad en el semestre activo
-Route::get('/encuesta-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+Route::get('/encuestas-nueva-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+//Cantidad de preguntas de la última encuesta según la especialidad y el tipo de encuesta(docente/jefe_practica)
+Route::get('/encuestas-nueva-cant/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+//Listar las preguntas de la última encuesta según la especialidad y el tipo de encuesta
+Route::get('/encuestas-nueva-preg/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'obtenerPreguntasUltimaEncuesta']);
+//Registrar una nueva encuesta
+Route::post('/encuestas-nueva/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'registrarNuevaEncuesta']);
+
+//GESTIONAR CAMBIOS ENCUESTA
+
+//Listar cursos asociados y no asociados a una encuesta
+Route::get('/encuestas-cursos/{encuesta_id}', [EncuestaController::class, 'mostrarCursos']);
+//Listar preguntas asociadas a la encuesta
+Route::get('/encuestas-preguntas/{encuesta_id}', [EncuestaController::class, 'listarPreguntas']);
+//Guardar cambios en una encuesta
+Route::put('/encuestas/{especialidad_id}/{encuesta_id}', [EncuestaController::class, 'gestionarEncuesta']);
+
+
+
+
 
 
 
