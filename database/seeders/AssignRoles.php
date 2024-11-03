@@ -26,23 +26,23 @@ class AssignRoles extends Seeder
 
 
         $secretario_role = Role::findByName('Secretario Académico');
-        $secretario_role->syncPermissions(Permission::where('category', 'facultades')->get());
+        $secretario_role->syncPermissions(Permission::where('name', 'like', '% facultades')->get());
 
 
         $coordinador_role = Role::findByName('Coordinador');
-        $coordinador_role->syncPermissions(Permission::where('category', 'departamentos')->get());
+        $coordinador_role->syncPermissions(Permission::where('name', 'like', '% departamentos')->get());
 
 
         $director_role = Role::findByName('Director de Carrera');
-        $director_role->syncPermissions(Permission::where('category', 'especialidades')->get());
+        $director_role->syncPermissions(Permission::where('name', 'like', '% especialidades')->get());
 
 
         $docente_role = Role::findByName('Docente');
-        $docente_role->syncPermissions(Permission::where('category', 'cursos')->get());
+        $docente_role->syncPermissions(Permission::where('name', 'like', '% cursos')->get());
 
 
         $jefe_role = Role::findByName('Jefe de Práctica');
-        $jefe_role->syncPermissions(Permission::where('category', 'cursos')->get());
+        $jefe_role->syncPermissions(Permission::where('name', 'like', '% secciones')->get());
 
 
         $estudiante_role = Role::findByName('Estudiante');

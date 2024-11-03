@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\AccessPath;
+use App\Models\Authorization\PermissionCategory;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -13,52 +15,32 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = [
-            ['name' => 'ver instituciones', 'category' => 'instituciones'],
-            ['name' => 'manage instituciones', 'category' => 'instituciones'],
-
-            ['name' => 'ver ciclos', 'category' => 'ciclos'],
-            ['name' => 'manage ciclos', 'category' => 'ciclos'],
-
-            ['name' => 'ver semestres', 'category' => 'semestres'],
-            ['name' => 'manage semestres', 'category' => 'semestres'],
-
-            ['name' => 'ver areas', 'category' => 'areas'],
-            ['name' => 'manage areas', 'category' => 'areas'],
-
-            ['name' => 'ver facultades', 'category' => 'facultades'],
-            ['name' => 'manage facultades', 'category' => 'facultades'],
-
-            ['name' => 'ver departamentos', 'category' => 'departamentos'],
-            ['name' => 'manage departamentos', 'category' => 'departamentos'],
-
-            ['name' => 'ver especialidades', 'category' => 'especialidades'],
-            ['name' => 'manage especialidades', 'category' => 'especialidades'],
-
-            ['name' => 'ver secciones', 'category' => 'secciones'],
-            ['name' => 'manage secciones', 'category' => 'secciones'],
-
-            ['name' => 'ver cursos', 'category' => 'cursos'],
-            ['name' => 'manage cursos', 'category' => 'cursos'],
-
-            ['name' => 'ver planes de estudio', 'category' => 'planes de estudio'],
-            ['name' => 'manage planes de estudio', 'category' => 'planes de estudio'],
-
-            ['name' => 'ver horarios', 'category' => 'horarios'],
-            ['name' => 'manage horarios', 'category' => 'horarios'],
-
-            ['name' => 'ver usuarios', 'category' => 'usuarios'],
-            ['name' => 'manage usuarios', 'category' => 'usuarios'],
-
-            ['name' => 'ver roles', 'category' => 'roles'],
-            ['name' => 'manage roles', 'category' => 'roles'],
-
-            ['name' => 'ver permisos', 'category' => 'permisos'],
-            ['name' => 'manage permisos', 'category' => 'permisos'],
+        $permission_categories = [
+            ['name' => 'instituciones', 'access_path' => AccessPath::CONFIGURACION],
+            ['name' => 'semestres', 'access_path' => AccessPath::SEMESTRES],
+            ['name' => 'areas', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'facultades', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'departamentos', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'especialidades', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'secciones', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'cursos', 'access_path' => AccessPath::CURSOS],
+            ['name' => 'planes de estudio', 'access_path' => AccessPath::UNIDADES],
+            ['name' => 'horarios', 'access_path' => AccessPath::CURSOS],
+            ['name' => 'usuarios', 'access_path' => AccessPath::PERSONAS],
+            ['name' => 'roles', 'access_path' => AccessPath::PERSONAS],
+            ['name' => 'permisos', 'access_path' => AccessPath::PERSONAS],
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::create($permission);
+        foreach ($permission_categories as $permission_category) {
+            $category = PermissionCategory::create($permission_category);
+            $permissions = [
+                ['name' => 'ver ' . $permission_category['name'], 'category_id' => $category->id],
+                ['name' => 'manage ' . $permission_category['name'], 'category_id' => $category->id],
+            ];
+
+            foreach ($permissions as $permission) {
+                Permission::create($permission);
+            }
         }
     }
 }

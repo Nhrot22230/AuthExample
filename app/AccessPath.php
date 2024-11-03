@@ -2,19 +2,29 @@
 
 namespace App;
 
-enum AccessPath
+enum AccessPath: string
 {
-    case ROOT;
-    case PERSONAS;
-    case UNIDADES;
-    case CURSOS;
-    case CONFIGURACION;
-    case PREGUNTAS_FRECUENTES;
-    case PEDIDOS_HORARIOS;
-    case PLAN_ESTUDIOS;
-    case JEFE_PRACTICA;
-    case CANDIDATURAS;
-    case MIS_CANDIDATURAS;
-    case MIS_UNIDADES;
-    case MIS_CURSOS;
+    case ROOT = '/';
+    case PERSONAS = '/Personas';
+    case UNIDADES = '/Unidades';
+    case CURSOS = '/Cursos';
+    case CONFIGURACION = '/Configuracion';
+    case SEMESTRES = '/Semestres';
+    case PREGUNTAS_FRECUENTES = '/PreguntasFrecuentes';
+    case PEDIDOS_HORARIOS = '/PedidosHorarios';
+    case PLAN_ESTUDIOS = '/PlanEstudios';
+    case JEFE_PRACTICA = '/JefePractica';
+    case CANDIDATURAS = '/Candidaturas';
+    case MIS_CANDIDATURAS = '/MisCandidaturas';
+    case MIS_UNIDADES = '/MisUnidades';
+    case MIS_CURSOS = '/MisCursos';
+
+    public static function toArray(): array
+    {
+        $array = [];
+        foreach (self::cases() as $case) {
+            $array[] = $case->value;
+        }
+        return $array;
+    }
 }
