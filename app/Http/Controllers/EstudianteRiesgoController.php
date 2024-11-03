@@ -96,6 +96,7 @@ class EstudianteRiesgoController extends Controller
     public function listar_por_especialidad_profesor(Request $request) //Para el profesor
     {
         $data = json_decode($request, true);
+        if($data == null) return response()->json("");
         $profesor = $data['CodigoProfesor'];
         $request = $data['Especialidad'];
         $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('codigo_profesor', $profesor)->get();
