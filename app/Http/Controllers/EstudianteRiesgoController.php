@@ -38,10 +38,9 @@ class EstudianteRiesgoController extends Controller
         $periodo = $ciclo->anho . "-" . $ciclo->periodo;
         foreach ($estudiantesRiesgo as $estudiante)
         {
-            return response()->json($estudiante->id);
             $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
 
-            if($periodo != $estudiante->ciclo) continue;
+            if($periodo != $estudiante->ciclo) return response()->json(777);
 
             $resultado[] = [
                 'Id' => $estudiante->id,
@@ -52,6 +51,7 @@ class EstudianteRiesgoController extends Controller
                 'Horario' => $estudiante->horario,
                 'Riesgo' => $estudiante->riesgo,
             ];
+            break;
         }
         return response()->json($resultado);
     }
