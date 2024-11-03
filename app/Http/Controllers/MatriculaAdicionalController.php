@@ -264,4 +264,38 @@ public function getHorariosByCurso(Request $request, $cursoId)
 
         return response()->json($horarios);
     }
+
+    public function getById($id)
+{
+    // Obtener la matrícula adicional por su ID
+    $matricula = MatriculaAdicional::with([
+        'estudiante.usuario', 
+        'curso',
+        'horario' // Asegúrate de incluir el horario si necesitas información de él
+    ])->find($id);
+
+    // Verificar si se encontró la matrícula
+    if (!$matricula) {
+        return response()->json(['message' => 'Matrícula adicional no encontrada'], 404);
+    }
+
+    // Preparar la respuesta
+    $response = [
+        'id' => $matricula->id,
+        'codigoEstudiante' => $matricula->estudiante->codigoEstudiante,
+        'nombreEstudiante' => $matricula->estudiante->usuario->nombre . ' ' . 
+                             $matricula->estudiante->usuario->apellido_paterno . ' ' . 
+                             $matricula->estudiante->usuario->apellido_materno,
+        'correoEstudiante' => $matricula->estudiante->usuario->email,
+        'nombreHorario' => $matricula->horario->nombre,
+        'motivo' => $matricula->motivo,
+        'justificacion' => $matricula->justificacion,
+        'claveCurso' => $matricula->curso->cod_curso,
+        'motivoRechazo' => $matricula->motivo_rechazo,
+        'estado' => $matricula->estado, // Agregar estado
+    ];
+
+    return response()->json($response);
+}
+
 }
