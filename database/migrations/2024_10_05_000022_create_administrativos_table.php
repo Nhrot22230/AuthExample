@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('administrativos', function (Blueprint $table) {
@@ -17,13 +14,11 @@ return new class extends Migration
             $table->string('codigoAdministrativo')->unique();
             $table->string('cargo');
             $table->string('lugarTrabajo');
+            $table->foreignId('facultad_id')->nullable()->constrained('facultades')->nullOnDelete(); // Relación opcional
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('administrativos');

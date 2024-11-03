@@ -16,6 +16,7 @@ class RolePermissionSeeder extends Seeder
         $roles = [
             'administrativo',
             'secretarioAcademico',
+            'directorCarrera',
             'estudiante',
             'docente',
             'jefePractica',
@@ -97,6 +98,36 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'editar docentes', 'category' => 'docentes'],
             ['name' => 'eliminar docentes', 'category' => 'docentes'],
 
+            ['name' => 'ver temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'crear temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'editar temas de tesis', 'category' => 'tema de tesis'],
+            ['name' => 'eliminar temas de tesis', 'category' => 'tema de tesis'],
+
+            ['name' => 'ver horarios', 'category' => 'horarios'],
+            ['name' => 'crear horarios', 'category' => 'horarios'],
+            ['name' => 'editar horarios', 'category' => 'horarios'],
+            ['name' => 'eliminar horarios', 'category' => 'horarios'],
+
+            ['name' => 'ver jurados', 'category' => 'jurados'],
+            ['name' => 'crear jurados', 'category' => 'jurados'],
+            ['name' => 'editar jurados', 'category' => 'jurados'],
+            ['name' => 'eliminar jurados', 'category' => 'jurados'],
+
+            ['name' => 'ver asesores', 'category' => 'asesores'],
+            ['name' => 'crear asesores', 'category' => 'asesores'],
+            ['name' => 'editar asesores', 'category' => 'asesores'],
+            ['name' => 'eliminar asesores', 'category' => 'asesores'],
+
+            ['name' => 'ver jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'crear jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'editar jefes de práctica', 'category' => 'jefes de práctica'],
+            ['name' => 'eliminar jefes de práctica', 'category' => 'jefes de práctica'],
+
+            ['name' => 'ver observaciones', 'category' => 'observaciones'],
+            ['name' => 'crear observaciones', 'category' => 'observaciones'],
+            ['name' => 'editar observaciones', 'category' => 'observaciones'],
+            ['name' => 'eliminar observaciones', 'category' => 'observaciones'],
+
             ['name' => 'ver roles', 'category' => 'roles'],
             ['name' => 'crear roles', 'category' => 'roles'],
             ['name' => 'editar roles', 'category' => 'roles'],
@@ -110,6 +141,12 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'asignar permisos', 'category' => 'permisos'],
             ['name' => 'revocar permisos', 'category' => 'permisos'],
             ['name' => 'eliminar permisos', 'category' => 'permisos'],
+
+            ['name' => 'crear matriculas_adicionales', 'category' => 'solicitudes'],
+            ['name' => 'ver matriculas_especialidad', 'category' => 'solicitudes'],
+            ['name' => 'ver mis matriculas_adicionales', 'category' => 'solicitudes'],
+            ['name' => 'ver matriculas_facultad', 'category' => 'solicitudes'],
+            
         ];
 
         foreach ($roles as $role) {
@@ -125,21 +162,36 @@ class RolePermissionSeeder extends Seeder
 
         $role = Role::findByName('secretarioAcademico');
         $permissions = Permission::where('category', '=', 'planes de estudio')
-        ->orWhere('category', '=', 'horarios')
-        ->orWhere('category', '=', 'areas')
-        ->orWhere('category', '=', 'departamentos')
-        ->orWhere('category', '=', 'facultades');
+            ->orWhere('category', '=', 'horarios')
+            ->orWhere('category', '=', 'areas')
+            ->orWhere('category', '=', 'departamentos')
+            ->orWhere('category', '=', 'facultades')
+            ->orWhere('category', '=', 'tema de tesis') // Corrige la categoría aquí
+            ->orWhere('category', '=', 'solicitudes')
+            ->orWhere('category', '=', 'cursos')
+            ->get();
+
+        $role->syncPermissions($permissions);
+
+
+        $role = Role::findByName('directorCarrera');
+        $permissions = Permission::where('category', '=', 'planes de estudio')
+            ->orWhere('category', '=', 'horarios')
+            ->orWhere('category', '=', 'areas')
+            ->orWhere('category', '=', 'departamentos')
+            ->orWhere('category', '=', 'facultades')
+            ->orWhere('category', '=', 'temaDeTesis');   
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('docente');
         $permissions = Permission::where('name', 'like', 'ver %')
-        ->orWhere('name', 'like', 'editar %')
-        ->get();
+            ->orWhere('name', 'like', 'editar %')
+            ->get();
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('estudiante');
         $permissions = Permission::where('name', 'like', 'ver %')
-        ->get();
+            ->get();
         $role->syncPermissions($permissions);
     }
 }
