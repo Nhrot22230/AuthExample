@@ -11,6 +11,7 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use mysql_xdevapi\Exception;
 use DateTime;
+use function PHPUnit\Framework\isEmpty;
 
 class EstudianteRiesgoController extends Controller
 {
@@ -99,6 +100,7 @@ class EstudianteRiesgoController extends Controller
         $profesor = $data['CodigoProfesor'];
         $request = $data['Especialidad'];
         $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('codigo_profesor', $profesor)->get();
+        if($estudiantesRiesgo->isEmpty()) return;
         $resultado = [];
         $fechaActual = new DateTime();
         $inicioSemanaActual = (clone $fechaActual)->modify('monday this week');
