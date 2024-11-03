@@ -71,6 +71,9 @@ class EstudianteRiesgoController extends Controller
     {
         $data = json_decode($request, true);
         $estudiante_id = $data['IdEstudiante'];
+        $numero_semana = $data['NumeroSemana'];
+        $ciclo = Semestre::where('estado', 'activo')->first();
+
     }
 
     public function actualizar_informe_estudiante(Request $request)
@@ -110,7 +113,7 @@ class EstudianteRiesgoController extends Controller
                 }
                 $informe_actual = null;
             }
-            if($informe_actual == null) $informe_actual = new InformeRiesgo();
+            if($informe_actual == null) continue;
 
             $resultado[] = [
                 'Id' => $estudiante->id,
@@ -125,7 +128,7 @@ class EstudianteRiesgoController extends Controller
                 'Fecha' => $informe_actual->fecha,
                 'Desempeño' => $informe_actual->desempenho,
                 'Observaciones' => $informe_actual->observaciones,
-                'Docente' => $informe_actual->nombre
+                'Docente' => $informe_actual->nombre_profesor
             ];
         }
         return response()->json($resultado);
