@@ -114,7 +114,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/semestres/{id}', [SemestreController::class, 'show'])->middleware('can:ver semestres');
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
-        
+
 
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:crear usuarios');
@@ -175,6 +175,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
         Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
         Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+        Route::post('/estudiantesRiesgo/listar_informes_director', [EstudianteRiesgoController::class, 'listar_informes_director']);
         Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
         Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
         Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
