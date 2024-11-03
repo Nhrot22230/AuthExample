@@ -18,6 +18,7 @@ use App\Http\Controllers\Usuarios\UsuarioController;
 use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
+use App\Http\Controllers\EstudianteRiesgoController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -154,6 +155,13 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:editar permisos');
 
         Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
+
+        Route::get('/estudiantesRiesgo/listar_profesor', [EstudianteRiesgoController::class, 'listar_por_especialidad_profesor']);
+        Route::get('/estudiantesRiesgo/listar_director', [EstudianteRiesgoController::class, 'listar_por_especialidad_director']);
+        Route::get('/estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
+        Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
+        Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
+        Route::post('/estudiantesRiesgo/agregar_informe', [EstudianteRiesgoController::class, 'agregar_informe_estudiante']);
     });
 });
 
@@ -185,3 +193,4 @@ Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocent
 
 
 Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
+
