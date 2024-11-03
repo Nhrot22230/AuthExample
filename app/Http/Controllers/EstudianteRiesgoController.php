@@ -228,6 +228,7 @@ class EstudianteRiesgoController extends Controller
         try{
             $request->validate([
                 'alumnos'=> 'required|array',
+                'Especialidad' => 'required',
                 'alumnos.*.Codigo' => 'required',
                 'alumnos.*.CodigoCurso' => 'required|exists:cursos,cod_curso',
                 'alumnos.*.Horario' => 'required',
