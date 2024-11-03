@@ -31,16 +31,14 @@ class EstudianteRiesgoController extends Controller
     public function listar_por_especialidad_director(Request $request)
     {
         $request = $request->IdEspecialidad;
-        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->get();
-        $resultado = [];
-        $fechaActual = new DateTime();
         $ciclo = Semestre::where('estado', 'activo')->first();
         $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('ciclo', $periodo)->get();
+        $resultado = [];
+
         foreach ($estudiantesRiesgo as $estudiante)
         {
             $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
-
-            if($periodo != $estudiante->ciclo) return response()->json(777);
 
             $resultado[] = [
                 'Id' => $estudiante->id,
@@ -52,7 +50,6 @@ class EstudianteRiesgoController extends Controller
                 'Riesgo' => $estudiante->riesgo,
                 'Fecha' => $estudiante->fecha
             ];
-            //break;
         }
         return response()->json($resultado);
     }
