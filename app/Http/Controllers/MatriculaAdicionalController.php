@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\MatriculaAdicional; // Asegúrate de importar tu modelo
 use Illuminate\Support\Facades\Validator;
+use App\Models\Horario;
+use App\Models\Semestre;
 
 class MatriculaAdicionalController extends Controller
 {
@@ -240,4 +242,22 @@ public function getByFacultad(Request $request, $facultadId)
         ],
     ]);
 }
+
+public function getHorariosByCurso(Request $request, $cursoId)
+    {
+        // Obtener el semestre activo
+        $semestreActivo = Semestre::where('estado', 'activo')->first();
+
+        if (!$semestreActivo) {
+            return response()->json(['message' => 'No hay semestre activo'], 404);
+        }
+
+        // Obtener solo los IDs y nombres de los horarios del curso que pertenecen al semestre activo
+        $horarios = Horario::where('curso_id', $cursoId)
+            ->where('semestre_id', $semestreActivo->id)
+            ->select('id', 'nombre') // Solo selecciona el id y el nombre
+            ->get();
+
+        return response()->json($horarios);
+    }
 }
