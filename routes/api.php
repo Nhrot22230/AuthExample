@@ -189,8 +189,8 @@ Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController:
 Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
 //Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
-//Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado
-//Actualmente solo sirve para guardar respuestas de docentes que no sean texto
+//Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado, tambien jp_horario_id
+//Actualmente solo sirve para guardar respuestas de docentes y JPs que no sean texto
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
 

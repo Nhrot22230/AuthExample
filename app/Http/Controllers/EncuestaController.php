@@ -12,6 +12,7 @@ use App\Models\Horario;
 use App\Models\Semestre;
 use App\Models\RespuestasPreguntaDocente;
 use App\Models\HorarioEstudiante;
+use App\Models\RespuestasPreguntaJP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -159,6 +160,7 @@ class EncuestaController extends Controller
                 'respuestas' => 'required|array',
                 'respuestas.*.pregunta_id' => 'required|exists:preguntas,id',
                 'respuestas.*.respuesta' => 'required|integer|min:1|max:5', // Escala de 1 a 5
+                'jp_horario_id' => 'nullable|exists:jp_horario,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -180,7 +182,18 @@ class EncuestaController extends Controller
                     ->update(['encuestaDocente' => true]);
                 return response()->json(['message' => 'Respuestas de docente registradas exitosamente'], 200);
             } elseif ($encuesta->tipo_encuesta === 'jefe_practica') {
-                return response()->json(['error' => 'No implementada la encuesta JP'], 400);
+                if (empty($data['jp_horario_id'])) {
+                    return response()->json(['error' => 'jp_horario_id es requerido para la encuesta de jefe de práctica'], 400);
+                }
+
+                $this->registrarRespuestasJefePractica($data, $encuesta, $data['jp_horario_id']);
+
+                DB::table('estudiante_horario_jp')
+                ->where('estudiante_horario_id', $horarioId)
+                ->where('jp_horario_id', $data['jp_horario_id'])
+                ->update(['encuestaJP' => true]);
+
+                return response()->json(['message' => 'Respuestas de jefe de práctica registradas exitosamente'], 200);
             }
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
@@ -192,7 +205,7 @@ class EncuestaController extends Controller
         foreach ($data['respuestas'] as $respuesta) {
             $preguntaId = $respuesta['pregunta_id'];
             $valorRespuesta = $respuesta['respuesta'];
-
+            throw new \Exception('Salgo');
             $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
             
             if (!$encuestaPregunta) {
@@ -220,6 +233,46 @@ class EncuestaController extends Controller
                 $respuestaDocente->increment('cant4');
             } elseif ($valorRespuesta === 5) {
                 $respuestaDocente->increment('cant5');
+            }
+        }
+    }
+    protected function registrarRespuestasJefePractica($data, $encuesta, $jpHorarioId)
+    {
+        foreach ($data['respuestas'] as $respuesta) {
+            $preguntaId = $respuesta['pregunta_id'];
+            $valorRespuesta = $respuesta['respuesta'];
+
+            // Verificar si la pregunta está asociada a la encuesta
+            $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
+
+            if (!$encuestaPregunta) {
+                throw new \Exception('La pregunta no está asociada a esta encuesta');
+            }
+
+            // Buscar o crear la respuesta específica para el JP
+            $respuestaJefePractica = RespuestasPreguntaJP::firstOrCreate(
+                [
+                    'jp_horario_id' => (int) $jpHorarioId,
+                    'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
+                ],
+                ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
+            );
+
+            if (!$respuestaJefePractica) {
+                throw new \Exception('No se pudo crear o encontrar el registro en RespuestasPreguntaJefePractica');
+            }
+
+            // Incrementar el contador correspondiente según el valor de la respuesta
+            if ($valorRespuesta === 1) {
+                $respuestaJefePractica->increment('cant1');
+            } elseif ($valorRespuesta === 2) {
+                $respuestaJefePractica->increment('cant2');
+            } elseif ($valorRespuesta === 3) {
+                $respuestaJefePractica->increment('cant3');
+            } elseif ($valorRespuesta === 4) {
+                $respuestaJefePractica->increment('cant4');
+            } elseif ($valorRespuesta === 5) {
+                $respuestaJefePractica->increment('cant5');
             }
         }
     }
