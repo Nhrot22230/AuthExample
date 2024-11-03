@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pregunta;
-
-
 use App\Models\Curso;
 use App\Models\Encuesta;
 use App\Models\Especialidad;
@@ -13,11 +11,9 @@ use App\Models\Semestre;
 use App\Models\RespuestasPreguntaDocente;
 use App\Models\HorarioEstudiante;
 use App\Models\RespuestasPreguntaJP;
-
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 
 class EncuestaController extends Controller
 {
@@ -71,7 +67,6 @@ class EncuestaController extends Controller
 
         return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
-
 
     public function obtenerPreguntasUltimaEncuesta(int $especialidad_id, string $tipo_encuesta) : JsonResponse
     {
