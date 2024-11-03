@@ -7,7 +7,6 @@ use App\Models\Docente;
 use App\Models\Estudiante;
 use App\Models\Usuario;
 use App\Models\Area;
-use App\Models\Especialidad;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;

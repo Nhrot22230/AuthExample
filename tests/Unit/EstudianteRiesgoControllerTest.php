@@ -82,7 +82,7 @@ class EstudianteRiesgoControllerTest extends TestCase
         }
 
         // Simular la llamada a tu endpoint
-        $response = $this->get('/api/v1/estudiantesRiesgo/obtener_estadisticas_informes?IdEspecialidad=' . $especialidad->id);
+        $response = $this->actingAs($this->getRandomUser())->get('/api/v1/estudiantesRiesgo/obtener_estadisticas_informes?IdEspecialidad=' . $especialidad->id);
 
         // Imprimir la respuesta JSON
         dump($response->json()); // Esto mostrará la respuesta JSON y continuará la ejecución

@@ -22,4 +22,14 @@ abstract class TestCase extends BaseTestCase
         $this->withHeaders(['Authorization' => "Bearer $token"]);
         return parent::actingAs($user, $driver);
     }
+
+    /**
+     * Obtiene un usuario aleatorio de la base de datos.
+     *
+     * @return \App\Models\Usuario
+     */
+    public function getRandomUser()
+    {
+        return Usuario::inRandomOrder()->first() ?? Usuario::factory()->create();
+    }
 }
