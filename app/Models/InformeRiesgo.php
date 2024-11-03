@@ -12,6 +12,7 @@ class InformeRiesgo extends Model
     protected $table = 'informes_riesgo'; // Nombre de la tabla en la base de datos
 
     protected $fillable = [
+        'semana',
         'codigo_alumno_riesgo',
         'fecha',
         'desempenho',

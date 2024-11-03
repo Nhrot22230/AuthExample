@@ -28,6 +28,7 @@ return new class extends Migration
             $table->foreign('codigo_curso')->references('id')->on('cursos')->onDelete('cascade');
             $table->foreign('codigo_docente')->references('codigoDocente')->on('docentes')->onDelete('cascade');
             $table->foreign('codigo_especialidad')->references('id')->on('especialidades')->onDelete('cascade');
+            $table->unique(['codigo_estudiante', 'codigo_curso', 'ciclo'], 'unique_estudiante_curso_ciclo');
         });
     }
 

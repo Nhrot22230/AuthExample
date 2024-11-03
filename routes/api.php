@@ -161,7 +161,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
         Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
-        Route::post('/estudiantesRiesgo/agregar_informe', [EstudianteRiesgoController::class, 'agregar_informe_estudiante']);
+        Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
     });
 });
 

@@ -51,4 +51,16 @@ class EstudianteRiesgo extends Model
     {
         return $this->hasMany(InformeRiesgo::class, 'codigo_alumno_riesgo', 'id');
     }
+
+    public function usuario()
+    {
+        return $this->hasOneThrough(
+            Usuario::class,
+            Estudiante::class,
+            'codigoEstudiante', // Foreign key en Estudiante (intermedio)
+            'id',               // Foreign key en Usuario
+            'codigo_estudiante', // Local key en EstudianteRiesgo
+            'usuario_id'        // Local key en Estudiante
+        );
+    }
 }

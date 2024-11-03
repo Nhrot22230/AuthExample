@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('codigo_alumno_riesgo');
             $table->date('fecha')->nullable();
+            $table->integer('semana')->nullable();
             $table->string('desempenho')->nullable();
             $table->text('observaciones')->nullable();
             $table->string('estado')->nullable();
