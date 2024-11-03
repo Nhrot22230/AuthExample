@@ -41,7 +41,7 @@ class MatriculaAdicionalFactory extends Factory
          
             'motivo' => $this->faker->sentence(),
             'justificacion' => $this->faker->paragraph(),
-            'estado' => $this->faker->randomElement(['pendiente', 'pendiente1','aprobado', 'rechazado']),
+            'estado' => $this->faker->randomElement( ['Pendiente DC', 'Pendiente SA', 'Rechazado','Aprobado'] ),
             'motivo_rechazo' => $this->faker->optional()->sentence(), // Puede ser null
         ];
     }

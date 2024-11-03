@@ -12,6 +12,6 @@ class MatriculaAdicionalSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\MatriculaAdicional::factory()->count(50)->create();
+        \App\Models\MatriculaAdicional::factory()->count(1000)->create();
     }
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('motivo');
        
             $table->text('justificacion');
-            $table->enum('estado', ['pendiente', 'pendiente1', 'rechazado','aprobado']);
+            $table->enum('estado', ['Pendiente DC', 'Pendiente SA', 'Rechazado','Aprobado']);
             $table->string('motivo_rechazo')->nullable();
             $table->timestamps();
         });

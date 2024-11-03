@@ -46,22 +46,49 @@ class MatriculaAdicionalController extends Controller
         return response()->json($matriculas);
     }
 
-    public function getByEspecialidad($id)
+    public function getByEspecialidad(Request $request, $id)
 {
-    $matriculas = MatriculaAdicional::with([
+    // Recoger los filtros de búsqueda y estado
+    $search = $request->input('search', ''); // Campo de búsqueda
+    $estado = $request->input('estado', null); // Estado para filtrar
+    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+
+    // Comenzar la consulta
+    $query = MatriculaAdicional::with([
         'estudiante.usuario', 
         'especialidad', 
         'curso', 
         'horario', 
         'horario.docentes.usuario:id,nombre,apellido_paterno'
     ])
-    ->where('especialidad_id', $id)
-    ->get();
+    ->where('especialidad_id', $id);
+
+    // Aplicar el filtro de búsqueda si el campo no está vacío
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('estudiante.usuario', function ($subQuery) use ($search) {
+                $subQuery->where('nombre', 'like', '%' . $search . '%')
+                          ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('curso', function ($subQuery) use ($search) {
+                $subQuery->where('nombre', 'like', '%' . $search . '%')
+                          ->orWhere('cod_curso', 'like', '%' . $search . '%');
+            });
+        });
+    }
+
+    // Aplicar el filtro de estado si se ha seleccionado
+    if ($estado) {
+        $query->whereIn('estado', (array)$estado);
+    }
+
+    // Paginación
+    $matriculas = $query->paginate($perPage);
 
     $result = $matriculas->map(function ($matricula) {
         $estudiante = $matricula->estudiante;
         return [
-            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'id' => $matricula->id,
             'codigo' => $estudiante->codigoEstudiante,
             'nombres' => $estudiante->usuario->nombre . ' ' . $estudiante->usuario->apellido_paterno . ' ' . $estudiante->usuario->apellido_materno,
             'ultimaModificacion' => Carbon::parse($matricula->updated_at)->format('d-m-Y'),
@@ -71,24 +98,62 @@ class MatriculaAdicionalController extends Controller
         ];
     });
 
-    return response()->json($result);
+    return response()->json([
+        'data' => $result,
+        'pagination' => [
+            'total' => $matriculas->total(),
+            'current_page' => $matriculas->currentPage(),
+            'last_page' => $matriculas->lastPage(),
+            'per_page' => $matriculas->perPage(),
+        ],
+    ]);
 }
     
-public function getByEstudiante($estudianteId)
+public function getByEstudiante(Request $request, $estudianteId)
 {
-    $matriculas = MatriculaAdicional::with([
+    // Recoger los filtros de búsqueda y estado
+    $search = $request->input('search', ''); // Campo de búsqueda
+    $estado = $request->input('estado', null); // Estado para filtrar
+    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+
+    // Comenzar la consulta
+    $query = MatriculaAdicional::with([
         'estudiante.usuario', 
         'especialidad', 
         'curso', 
         'horario', 
         'horario.docentes.usuario:id,nombre,apellido_paterno',
     ])
-    ->where('estudiante_id', $estudianteId)
-    ->get();
+    ->where('estudiante_id', $estudianteId);
+
+    // Aplicar el filtro de búsqueda si el campo no está vacío
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('curso', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%')
+                  ->orWhere('cod_curso', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('horario', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%')
+                  ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+            });
+        });
+    }
+
+    // Aplicar el filtro de estado si se ha seleccionado
+    if ($estado) {
+        $query->whereIn('estado', (array)$estado);
+    }
+
+    // Paginación
+    $matriculas = $query->paginate($perPage);
 
     $result = $matriculas->map(function ($matricula) {
         return [
-            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'id' => $matricula->id,
             'clave' => $matricula->curso->cod_curso,
             'curso' => $matricula->curso->nombre,
             'horario' => $matricula->horario->nombre,
@@ -100,12 +165,27 @@ public function getByEstudiante($estudianteId)
         ];
     });
 
-    return response()->json($result);
+    return response()->json([
+        'data' => $result,
+        'pagination' => [
+            'total' => $matriculas->total(), // Total de filas
+            'current_page' => $matriculas->currentPage(),
+            'last_page' => $matriculas->lastPage(),
+            'per_page' => $matriculas->perPage(),
+        ],
+    ]);
 }
 
-public function getByFacultad($facultadId)
+
+public function getByFacultad(Request $request, $facultadId)
 {
-    $matriculas = MatriculaAdicional::with([
+    // Recoger los filtros de búsqueda y estado
+    $search = $request->input('search', ''); // Campo de búsqueda
+    $estado = $request->input('estado', null); // Estado para filtrar
+    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+
+    // Comenzar la consulta
+    $query = MatriculaAdicional::with([
         'estudiante.usuario',
         'especialidad',
         'curso',
@@ -114,12 +194,33 @@ public function getByFacultad($facultadId)
     ])
     ->whereHas('especialidad', function ($query) use ($facultadId) {
         $query->where('facultad_id', $facultadId);
-    })
-    ->get();
+    });
+
+    // Aplicar el filtro de búsqueda si el campo no está vacío
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('estudiante.usuario', function ($subQuery) use ($search) {
+                $subQuery->where('nombre', 'like', '%' . $search . '%')
+                          ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('curso', function ($subQuery) use ($search) {
+                $subQuery->where('nombre', 'like', '%' . $search . '%')
+                          ->orWhere('cod_curso', 'like', '%' . $search . '%');
+            });
+        });
+    }
+
+    // Aplicar el filtro de estado si se ha seleccionado
+    if ($estado) {
+        $query->whereIn('estado', (array)$estado);
+    }
+
+    // Paginación
+    $matriculas = $query->paginate($perPage);
 
     $result = $matriculas->map(function ($matricula) {
         return [
-            'id' => $matricula->id, // Agregado: ID de la solicitud
+            'id' => $matricula->id,
             'codigo' => $matricula->estudiante->codigoEstudiante,
             'nombres' => $matricula->estudiante->usuario->nombre . ' ' . $matricula->estudiante->usuario->apellido_paterno,
             'ultimaModificacion' => $matricula->updated_at->format('d/m/Y'),
@@ -129,6 +230,14 @@ public function getByFacultad($facultadId)
         ];
     });
 
-    return response()->json($result);
+    return response()->json([
+        'data' => $result,
+        'pagination' => [
+            'total' => $matriculas->total(),
+            'current_page' => $matriculas->currentPage(),
+            'last_page' => $matriculas->lastPage(),
+            'per_page' => $matriculas->perPage(),
+        ],
+    ]);
 }
 }
