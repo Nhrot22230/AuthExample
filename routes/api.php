@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PlanEstudioController;
+use App\Http\Controllers\TemaDeTesisController;
 use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
@@ -27,6 +28,14 @@ use App\Models\Departamento;
 use App\Models\Especialidad;
 use App\Models\Facultad;
 use App\Models\Seccion;
+use App\Http\Controllers\MatriculaAdicionalController;
+
+
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'Hello World!',
+    ]);
+});
 
 Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
     Route::prefix('v1')->group(function () {
@@ -51,6 +60,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage facultades,' . Facultad::class]);
         Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage facultades,' . Facultad::class]);
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
+        Route::get('/matriculas-adicionales/facultad/{facultadId}', [MatriculaAdicionalController::class, 'getByFacultad'])->middleware('can:ver matriculas_facultad');
 
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
@@ -96,6 +106,14 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete ('/plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:manage planes de estudio');
 
 
+        Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:crear matriculas_adicionales');
+        //Route::get('/matriculas-adicionales', [MatriculaAdicionalController::class, 'getAll'])->middleware('can:ver matriculas_adicionales');
+        Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_especialidad');
+        Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes eliminar el middleware si no deseas autorización
+        Route::get('/horarios/cursos/{cursoId}', [MatriculaAdicionalController::class, 'getHorariosByCurso'])->middleware('can:ver horarios');
+        Route::get('/matricula-adicional/{id}', [MatriculaAdicionalController::class, 'getById'])->middleware('can:ver mis matriculas_adicionales'); // Ajusta el nombre del permiso según sea necesario
+
+
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');
         Route::get('/semestres/last', [SemestreController::class, 'getLastSemestre'])->middleware('can:ver semestres');
@@ -105,6 +123,9 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:manage semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:manage semestres');
 
+        Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
+        Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
+        
 
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:manage usuarios');
@@ -164,8 +185,16 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
         Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
+        Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+        Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
+        Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
+        Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
     });
 });
+
+/*Route::prefix('v1')->group(function () {
+    Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+});*/
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
