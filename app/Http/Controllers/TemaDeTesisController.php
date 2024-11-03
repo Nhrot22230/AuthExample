@@ -15,7 +15,7 @@ class TemaDeTesisController extends Controller
         $per_page = $request->input('per_page', 10);
         $facultad_id = $request->input('facultad_id', null);
         $especialidad_id = $request->input('especialidad_id', null);
-
+        $estado_jurado = $request->input('estado_jurado', null);
 
 
         $query = TemaDeTesis::with([
@@ -31,6 +31,9 @@ class TemaDeTesisController extends Controller
             })
             ->when($especialidad_id, function ($query) use ($especialidad_id) {
                 $query->where('especialidad_id', $especialidad_id);
+            })
+            ->when($estado_jurado, function ($query) use ($estado_jurado) {
+                $query->where('estado_jurado', $estado_jurado);
             });
 
 
