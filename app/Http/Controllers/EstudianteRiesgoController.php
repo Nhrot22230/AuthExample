@@ -104,7 +104,7 @@ class EstudianteRiesgoController extends Controller
 
         // Filtro por número de semana
         if ($request->has('semana') && !empty($request->semana)) {
-            $query->whereHas('informes_riesgo', function ($q) use ($request) {
+            $query->whereHas('informes', function ($q) use ($request) {
                 $q->where('semana', $request->semana);
             });
         }
