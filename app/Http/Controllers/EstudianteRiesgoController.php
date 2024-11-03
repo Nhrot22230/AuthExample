@@ -98,7 +98,7 @@ class EstudianteRiesgoController extends Controller
         //$data = json_decode($request, true);
         $profesor = $request->CodigoProfesor;//$data['CodigoProfesor'];
         $request = $request->Especialidad;
-        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('codigo_profesor', $profesor)->get();
+        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('codigo_docente', $profesor)->get();
         if($estudiantesRiesgo->isEmpty()) return response()->json("");
         $resultado = [];
         $fechaActual = new DateTime();
