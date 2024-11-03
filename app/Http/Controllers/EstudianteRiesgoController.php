@@ -244,6 +244,7 @@ class EstudianteRiesgoController extends Controller
             EstudianteRiesgo::create([
                 'codigo_estudiante' => $alumno['Codigo'],
                 'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
+                'codigo_especialidad' => $alumno['Especialidad'],
                 'horario' => $alumno['Horario'],
                 'riesgo' => $alumno['Riesgo'],
                 'fecha' => $alumno['Fecha'],
