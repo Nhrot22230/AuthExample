@@ -9,8 +9,10 @@ use App\Models\InformeRiesgo;
 use App\Models\Semestre;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use mysql_xdevapi\Exception;
 use DateTime;
+use Nette\Schema\ValidationException;
 use function PHPUnit\Framework\isEmpty;
 
 class EstudianteRiesgoController extends Controller
@@ -223,6 +225,19 @@ class EstudianteRiesgoController extends Controller
 
     public function carga_alumnos_riesgo(Request $request)
     {
+        try{
+            $request->validate([
+                'alumnos'=> 'required|array',
+                'alumnos.*.Codigo' => 'required',
+                'alumnos.*.CodigoCurso' => 'required',
+                'alumnos.*.Horario' => 'required',
+                'alumnos.*.Riesgo' => 'required',
+                'alumnos.*.Fecha' => 'required',
+            ]);
+        } catch(ValidationException $e){
+            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+        }
         $ciclo = Semestre::where('estado', 'activo')->first();
         foreach ($request as $alumno){
             $estudianteRiesgo = new EstudianteRiesgo();
