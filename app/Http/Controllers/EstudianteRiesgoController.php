@@ -78,11 +78,11 @@ class EstudianteRiesgoController extends Controller
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
-        $informe = new InformeRiesgo();
-        $informe->estado = 'Pendiente';
-        $informe->fecha = $fechaInicio;
-        $informe->codigo_alumno_riesgo = $request->IdAlumnoRiesgo;
-        $informe->store();
+        InformeRiesgo::create([
+            'estado' => 'Pendiente',
+            'fecha' => $fechaInicio,
+            'codigo_alumno_riesgo' => $request->IdAlumnoRiesgo,
+        ]);
     }
 
     public function actualizar_informe_estudiante(Request $request)
@@ -241,14 +241,14 @@ class EstudianteRiesgoController extends Controller
         $ciclo = Semestre::where('estado', 'activo')->first();
         foreach ($request->alumnos as $alumno){
             Log::channel('usuarios')->info($alumno);
-            $estudianteRiesgo = new EstudianteRiesgo();
-            $estudianteRiesgo->codigo_estudiante = $alumno['Codigo'];
-            $estudianteRiesgo->codigo_curso = Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id;
-            $estudianteRiesgo->horario = $alumno['Horario'];
-            $estudianteRiesgo->riesgo = $alumno['Riesgo'];
-            $estudianteRiesgo->fecha = $alumno['Fecha'];
-            $estudianteRiesgo->ciclo = $ciclo->anho . "-" . $ciclo->periodo;
-            $estudianteRiesgo->store();
+            EstudianteRiesgo::create([
+                'codigo_estudiante' => $alumno['Codigo'],
+                'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
+                'horario' => $alumno['Horario'],
+                'riesgo' => $alumno['Riesgo'],
+                'fecha' => $alumno['Fecha'],
+                'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
+            ]);
         }
         return response()->json("",201);
     }
