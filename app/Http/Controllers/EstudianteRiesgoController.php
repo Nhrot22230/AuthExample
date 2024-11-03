@@ -61,6 +61,7 @@ class EstudianteRiesgoController extends Controller
         $informes = InformeRiesgo::where('codigo_alumno_riesgo', $request)->get();
         $resultado = [];
         foreach($informes as $i){
+            if($i->estado == 'Pendiente') continue;
             $resultado[] = [
                 'Estado' => $i->estado,
                 'Fecha' => $i->fecha,
@@ -72,17 +73,28 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
-    public function agregar_informe_estudiante(Request $request)
+    public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
-        $numero_semana = $request->NumeroSemana;
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
         InformeRiesgo::create([
             'estado' => 'Pendiente',
             'fecha' => $fechaInicio,
-            'codigo_alumno_riesgo' => $request->IdAlumnoRiesgo,
+            'codigo_alumno_riesgo' => $IdAlumnoRiesgo,
         ]);
+    }
+
+    public function crear_informes(Request $request)
+    {
+        $numero_semana = $request->NumeroSemana;
+        $especialidad = $request->IdEspecialidad;
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)->where('ciclo', $periodo)->get();
+        foreach ($estudiantesRiesgo as $est){
+            $this->agregar_informe_estudiante($numero_semana, $est->id);
+        }
     }
 
     public function actualizar_informe_estudiante(Request $request)

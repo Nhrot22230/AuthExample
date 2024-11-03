@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('estudiante_riesgo', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo_estudiante')->unique();
-            $table->unsignedBigInteger('codigo_curso')->unique();
+            $table->string('codigo_estudiante');
+            $table->unsignedBigInteger('codigo_curso');
             $table->string('codigo_docente')->nullable();
             $table->unsignedBigInteger('codigo_especialidad');
             $table->string('horario')->nullable();
             $table->string('riesgo')->nullable();
             $table->date('fecha')->nullable();
-            $table->string('ciclo')->nullable()->unique();
+            $table->string('ciclo')->nullable();
             $table->timestamps();
 
             // Definición de llaves foráneas
@@ -28,6 +28,7 @@ return new class extends Migration
             $table->foreign('codigo_curso')->references('id')->on('cursos')->onDelete('cascade');
             $table->foreign('codigo_docente')->references('codigoDocente')->on('docentes')->onDelete('cascade');
             $table->foreign('codigo_especialidad')->references('id')->on('especialidades')->onDelete('cascade');
+            $table->unique(['codigo_estudiante', 'codigo_curso', 'ciclo'], 'unique_estudiante_curso_ciclo');
         });
     }
 
