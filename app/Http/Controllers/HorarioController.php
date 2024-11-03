@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Horario;
-
+use App\Models\Semestre;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,21 +15,16 @@ class HorarioController extends Controller
     //
     public function obtenerCursosEstudiante($estudianteId)
     {
-        $anioActual = 2024;
-        $periodoActual = 2;
+        $semestre_id = Semestre::where('estado', 'activo')->first()->id;
 
-        // Obtener los horarios en los que está inscrito el estudiante en el semestre actual
-        $horarios = Horario::whereHas('semestre', function ($query) use ($anioActual, $periodoActual) {
-                $query->where('anho', $anioActual)
-                    ->where('periodo', $periodoActual)
-                    ->whereIn('estado', ['activo', 1]);
-            })
+        $horarios = Horario::where('semestre_id', $semestre_id)
             ->whereHas('estudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
             ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps'])
             ->get();
-  
+
+        // Procesar los horarios para estructurar los datos de los cursos y los JPs evaluados
         $cursos = $horarios->map(function ($horario) use ($estudianteId) {
             $jpsEvaluados = $horario->horarioEstudiantes
                 ->where('estudiante_id', $estudianteId) // Filtra el estudiante específico
@@ -37,7 +32,7 @@ class HorarioController extends Controller
                     return $horarioEstudiante->horarioEstudianteJps->where('encuestaJP', true);
                 })
                 ->count();
-        
+
             return [
                 'horario_id' => $horario->id,
                 'curso_id' => $horario->curso->id,
@@ -87,43 +82,43 @@ class HorarioController extends Controller
         return response()->json($detalleHorario);
     }
 
-
     public function obtenerEncuestasDocentesEstudiante($estudianteId)
     {
-        $anioActual = 2024;
-        $periodoActual = 2;
+        $semestre = Semestre::where('estado', 'activo')->first();
+        if (!$semestre) {
+            return response()->json(['error' => 'No hay un semestre activo'], 404);
+        }
+        $semestre_id = $semestre->id;
 
-        $horarios = Horario::whereHas('semestre', function ($query) use ($anioActual, $periodoActual) {
-            $query->where('anho', $anioActual)
-                ->where('periodo', $periodoActual)
-                ->whereIn('estado', ['activo', 1]);
-        })
-        ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
-            $query->where('estudiante_id', $estudianteId);
-        })
-        ->with(['curso', 'horarioEstudiantes' => function ($query) use ($estudianteId) {
-            $query->where('estudiante_id', $estudianteId)
-                ->select('horario_id', 'estudiante_id', 'encuestaDocente');
-        }])
-        ->get();
+        $horarios = Horario::where('semestre_id', $semestre_id)
+            ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
+                $query->where('estudiante_id', $estudianteId);
+            })
+            ->with(['curso', 'horarioEstudiantes' => function ($query) use ($estudianteId) {
+                $query->where('estudiante_id', $estudianteId)
+                    ->select('horario_id', 'estudiante_id', 'encuestaDocente');
+            }, 'encuestas'])  // Incluimos la relación con encuestas
+            ->get();
 
-    $cursos = $horarios->map(function ($horario) {
-        $encuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
-        $encuestas = $horario->encuestas->map(function ($encuesta) {
-            return $encuesta->id;
+        $cursos = $horarios->map(function ($horario) {
+            $estadoEncuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
+
+            $encuestas = $horario->encuestas->map(function ($encuesta) {
+                return $encuesta->id;
+            });
+
+            return [
+                'horario_id' => $horario->id,
+                'curso_id' => $horario->curso->id,
+                'curso_nombre' => $horario->curso->nombre,
+                'estado_encuesta' => $estadoEncuesta,
+                'encuestas' => $encuestas,
+            ];
         });
 
-        return [
-            'horario_id' => $horario->id,
-            'curso_id' => $horario->curso->id,
-            'curso_nombre' => $horario->curso->nombre,
-            'estado_encuesta' => $horario->horarioEstudiantes->first()->encuestaDocente,
-            'encuestas' => $encuestas,
-        ];
-    });
-
-    return response()->json([
-        'cursos' => $cursos,
+        return response()->json([
+            'cursos' => $cursos,
         ]);
     }
+
 }

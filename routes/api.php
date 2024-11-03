@@ -173,8 +173,7 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     });
 });
 
-//Ruta que con el ID del estudiante te saca todos los cursos en los que esta matriculado el semestre actual
-// !!!Falta revisar lo del semestre actual (esta hardcodeado)
+//Ruta que con el ID del estudiante te saca todos los cursos en los que esta matriculado el semestre actual (JP)
 Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
 
 //Ruta que con el ID de horario (obtenido de la previa ruta) te da un listado de los Jps para evaluar
