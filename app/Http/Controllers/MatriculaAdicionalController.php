@@ -12,34 +12,38 @@ use App\Models\Semestre;
 class MatriculaAdicionalController extends Controller
 {
     public function store(Request $request)
-    {
-        // Validar los datos de entrada
-        $validator = Validator::make($request->all(), [
-            'codigoEstudiante' => 'required|string',
-            'clase_especialidad' => 'required|string',
-            'motivo' => 'required|string',
-            'justificacion' => 'required|string',
-            'motivo_rechazo' => 'nullable|string',
-        ]);
+{
+    // Validar los datos de entrada
+    $validator = Validator::make($request->all(), [
+        'estudiante_id' => 'required|integer',
+        'especialidad_id' => 'required|integer',
+        'motivo' => 'required|string',
+        'justificacion' => 'required|string',
+        'curso_id' => 'required|integer',
+        'horario_id' => 'required|integer',
+        'motivo_rechazo' => 'nullable|string',
+    ]);
 
-        // Si la validación falla, retorna un error
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        // Crear una nueva matrícula adicional
-        $matricula = MatriculaAdicional::create([
-            'estudiante_id' => $request->codigoEstudiante,
-            'especialidad_id' => $request->clase_especialidad,
-            'motivo' => $request->motivo,
-            'justificacion' => $request->justificacion,
-            'estado' => 'pendiente',
-            'motivo_rechazo' => $request->motivo_rechazo,
-        ]);
-
-        // Retornar la respuesta
-        return response()->json($matricula, 201);
+    // Si la validación falla, retorna un error
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 400);
     }
+
+    // Crear una nueva matrícula adicional
+    $matricula = MatriculaAdicional::create([
+        'estudiante_id' => $request->estudiante_id,
+        'especialidad_id' => $request->especialidad_id,
+        'motivo' => $request->motivo,
+        'justificacion' => $request->justificacion,
+        'estado' => 'Pendiente DC', // O cualquier otro valor predeterminado que desees
+        'motivo_rechazo' => $request->motivo_rechazo,
+        'curso_id' => $request->curso_id,
+        'horario_id' => $request->horario_id,
+    ]);
+
+    // Retornar la respuesta
+    return response()->json($matricula, 201);
+}
 
     public function getAll()
     {
