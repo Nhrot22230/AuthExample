@@ -330,7 +330,8 @@ class EncuestaController extends Controller
             $horario = $horarioId ? $encuesta->horario->firstWhere('id', $horarioId) : null;
 
             if ($horario) {
-                $jefePractica = $horario->jefePracticas->firstWhere('usuario_id', $jpId);
+                $jefePractica = $horario->jefePracticas->firstWhere('id', (int) $jpId);
+                
                 if ($jefePractica) {
                     $nombreResponsable = $jefePractica->usuario->nombre." ".
                     $jefePractica->usuario->apellido_paterno." ".$jefePractica->usuario->apellido_materno;
@@ -351,6 +352,7 @@ class EncuestaController extends Controller
                 'id' => $horario->curso->id,
                 'nombre' => $horario->curso->nombre,
             ],
+            'horario_nombre' => $horario->nombre,
             'nombre_encuesta' => $encuesta->nombre_encuesta,
             'fecha_inicio' => $encuesta->fecha_inicio,
             'fecha_fin' => $encuesta->fecha_fin,
