@@ -38,7 +38,7 @@ class EstudianteRiesgoController extends Controller
         $periodo = $ciclo->anho . "-" . $ciclo->periodo;
         foreach ($estudiantesRiesgo as $estudiante)
         {
-            return response()->json(1);
+            return response()->json($estudiante->id);
             $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
 
             if($periodo != $estudiante->ciclo) continue;
