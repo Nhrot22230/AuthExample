@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('horario')->nullable();
             $table->string('riesgo')->nullable();
             $table->date('fecha')->nullable();
+            $table->string('ciclo')->nullable();
             $table->timestamps();
 
             // Definición de llaves foráneas

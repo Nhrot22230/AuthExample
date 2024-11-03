@@ -187,4 +187,4 @@ Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocent
 
 Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
 
-Route::get('/estudiantesRiesgo/especialidad/{codigoEspecialidad}', [EstudianteRiesgoController::class, 'listar_por_especialidad']);
+Route::get('/estudiantesRiesgo/especialidad/{codigoEspecialidad}', [EstudianteRiesgoController::class, 'listar_por_especialidad_profesor']);

@@ -22,7 +22,8 @@ class EstudianteRiesgo extends Model
         'fecha',
         'desempenho',
         'observaciones',
-        'nombre'
+        'nombre',
+        'ciclo'
     ];
 
     // Relaciones
