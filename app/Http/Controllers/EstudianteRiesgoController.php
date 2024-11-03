@@ -92,7 +92,7 @@ class EstudianteRiesgoController extends Controller
         $informe->nombre_profesor = $request->NombreProfesor;
         $informe->save();
     }
-
+/*
     public function listar_por_especialidad_profesor(Request $request) //Para el profesor
     {
         //$data = json_decode($request, true);
@@ -138,6 +138,86 @@ class EstudianteRiesgoController extends Controller
                 'Docente' => $informe_actual->nombre_profesor
             ];
         }
+        return response()->json($resultado);
+    }*/
+
+    public function listar_por_especialidad_profesor(Request $request) //Para el profesor
+    {
+        //$data = json_decode($request, true);
+        $profesor = $request->CodigoProfesor;
+        $especialidad = $request->Especialidad;
+        $estado = $request->Estado ?? 'Todos'; // "Todos", "Pendientes" o "Respondida"
+        $riesgo = $request->Riesgo ?? 'Todos'; // "Tercera", "Cuarta" u "Otros"
+        $busqueda = $request->Busqueda ?? ''; // Búsqueda por código o nombre
+
+        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)
+            ->where('codigo_docente', $profesor);
+
+// Aplicar filtro de estado
+        if ($estado !== 'Todos') {
+            $estudiantesRiesgo->whereHas('informes', function ($query) use ($estado) {
+                $query->where('estado', $estado);
+            });
+        }
+
+// Aplicar filtro de riesgo
+        if ($riesgo !== 'Todos') {
+            $estudiantesRiesgo->where('riesgo', $riesgo);
+        }
+
+// Filtrar por búsqueda de código o nombre
+        if (!empty($busqueda)) {
+            $estudiantesRiesgo->where(function ($query) use ($busqueda) {
+                $query->where('codigo_estudiante', 'like', '%' . $busqueda . '%')
+                    ->orWhereHas('usuario', function ($query) use ($busqueda) {
+                        $query->where('nombre', 'like', '%' . $busqueda . '%');
+                    });
+            });
+        }
+
+        $estudiantesRiesgo = $estudiantesRiesgo->get();
+
+        if ($estudiantesRiesgo->isEmpty()) {
+            return response()->json("");
+        }
+
+        $resultado = [];
+        $fechaActual = new DateTime();
+        $inicioSemanaActual = (clone $fechaActual)->modify('monday this week');
+        $finSemanaActual = (clone $fechaActual)->modify('sunday this week');
+
+        foreach ($estudiantesRiesgo as $estudiante) {
+            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+            $informes = InformeRiesgo::where('codigo_alumno_riesgo', $estudiante->id)->get();
+
+            $informe_actual = null;
+            foreach ($informes as $informe) {
+                $fechaRegistro = new DateTime($informe->fecha);
+                if ($fechaRegistro >= $inicioSemanaActual && $fechaRegistro <= $finSemanaActual) {
+                    $informe_actual = $informe;
+                    break;
+                }
+            }
+
+            if ($informe_actual == null) continue;
+
+            $resultado[] = [
+                'Id' => $estudiante->id,
+                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
+                'Codigo' => $estudiante->codigo_estudiante,
+                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                'CodigoCurso' => $estudiante->codigo_curso,
+                'Horario' => $estudiante->horario,
+                'Riesgo' => $estudiante->riesgo,
+                'IdInforme' => $informe_actual->id,
+                'Estado' => $informe_actual->estado,
+                'Fecha' => $informe_actual->fecha,
+                'Desempeño' => $informe_actual->desempenho,
+                'Observaciones' => $informe_actual->observaciones,
+                'Docente' => $informe_actual->nombre_profesor
+            ];
+        }
+
         return response()->json($resultado);
     }
 
