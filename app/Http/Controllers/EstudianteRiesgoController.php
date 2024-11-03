@@ -50,8 +50,9 @@ class EstudianteRiesgoController extends Controller
                 'CodigoCurso' => $estudiante->codigo_curso,
                 'Horario' => $estudiante->horario,
                 'Riesgo' => $estudiante->riesgo,
+                'Fecha' => $estudiante->fecha
             ];
-            break;
+            //break;
         }
         return response()->json($resultado);
     }
