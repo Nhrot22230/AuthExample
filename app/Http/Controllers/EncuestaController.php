@@ -433,7 +433,6 @@ class EncuestaController extends Controller
         foreach ($data['respuestas'] as $respuesta) {
             $preguntaId = $respuesta['pregunta_id'];
             $valorRespuesta = $respuesta['respuesta'];
-            throw new \Exception('Salgo');
             $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
 
             if (!$encuestaPregunta) {
@@ -504,5 +503,86 @@ class EncuestaController extends Controller
             }
         }
     }
+    
+    public function obtenerCursosEncuesta($encuestaId)
+    {
+        $encuesta = Encuesta::with(['horario.curso'])->findOrFail($encuestaId);
+        $cursosEncuesta = $encuesta->horario->map(function ($horario) {
+            $curso = $horario->curso;
+
+            // Suponiendo que hay un campo `completada` en la tabla pivote `encuesta_horario`
+            //$estadoEncuesta = $horario->pivot->completada ? 'Completada' : 'Pendiente';
+
+            return [
+                'curso_nombre' => $curso->nombre,
+                'curso_id' => $curso->id,
+                //'estado' => $estadoEncuesta,
+            ];
+        });
+
+        return response()->json($cursosEncuesta);
+    }
+
+    
+
+
+    public function obtenerResultadosDetalleDocente($encuestaId, $horarioId)
+    {
+        // Obtener la información del horario y docente
+        $horario = Horario::with(['curso', 'docentes.usuario'])->findOrFail($horarioId);
+        $docente = $horario->docentes->first();
+        if (!$docente) {
+            return response()->json(['error' => 'Docente no encontrado para el horario'], 404);
+        }
+        $usuario = $docente->usuario;
+        
+        // Obtener preguntas y respuestas usando consultas directas, filtrando por horario
+        $preguntasConRespuestas = DB::table('encuesta_pregunta')
+            ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
+            ->leftJoin('respuesta_pregunta_docente', function($join) use ($horarioId) {
+                $join->on('encuesta_pregunta.id', '=', 'respuesta_pregunta_docente.encuesta_pregunta_id')
+                    ->where('respuesta_pregunta_docente.horario_id', '=', $horarioId);
+            })
+            ->select(
+                'preguntas.id',
+                'preguntas.texto_pregunta',
+                'respuesta_pregunta_docente.cant1',
+                'respuesta_pregunta_docente.cant2',
+                'respuesta_pregunta_docente.cant3',
+                'respuesta_pregunta_docente.cant4',
+                'respuesta_pregunta_docente.cant5'
+            )
+            ->where('encuesta_pregunta.encuesta_id', $encuestaId)
+            ->get();
+        
+        // Estructurar las preguntas y sus respuestas en el formato deseado
+        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) {
+            return [
+                'pregunta_id' => $pregunta->id,
+                'texto_pregunta' => $pregunta->texto_pregunta,
+                'respuestas' => [
+                    'Totalmente de acuerdo' => $pregunta->cant5 ?? 0,
+                    'De acuerdo' => $pregunta->cant4 ?? 0,
+                    'Ni de acuerdo ni en desacuerdo' => $pregunta->cant3 ?? 0,
+                    'En desacuerdo' => $pregunta->cant2 ?? 0,
+                    'Totalmente en desacuerdo' => $pregunta->cant1 ?? 0,
+                ],
+            ];
+        });
+
+        // Estructurar la respuesta final
+        $resultadoEncuesta = [
+            'docente' => [
+                'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+                'codigo' => $usuario->codigo,
+            ],
+            'detalles_preguntas' => $detallesPreguntas,
+        ];
+
+        return response()->json($resultadoEncuesta);
+    }
+
+
+    
 
 }

@@ -193,6 +193,20 @@ Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaCont
 //Actualmente solo sirve para guardar respuestas de docentes y JPs que no sean texto
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
+Route::get('/encuestas/{encuestaId}/cursos', [EncuestaController::class, 'obtenerCursosEncuesta']);
+
+Route::get('/cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
+
+
+Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
+
+
+
+
+
+
+
+
 
 Route::prefix('v1')->group(function () {
     Route::post('/images/upload', [ImageController::class, 'upload']);

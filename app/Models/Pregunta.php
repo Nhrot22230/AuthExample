@@ -21,4 +21,8 @@ class Pregunta extends Model
     public function encuesta(): BelongsToMany {
         return $this->belongsToMany(Encuesta::class, 'encuesta_pregunta');
     }
+    public function respuestasPreguntaDocente()
+    {
+        return $this->hasOne(RespuestasPreguntaDocente::class);
+    }
 }
