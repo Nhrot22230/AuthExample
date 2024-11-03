@@ -19,7 +19,6 @@ class UsuariosSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuario administrador
         $admin = Usuario::create([
             'nombre' => 'admin',
             'apellido_paterno' => 'admin',
@@ -29,9 +28,8 @@ class UsuariosSeeder extends Seeder
             'estado' => 'activo',
         ]);
 
-        // asignar roles de administrativo y docente a admin
-        $administrativoRole = Role::findByName('administrativo');
-        $docenteRole = Role::findByName('docente');
+        $administrativoRole = Role::findByName('Administrador');
+        $docenteRole = Role::findByName('Docente');
         $admin->assignRole([$administrativoRole, $docenteRole]);
 
         Administrativo::create([
@@ -42,7 +40,6 @@ class UsuariosSeeder extends Seeder
             'facultad_id' => null,
         ]);
 
-        // Crear usuario secretario
         $secretario = Usuario::create([
             'nombre' => 'secretario',
             'apellido_paterno' => 'secretario',
@@ -60,11 +57,9 @@ class UsuariosSeeder extends Seeder
             'facultad_id' => 5,
         ]);
 
-        // Asignar el rol de secretario académico
-        $secretarioRole = Role::findByName('secretarioAcademico');
+        $secretarioRole = Role::findByName('Secretario Académico');
         $secretario->assignRole($secretarioRole);
 
-        // Crear usuario director de carrera
         $director = Usuario::create([
             'nombre' => 'director',
             'apellido_paterno' => 'director',
@@ -74,7 +69,6 @@ class UsuariosSeeder extends Seeder
             'estado' => 'activo',
         ]);
 
-        // Seleccionar o crear un área específica para Ingeniería de Sistemas (ID 28)
         $random_area_sistemas = Area::where('especialidad_id', 28)->inRandomOrder()->first();
         if (!$random_area_sistemas) {
             $random_area_sistemas = Area::create([
@@ -83,7 +77,6 @@ class UsuariosSeeder extends Seeder
             ]);
         }
 
-        // Crear el usuario director de carrera en Ingeniería de Sistemas
         Docente::create([
             'usuario_id' => $director->id,
             'codigoDocente' => 'director',
@@ -93,16 +86,9 @@ class UsuariosSeeder extends Seeder
             'area_id' => $random_area_sistemas->id,
         ]);
 
-        // Factor de multiplicación para la creación masiva de registros
-        $factor = 30;
-
-        // Crear docentes en general
+        $factor = 10;
         Docente::factory(8 * $factor)->create();
-
-        // Crear docentes que pertenezcan a FACI
         Docente::factory(10 * $factor)->fromFacultad(5)->create();
-
-        // Crear estudiantes y administrativos en cantidades definidas por el factor
         Estudiante::factory(50 * $factor)->create();
         Administrativo::factory(1 * $factor)->create();
     }

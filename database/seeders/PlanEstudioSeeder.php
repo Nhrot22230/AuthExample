@@ -22,13 +22,7 @@ class PlanEstudioSeeder extends Seeder
             'especialidad_id' => $especialidad->id,
         ]);
         
-        $cursos = $especialidad->cursos->random(20);
-
-        if ($cursos->count() < 20) {
-            $cursos = Curso::factory(20 - $cursos->count())->create(
-                ['especialidad_id' => $especialidad->id]
-            );
-        }
+        $cursos = Curso::inRandomOrder()->limit(20)->get() ?? Curso::factory(20)->create();
 
         foreach ($cursos as $curso) {
             $plan_estudio->cursos()->attach($curso, [
