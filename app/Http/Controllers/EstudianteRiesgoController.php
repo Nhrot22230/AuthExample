@@ -82,7 +82,7 @@ class EstudianteRiesgoController extends Controller
         $informe->estado = 'Pendiente';
         $informe->fecha = $fechaInicio;
         $informe->codigo_alumno_riesgo = $request->IdAlumnoRiesgo;
-        $informe->save();
+        $informe->store();
     }
 
     public function actualizar_informe_estudiante(Request $request)
@@ -248,7 +248,7 @@ class EstudianteRiesgoController extends Controller
             $estudianteRiesgo->riesgo = $alumno['Riesgo'];
             $estudianteRiesgo->fecha = $alumno['Fecha'];
             $estudianteRiesgo->ciclo = $ciclo->anho . "-" . $ciclo->periodo;
-            $estudianteRiesgo->save();
+            $estudianteRiesgo->store();
         }
         return response()->json("",201);
     }
