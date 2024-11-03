@@ -99,7 +99,7 @@ class EstudianteRiesgoController extends Controller
         $profesor = $data['CodigoProfesor'];
         $request = $data['Especialidad'];
         $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('codigo_profesor', $profesor)->get();
-        if($estudiantesRiesgo->isEmpty()) return;
+        if($estudiantesRiesgo->isEmpty()) return response()->json("");
         $resultado = [];
         $fechaActual = new DateTime();
         $inicioSemanaActual = (clone $fechaActual)->modify('monday this week');
