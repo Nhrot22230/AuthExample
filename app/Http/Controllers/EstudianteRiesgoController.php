@@ -73,7 +73,13 @@ class EstudianteRiesgoController extends Controller
         $estudiante_id = $data['IdEstudiante'];
         $numero_semana = $data['NumeroSemana'];
         $ciclo = Semestre::where('estado', 'activo')->first();
-
+        $fechaInicio = new DateTime($ciclo->fecha_inicio);
+        $fechaInicio->modify("+{$numero_semana} weeks");
+        $informe = new InformeRiesgo();
+        $informe->estado = 'Pendiente';
+        $informe->fecha = $fechaInicio;
+        $informe->codigo_alumno_riesgo = $data['IdAlumnoRiesgo'];
+        $informe->save();
     }
 
     public function actualizar_informe_estudiante(Request $request)
@@ -82,7 +88,7 @@ class EstudianteRiesgoController extends Controller
         $informe = InformeRiesgo::find($data['IdInforme']);
         $informe->desempenho = $data['Desempeño'];
         $informe->observaciones = $data['Observaciones'];
-        $informe->estado = 'Completado';
+        $informe->estado = 'Respondida';
         $informe->nombre_profesor = $data['NombreProfesor'];
         $informe->save();
     }
