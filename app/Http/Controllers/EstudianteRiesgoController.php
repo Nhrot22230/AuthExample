@@ -36,9 +36,9 @@ class EstudianteRiesgoController extends Controller
         $fechaActual = new DateTime();
         $ciclo = Semestre::where('estado', 'activo')->first();
         $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+        return response()->json("hjasjksdahjkasd");
         foreach ($estudiantesRiesgo as $estudiante)
         {
-            return response()->json("hjasjksdahjkasd");
             $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
 
             if($periodo != $estudiante->ciclo) continue;
