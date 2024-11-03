@@ -71,7 +71,6 @@ class EstudianteRiesgoController extends Controller
     public function agregar_informe_estudiante(Request $request)
     {
         $data = json_decode($request, true);
-        $estudiante_id = $data['IdEstudiante'];
         $numero_semana = $data['NumeroSemana'];
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
