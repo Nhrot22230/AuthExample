@@ -426,12 +426,16 @@ class EncuestaController extends Controller
     protected function registrarRespuestasDocente($data, $encuesta, $horarioId)
     {
         foreach ($data['respuestas'] as $respuesta) {
-            $preguntaId = $respuesta['pregunta_id'];
+            $encuestaPreguntaId = $respuesta['pregunta_id'];
             $valorRespuesta = $respuesta['respuesta'];
-            $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
+            
+            $encuestaPregunta = DB::table('encuesta_pregunta')
+                ->where('id', $encuestaPreguntaId)
+                ->where('encuesta_id', $encuesta->id)
+                ->first();
 
             if (!$encuestaPregunta) {
-                throw new \Exception('La pregunta no está asociada a esta encuesta');
+                throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }
             $respuestaDocente = RespuestasPreguntaDocente::firstOrCreate(
                 [
@@ -462,14 +466,16 @@ class EncuestaController extends Controller
     protected function registrarRespuestasJefePractica($data, $encuesta, $jpHorarioId)
     {
         foreach ($data['respuestas'] as $respuesta) {
-            $preguntaId = $respuesta['pregunta_id'];
+            $encuestaPreguntaId = $respuesta['pregunta_id'];
             $valorRespuesta = $respuesta['respuesta'];
 
-            // Verificar si la pregunta está asociada a la encuesta
-            $encuestaPregunta = $encuesta->pregunta()->where('pregunta_id', $preguntaId)->first();
+            $encuestaPregunta = DB::table('encuesta_pregunta')
+                ->where('id', $encuestaPreguntaId)
+                ->where('encuesta_id', $encuesta->id)
+                ->first();
 
             if (!$encuestaPregunta) {
-                throw new \Exception('La pregunta no está asociada a esta encuesta');
+                throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }
 
             // Buscar o crear la respuesta específica para el JP
