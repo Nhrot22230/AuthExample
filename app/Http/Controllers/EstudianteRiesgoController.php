@@ -26,8 +26,9 @@ class EstudianteRiesgoController extends Controller
         $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
     }
 
-    public function listar_por_especialidad_director($request)
+    public function listar_por_especialidad_director(Request $request)
     {
+        $request = $request->IdEspecialidad;
         $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->get();
         $resultado = [];
         $fechaActual = new DateTime();
@@ -52,8 +53,9 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
-    public function listar_informes_estudiante($request)
+    public function listar_informes_estudiante(Request $request)
     {
+        $request = $request->CodigoAlumnoRiesgo;
         $informes = InformeRiesgo::where('codigo_alumno_riesgo', $request)->get();
         $resultado = [];
         foreach($informes as $i){
@@ -70,26 +72,24 @@ class EstudianteRiesgoController extends Controller
 
     public function agregar_informe_estudiante(Request $request)
     {
-        $data = json_decode($request, true);
-        $numero_semana = $data['NumeroSemana'];
+        $numero_semana = $request->NumeroSemana;
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
         $informe = new InformeRiesgo();
         $informe->estado = 'Pendiente';
         $informe->fecha = $fechaInicio;
-        $informe->codigo_alumno_riesgo = $data['IdAlumnoRiesgo'];
+        $informe->codigo_alumno_riesgo = $request->IdAlumnoRiesgo;
         $informe->save();
     }
 
     public function actualizar_informe_estudiante(Request $request)
     {
-        $data = json_decode($request, true);
-        $informe = InformeRiesgo::find($data['IdInforme']);
-        $informe->desempenho = $data['Desempeño'];
-        $informe->observaciones = $data['Observaciones'];
+        $informe = InformeRiesgo::find($request->IdInforme);
+        $informe->desempenho = $request->Desempeño;
+        $informe->observaciones = $request->Observaciones;
         $informe->estado = 'Respondida';
-        $informe->nombre_profesor = $data['NombreProfesor'];
+        $informe->nombre_profesor = $request->NombreProfesor;
         $informe->save();
     }
 
@@ -143,15 +143,14 @@ class EstudianteRiesgoController extends Controller
 
     public function carga_alumnos_riesgo(Request $request)
     {
-        $data = json_decode($request, true);
         $ciclo = Semestre::where('estado', 'activo')->first();
-        foreach ($data as $alumno){
+        foreach ($request as $alumno){
             $estudianteRiesgo = new EstudianteRiesgo();
-            $estudianteRiesgo->codigo_estudiante = $alumno['Codigo'];
-            $estudianteRiesgo->codigo_curso = Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id;
-            $estudianteRiesgo->horario = $alumno['Horario'];
-            $estudianteRiesgo->riesgo = $alumno['Riesgo'];
-            $estudianteRiesgo->fecha = $alumno['Fecha'];
+            $estudianteRiesgo->codigo_estudiante = $alumno->Codigo;
+            $estudianteRiesgo->codigo_curso = Curso::where('cod_curso', $alumno->CodigoCurso)->first()->id;
+            $estudianteRiesgo->horario = $alumno->Horario;
+            $estudianteRiesgo->riesgo = $alumno->Riesgo;
+            $estudianteRiesgo->fecha = $alumno->Fecha;
             $estudianteRiesgo->ciclo = $ciclo->anho . "-" . $ciclo->periodo;
             $estudianteRiesgo->save();
         }
