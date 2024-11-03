@@ -47,7 +47,6 @@ class HorarioController extends Controller
     }
     public function obtenerJps($horarioId)
     {
-        // Cargar el horario junto con las relaciones necesarias
         $horario = Horario::with([
             'curso',
             'horarioEstudiantes.horarioEstudianteJps',
@@ -56,21 +55,28 @@ class HorarioController extends Controller
 
         // Mapear la información de los jefes de práctica asociados al horario
         $jps = $horario->jefePracticas->map(function ($jp) use ($horario) {
+            // Obtener el estado de la encuesta y el ID de la encuesta asociada al JP en este horario
+            $estadoEncuesta = $horario->horarioEstudiantes
+                ->flatMap(function ($horarioEstudiante) use ($jp) {
+                    return $horarioEstudiante->horarioEstudianteJps
+                        ->where('jp_horario_id', $jp->id)
+                        ->pluck('encuestaJP'); // Obtener el estado de la encuesta
+                })
+                ->first();
+    
+            $encuestaId = $horario->encuestas
+                ->where('tipo_encuesta', 'jefe_practica') // Filtrar por tipo de encuesta
+                ->first()?->id; // Obtener el ID de la encuesta de tipo 'jefe_practica'
+    
             return [
                 'id' => $jp->id,
                 'nombre' => $jp->usuario->nombre,
                 'apellido_paterno' => $jp->usuario->apellido_paterno,
                 'apellido_materno' => $jp->usuario->apellido_materno,
-                'estado' => $horario->horarioEstudiantes
-                    ->flatMap(function ($horarioEstudiante) use ($jp) {
-                        return $horarioEstudiante->horarioEstudianteJps
-                            ->where('jp_horario_id', $jp->id)
-                            ->pluck('encuestaJP');
-                    })
-                    ->first(), 
+                'estado' => $estadoEncuesta,
+                'encuesta_id' => $encuestaId, // Incluir el ID de la encuesta de tipo 'jefe_practica'
             ];
-        });
-
+        });   
         $detalleHorario = [
             'curso' => [
                 'id' => $horario->curso->id,

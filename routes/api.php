@@ -180,23 +180,25 @@ Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obt
 Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
 
 //Ruta que con el ID del estudiante puede listar el curso y los docentes que está matriculado el semestre actual
-// !!!Falta revisar lo del semestre actual (esta hardcodeado)
 Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
 
 //Ruta que te muestra los datos de una encuesta, las preguntas asociadas, si fuera JP te pide el idJP, si fuera docente no necesita
-// !!!Creo que no he pasado previamente encuestaId (Pendiente de revisar)
 Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
 
 //Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
 //Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado, tambien jp_horario_id
 //Actualmente solo sirve para guardar respuestas de docentes y JPs que no sean texto
+//Pendiente de revisar: Validacion correcta del tipo de encuestas
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
+
+//Usando encuestaID obtengo la lista de cursos asociados a esa encuesta
 Route::get('/encuestas/{encuestaId}/cursos', [EncuestaController::class, 'obtenerCursosEncuesta']);
 
+//Usando el cursoId previo, obtengo la lista de docentes
 Route::get('/cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
 
-
+//Usando la encuestaId de arriba, junto con cursoId y horarioId devuelto obtengo los resultados para ese docente
 Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
 
 
