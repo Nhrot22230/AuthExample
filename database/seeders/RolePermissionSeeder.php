@@ -142,10 +142,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'revocar permisos', 'category' => 'permisos'],
             ['name' => 'eliminar permisos', 'category' => 'permisos'],
 
-            ['name' => 'crear matriculas_adicionales', 'category' => 'permisos'],
-            ['name' => 'ver matriculas_especialidad', 'category' => 'permisos'],
-            ['name' => 'ver mis matriculas_adicionales', 'category' => 'permisos'],
-            ['name' => 'ver matriculas_facultad', 'category' => 'permisos'],
+            ['name' => 'crear matriculas_adicionales', 'category' => 'solicitudes'],
+            ['name' => 'ver matriculas_especialidad', 'category' => 'solicitudes'],
+            ['name' => 'ver mis matriculas_adicionales', 'category' => 'solicitudes'],
+            ['name' => 'ver matriculas_facultad', 'category' => 'solicitudes'],
             
         ];
 
@@ -167,6 +167,8 @@ class RolePermissionSeeder extends Seeder
             ->orWhere('category', '=', 'departamentos')
             ->orWhere('category', '=', 'facultades')
             ->orWhere('category', '=', 'tema de tesis') // Corrige la categoría aquí
+            ->orWhere('category', '=', 'solicitudes')
+            ->orWhere('category', '=', 'cursos')
             ->get();
 
         $role->syncPermissions($permissions);
@@ -178,7 +180,7 @@ class RolePermissionSeeder extends Seeder
             ->orWhere('category', '=', 'areas')
             ->orWhere('category', '=', 'departamentos')
             ->orWhere('category', '=', 'facultades')
-            ->orWhere('category', '=', 'temaDeTesis');
+            ->orWhere('category', '=', 'temaDeTesis');   
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('docente');
