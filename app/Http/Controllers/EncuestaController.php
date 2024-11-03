@@ -16,6 +16,7 @@ use App\Models\RespuestasPreguntaJP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Psy\Util\Json;
 
 
@@ -25,16 +26,13 @@ class EncuestaController extends Controller
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
-
         if (!Especialidad::where('id', $especialidad_id)->exists()) {
             return response()->json(['message' => 'Especialidad no encontrada.'], 404);
         }
-
         $encuestas = Encuesta::where('tipo_encuesta', $tipo_encuesta)
             ->where('especialidad_id', $especialidad_id)
             ->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')
             ->get();
-
         return response()->json($encuestas);
     }
 
@@ -42,16 +40,13 @@ class EncuestaController extends Controller
         if (!Especialidad::where('id', $especialidad_id)->exists()) {
             return response()->json(['message' => 'Especialidad no encontrada.'], 404);
         }
-
         $semestre_id = Semestre::where('estado', 'activo')->first()->id;
-
         $cursos = Curso::where('especialidad_id', $especialidad_id)
             ->whereHas('horarios', function ($query) use ($semestre_id) {
                 $query->where('semestre_id', $semestre_id);
             })
             ->select('id', 'nombre', 'cod_curso')
             ->get();
-
         return response()->json($cursos);
     }
 
@@ -107,11 +102,9 @@ class EncuestaController extends Controller
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
-
         if (!Especialidad::where('id', $especialidad_id)->exists()) {
             return response()->json(['message' => 'Especialidad no encontrada.'], 404);
         }
-
         $validated = $request->validate([
             'nombre_encuesta' => 'required|string|max:255',
             'tipo_encuesta' => 'required|in:docente,jefe_practica',
@@ -123,70 +116,67 @@ class EncuestaController extends Controller
             'preguntas_nuevas' => 'nullable|array',
             'preguntas_eliminadas' => 'nullable|array'
         ]);
-
-        $ultimaEncuesta = Encuesta::where('tipo_encuesta', $validated['tipo_encuesta'])
-            ->where('especialidad_id', $especialidad_id)
-            ->latest()
-            ->first();
-
-        if (!$ultimaEncuesta) {
-            return response()->json(['message' => 'No hay encuestas disponibles.'], 404);
-        }
-
-        $encuesta = Encuesta::create([
-            'nombre_encuesta' => $validated['nombre_encuesta'],
-            'tipo_encuesta' => $validated['tipo_encuesta'],
-            'especialidad_id' => $especialidad_id,
-            'fecha_inicio' => $validated['fecha_inicio'],
-            'fecha_fin' => $validated['fecha_fin'],
-            'disponible' => $validated['disponible']
-        ]);
-
-        $semestre_id = Semestre::where('estado', 'activo')->first()->id;
-
-        foreach ($validated['cursos'] as $curso_id) {
-            $horarios = Horario::where('curso_id', $curso_id)->where('semestre_id', $semestre_id)->get();
-            foreach ($horarios as $horario) {
-                $encuesta->horario()->attach($horario->id);
+        DB::beginTransaction();
+        try {
+            $ultimaEncuesta = Encuesta::where('tipo_encuesta', $validated['tipo_encuesta'])
+                ->where('especialidad_id', $especialidad_id)
+                ->latest()
+                ->first();
+            if (!$ultimaEncuesta) {
+                return response()->json(['message' => 'No hay encuestas disponibles.'], 404);
             }
-        }
-
-        if (!empty($validated['preguntas_modificadas'])) {
-            foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
-                $nuevaPregunta = Pregunta::create([
-                    'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                    'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                ]);
-
-                $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+            $encuesta = Encuesta::create([
+                'nombre_encuesta' => $validated['nombre_encuesta'],
+                'tipo_encuesta' => $validated['tipo_encuesta'],
+                'especialidad_id' => $especialidad_id,
+                'fecha_inicio' => $validated['fecha_inicio'],
+                'fecha_fin' => $validated['fecha_fin'],
+                'disponible' => $validated['disponible']
+            ]);
+            $semestre_id = Semestre::where('estado', 'activo')->first()->id;
+            foreach ($validated['cursos'] as $curso_id) {
+                $horarios = Horario::where('curso_id', $curso_id)->where('semestre_id', $semestre_id)->get();
+                foreach ($horarios as $horario) {
+                    $encuesta->horario()->attach($horario->id);
+                }
             }
-        }
+            if (!empty($validated['preguntas_modificadas'])) {
+                foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
+                    $nuevaPregunta = Pregunta::create([
+                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                    ]);
 
-        if (!empty($validated['preguntas_nuevas'])) {
-            foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
-                $nuevaPregunta = Pregunta::create([
-                    'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                    'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                ]);
-
-                $encuesta->pregunta()->attach($nuevaPregunta->id);
+                    $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                }
             }
-        }
+            if (!empty($validated['preguntas_nuevas'])) {
+                foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
+                    $nuevaPregunta = Pregunta::create([
+                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                    ]);
 
-        if ($ultimaEncuesta) {
-            $preguntasNoModificadas = $ultimaEncuesta->pregunta
-                ->whereNotIn('id', array_column($validated['preguntas_modificadas'] ?? [], 'id'))
-                ->whereNotIn('id', $validated['preguntas_eliminadas'] ?? []);
-
-            foreach ($preguntasNoModificadas as $pregunta) {
-                $encuesta->pregunta()->attach($pregunta->id);
+                    $encuesta->pregunta()->attach($nuevaPregunta->id);
+                }
             }
-        }
+            if ($ultimaEncuesta) {
+                $preguntasNoModificadas = $ultimaEncuesta->pregunta
+                    ->whereNotIn('id', array_column($validated['preguntas_modificadas'] ?? [], 'id'))
+                    ->whereNotIn('id', $validated['preguntas_eliminadas'] ?? []);
 
-        return response()->json(['message' => 'Encuesta creada exitosamente.',
-            'encuesta_id' => $encuesta->id,
-            'preguntas_no_modificadas' => $preguntasNoModificadas,
-        ], 201);
+                foreach ($preguntasNoModificadas as $pregunta) {
+                    $encuesta->pregunta()->attach($pregunta->id);
+                }
+            }
+            DB::commit();
+            return response()->json(['message' => 'Encuesta creada exitosamente.',
+                'encuesta_id' => $encuesta->id,
+            ], 201);
+        } catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error' => 'Error al realizar el registro.'], 500);
+        }
     }
 
     public function mostrarCursos(int $encuesta_id): JsonResponse
@@ -200,22 +190,15 @@ class EncuestaController extends Controller
         if (!$semestreActivo) {
             return response()->json(['message' => 'No hay semestre activo.'], 404);
         }
-
-        // Obtener los horarios asociados a la encuesta
         $horariosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)->pluck('curso_id');
-
-        // Obtener los cursos asociados a la especialidad de la encuesta que no están en los horarios asociados
         $cursosNoAsociados = Curso::where('especialidad_id', $encuesta->especialidad_id)
             ->whereNotIn('id', $horariosAsociados)
             ->select('id', 'nombre')
             ->get();
-
-        // Obtener los cursos asociados a la encuesta
         $cursosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)
             ->with('curso:id,nombre')
             ->get()
             ->pluck('curso');
-
         return response()->json([
             'cursos_asociados' => $cursosAsociados,
             'cursos_no_asociados' => $cursosNoAsociados,
@@ -261,74 +244,67 @@ class EncuestaController extends Controller
             'preguntas_eliminadas' => 'nullable|array',
         ]);
 
-        $encuesta = Encuesta::findOrFail($encuesta_id);
+        DB::beginTransaction();
+        try {
+            $encuesta = Encuesta::findOrFail($encuesta_id);
+            $encuesta->update(array_filter($validated));
+            if (!empty($validated['cursos'])) {
+                $encuesta->horario()->detach();
+                $semestre_id = Semestre::where('estado', 'activo')->first()->id;
 
-        $encuesta->update(array_filter($validated));
-
-        if (!empty($validated['cursos'])) {
-            $encuesta->horario()->detach();
-            $semestre_id = Semestre::where('estado', 'activo')->first()->id;
-
-            foreach ($validated['cursos'] as $curso_id) {
-                $horarios = Horario::where('curso_id', $curso_id)->where('semestre_id', $semestre_id)->get();
-                foreach ($horarios as $horario) {
-                    $encuesta->horario()->attach($horario->id);
-                }
-            }
-        }
-
-        if (!empty($validated['preguntas_eliminadas'])) {
-            foreach ($validated['preguntas_eliminadas'] as $pregunta_id) {
-                $pivot = $encuesta->pregunta()->where('pregunta_id', $pregunta_id)->first();
-
-                if ($pivot && $pivot->es_modificacion) {
-                    // Si es una modificación, eliminar de la tabla de preguntas
-                    Pregunta::destroy($pregunta_id);
-                }
-                $encuesta->pregunta()->detach($pregunta_id);
-            }
-        }
-
-        // Manejo de preguntas modificadas
-        if (!empty($validated['preguntas_modificadas'])) {
-            foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
-                $pivot = $encuesta->pregunta()->where('pregunta_id', $pregunta_data['id'])->first();
-
-                if ($pivot) {
-                    if ($pivot->es_modificacion) {
-                        // Si está marcada como modificación, actualizar la pregunta existente
-                        $pregunta = Pregunta::find($pregunta_data['id']);
-                        if ($pregunta) {
-                            $pregunta->texto_pregunta = $pregunta_data['texto_pregunta'];
-                            $pregunta->tipo_respuesta = $pregunta_data['tipo_respuesta'];
-                            $pregunta->save();
-                        }
-                    } else {
-                        // Si no está marcada como modificación, crear una nueva pregunta
-                        $nuevaPregunta = Pregunta::create([
-                            'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                            'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                        ]);
-                        // Eliminar la entrada en encuesta_pregunta
-                        $encuesta->pregunta()->detach($pregunta_data['id']);
-                        // Adjuntar la nueva pregunta como modificación
-                        $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                foreach ($validated['cursos'] as $curso_id) {
+                    $horarios = Horario::where('curso_id', $curso_id)->where('semestre_id', $semestre_id)->get();
+                    foreach ($horarios as $horario) {
+                        $encuesta->horario()->attach($horario->id);
                     }
                 }
             }
-        }
-
-        if (!empty($validated['preguntas_nuevas'])) {
-            foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
-                $nuevaPregunta = Pregunta::create([
-                    'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                    'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                ]);
-                $encuesta->pregunta()->attach($nuevaPregunta->id);
+            if (!empty($validated['preguntas_eliminadas'])) {
+                foreach ($validated['preguntas_eliminadas'] as $pregunta_id) {
+                    $pivot = $encuesta->pregunta()->where('pregunta_id', $pregunta_id)->first();
+                    if ($pivot && $pivot->es_modificacion) {
+                        Pregunta::destroy($pregunta_id);
+                    }
+                    $encuesta->pregunta()->detach($pregunta_id);
+                }
             }
+            if (!empty($validated['preguntas_modificadas'])) {
+                foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
+                    $pivot = $encuesta->pregunta()->where('pregunta_id', $pregunta_data['id'])->first();
+                    if ($pivot) {
+                        if ($pivot->es_modificacion) {
+                            $pregunta = Pregunta::find($pregunta_data['id']);
+                            if ($pregunta) {
+                                $pregunta->texto_pregunta = $pregunta_data['texto_pregunta'];
+                                $pregunta->tipo_respuesta = $pregunta_data['tipo_respuesta'];
+                                $pregunta->save();
+                            }
+                        } else {
+                            $nuevaPregunta = Pregunta::create([
+                                'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                                'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                            ]);
+                            $encuesta->pregunta()->detach($pregunta_data['id']);
+                            $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                        }
+                    }
+                }
+            }
+            if (!empty($validated['preguntas_nuevas'])) {
+                foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
+                    $nuevaPregunta = Pregunta::create([
+                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                    ]);
+                    $encuesta->pregunta()->attach($nuevaPregunta->id);
+                }
+            }
+            DB::commit();
+            return response()->json(['message' => 'Encuesta actualizada exitosamente.'], 200);
+        } catch(\Exception $e){
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'Encuesta actualizada exitosamente.'], 200);
     }
 
     public function obtenerDetalleEncuesta($encuestaId, $horarioId, $jpId=null)
