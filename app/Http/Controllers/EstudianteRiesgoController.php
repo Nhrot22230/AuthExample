@@ -240,6 +240,7 @@ class EstudianteRiesgoController extends Controller
         }
         $ciclo = Semestre::where('estado', 'activo')->first();
         foreach ($request->alumnos as $alumno){
+            Log::channel('usuarios')->info($alumno);
             $estudianteRiesgo = new EstudianteRiesgo();
             $estudianteRiesgo->codigo_estudiante = $alumno->Codigo;
             $estudianteRiesgo->codigo_curso = Curso::where('cod_curso', $alumno->CodigoCurso)->first()->id;
