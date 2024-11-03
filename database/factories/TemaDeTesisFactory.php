@@ -27,6 +27,8 @@ class TemaDeTesisFactory extends Factory
             $estadoJurado = 'no enviado';
         }
 
+        $comentarios = $estadoJurado == 'desaprobado' ? $this->faker->paragraph() : null;
+
         return [
             'titulo' => $this->faker->sentence(),
             'resumen' => $this->faker->paragraph(),
@@ -35,6 +37,7 @@ class TemaDeTesisFactory extends Factory
             'estado_jurado' => $estadoJurado,
             'fecha_enviado' => $this->faker->date(),
             'especialidad_id' => $especialidadId,
+            'comentarios' => $comentarios,
         ];
     }
 

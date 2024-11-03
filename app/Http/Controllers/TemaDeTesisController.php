@@ -68,18 +68,20 @@ class TemaDeTesisController extends Controller
             'estado_jurado' => 'nullable|in:enviado,no enviado,aprobado,pendiente,desaprobado,vencido',
             'jurados' => 'nullable|array',
             'jurados.*' => 'exists:docentes,id',
+            'comentarios' => 'nullable|string', // Validación de comentarios
         ]);
-
+    
         $temaDeTesis = TemaDeTesis::findOrFail($id);
-
-        // Actualización del estado y estado_jurado
-        $temaDeTesis->update($request->only('estado', 'estado_jurado'));
-
+    
+        // Actualización de estado, estado_jurado y comentarios
+        $temaDeTesis->update($request->only('estado', 'estado_jurado', 'comentarios'));
+    
         // Actualización de jurados, si se proveen
         if ($request->has('jurados')) {
             $temaDeTesis->jurados()->sync($request->jurados);
         }
-
+    
         return response()->json(['message' => 'Tema de Tesis actualizado exitosamente', 'tema' => $temaDeTesis], 200);
     }
+    
 }

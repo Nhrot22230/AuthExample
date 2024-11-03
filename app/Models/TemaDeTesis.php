@@ -15,10 +15,11 @@ class TemaDeTesis extends Model
         'titulo',
         'resumen',
         'documento',
-        'estado',
+        'estado', 
         'estado_jurado',
         'fecha_enviado',
         'especialidad_id',
+        'comentarios',
     ];
 
     // Relación con estudiantes (muchos a muchos)
