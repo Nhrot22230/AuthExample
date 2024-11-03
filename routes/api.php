@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
@@ -19,12 +20,13 @@ use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
 use App\Http\Controllers\EstudianteRiesgoController;
-
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'Hello World!',
-    ]);
-});
+use App\Http\Middleware\AuthzMiddleware;
+use App\Models\Area;
+use App\Models\Curso;
+use App\Models\Departamento;
+use App\Models\Especialidad;
+use App\Models\Facultad;
+use App\Models\Seccion;
 
 Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
     Route::prefix('v1')->group(function () {
@@ -36,58 +38,58 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/departamentos', [DepartamentoController::class, 'indexAll'])->middleware('can:ver departamentos');
         Route::get('/departamentos/paginated', [DepartamentoController::class, 'index'])->middleware('can:ver departamentos');
         Route::post('/departamentos', [DepartamentoController::class, 'store'])->middleware('can:manage departamentos');
-        Route::get('/departamentos/{id}', [DepartamentoController::class, 'show'])->middleware('can:ver departamentos');
-        Route::put('/departamentos/{id}', [DepartamentoController::class, 'update'])->middleware('can:manage departamentos');
-        Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy'])->middleware('can:manage departamentos');
+        Route::get('/departamentos/{id}', [DepartamentoController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver departamentos,' . Departamento::class]);
+        Route::put('/departamentos/{id}', [DepartamentoController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage departamentos,' . Departamento::class]);
+        Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage departamentos,' . Departamento::class]);
         Route::get('/departamentos/nombre/{nombre}', [DepartamentoController::class, 'showByName'])->middleware('can:ver departamentos');
 
 
         Route::get('/facultades', [FacultadController::class, 'indexAll'])->middleware('can:ver facultades');
         Route::get('/facultades/paginated', [FacultadController::class, 'index'])->middleware('can:ver facultades');
         Route::post('/facultades', [FacultadController::class, 'store'])->middleware('can:manage facultades');
-        Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware('can:ver facultades');
-        Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware('can:manage facultades');
-        Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware('can:manage facultades');
+        Route::get('/facultades/{id}', [FacultadController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver facultades,' . Facultad::class]);
+        Route::put('/facultades/{id}', [FacultadController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage facultades,' . Facultad::class]);
+        Route::delete('/facultades/{id}', [FacultadController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage facultades,' . Facultad::class]);
         Route::get('/facultades/nombre/{nombre}', [FacultadController::class, 'showByName'])->middleware('can:ver facultades');
 
 
         Route::get('/areas', [AreaController::class, 'indexAll'])->middleware('can:ver areas');
         Route::get('/areas/paginated', [AreaController::class, 'index'])->middleware('can:ver areas');
         Route::post('/areas', [AreaController::class, 'store'])->middleware('can:manage areas');
-        Route::get('/areas/{id}', [AreaController::class, 'show'])->middleware('can:ver areas');
-        Route::put('/areas/{id}', [AreaController::class, 'update'])->middleware('can:manage areas');
-        Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->middleware('can:manage areas');
+        Route::get('/areas/{id}', [AreaController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver areas,' . Area::class]);
+        Route::put('/areas/{id}', [AreaController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage areas,' . Area::class]);
+        Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage areas,' . Area::class]);
 
 
         Route::get('/especialidades', [EspecialidadController::class, 'indexAll'])->middleware('can:ver especialidades');
         Route::get('/especialidades/paginated', [EspecialidadController::class, 'index'])->middleware('can:ver especialidades');
         Route::post('/especialidades', [EspecialidadController::class, 'store'])->middleware('can:manage especialidades');
-        Route::get('/especialidades/{id}', [EspecialidadController::class, 'show'])->middleware('can:ver especialidades');
-        Route::put('/especialidades/{id}', [EspecialidadController::class, 'update'])->middleware('can:manage especialidades');
-        Route::delete('/especialidades/{id}', [EspecialidadController::class, 'destroy'])->middleware('can:manage especialidades');
+        Route::get('/especialidades/{id}', [EspecialidadController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver especialidades,' . Especialidad::class]);
+        Route::put('/especialidades/{id}', [EspecialidadController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage especialidades,' . Especialidad::class]);
+        Route::delete('/especialidades/{id}', [EspecialidadController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage especialidades,' . Especialidad::class]);
         Route::get('/especialidades/nombre/{nombre}', [EspecialidadController::class, 'showByName'])->middleware('can:ver especialidades');
 
 
         Route::get('/secciones', [SeccionController::class, 'indexAll'])->middleware('can:ver secciones');
         Route::get('/secciones/paginated', [SeccionController::class, 'index'])->middleware('can:ver secciones');
         Route::post('/secciones', [SeccionController::class, 'store'])->middleware('can:manage secciones');
-        Route::get('/secciones/{id}', [SeccionController::class, 'show'])->middleware('can:ver secciones');
-        Route::put('/secciones/{id}', [SeccionController::class, 'update'])->middleware('can:manage secciones');
-        Route::delete('/secciones/{id}', [SeccionController::class, 'destroy'])->middleware('can:manage secciones');
+        Route::get('/secciones/{id}', [SeccionController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver secciones,' . Seccion::class]);
+        Route::put('/secciones/{id}', [SeccionController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage secciones,' . Seccion::class]);
+        Route::delete('/secciones/{id}', [SeccionController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage secciones,' . Seccion::class]);
 
 
         Route::get('/cursos', [CursoController::class, 'index'])->middleware('can:ver cursos');
         Route::get('/cursos/paginated', [CursoController::class, 'indexPaginated'])->middleware('can:ver cursos');
-        Route::get('/cursos/{codigo}', [CursoController::class, 'getByCodigo'])->middleware('can:ver cursos');
+        Route::get('/cursos/codigo/{codigo}', [CursoController::class, 'getByCodigo'])->middleware('can:ver cursos');
         Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:manage cursos');
-        Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware('can:ver cursos');
-        Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware('can:manage cursos');
-        Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware('can:manage cursos');
+        Route::get('/cursos/{id}', [CursoController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver cursos,' . Curso::class]);
+        Route::put('/cursos/{id}', [CursoController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
+        Route::delete('/cursos/{id}', [CursoController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
 
 
         Route::get ('/plan-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
         Route::get ('/plan-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
-        Route::get ('/plan-estudio/current/{especialidad_id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware('can:ver planes de estudio');
+        Route::get ('/plan-estudio/current/{id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware([AuthzMiddleware::class . ':ver planes de estudio,' . Especialidad::class]);
         Route::post('/plan-estudio', [PlanEstudioController::class, 'store'])->middleware('can:manage planes de estudio');
         Route::put ('/plan-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:manage planes de estudio');
         Route::get ('/plan-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
@@ -113,28 +115,28 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy'])->middleware('can:manage usuarios');
 
 
-        Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver estudiantes');
-        Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:manage estudiantes');
-        Route::post('/estudiantes/multiple', [EstudianteController::class, 'storeMultiple'])->middleware('can:manage estudiantes');
-        Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver estudiantes');
-        Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:manage estudiantes');
-        Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:manage estudiantes');
+        Route::get('/estudiantes', [EstudianteController::class, 'index'])->middleware('can:ver usuarios');
+        Route::post('/estudiantes', [EstudianteController::class, 'store'])->middleware('can:manage usuarios');
+        Route::post('/estudiantes/multiple', [EstudianteController::class, 'storeMultiple'])->middleware('can:manage usuarios');
+        Route::get('/estudiantes/{codEstudiante}', [EstudianteController::class, 'show'])->middleware('can:ver usuarios');
+        Route::put('/estudiantes/{codEstudiante}', [EstudianteController::class, 'update'])->middleware('can:manage usuarios');
+        Route::delete('/estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy'])->middleware('can:manage usuarios');
 
 
-        Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver docentes');
-        Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:manage docentes');
-        Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:manage docentes');
-        Route::get('/docentes/{codDocente}', [DocenteController::class, 'show'])->middleware('can:ver docentes');
-        Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:manage docentes');
-        Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:manage docentes');
+        Route::get('/docentes', [DocenteController::class, 'index'])->middleware('can:ver usuarios');
+        Route::post('/docentes', [DocenteController::class, 'store'])->middleware('can:manage usuarios');
+        Route::post('/docentes/multiple', [DocenteController::class, 'storeMultiple'])->middleware('can:manage usuarios');
+        Route::get('/docentes/{codDocente}', [DocenteController::class, 'show'])->middleware('can:ver usuarios');
+        Route::put('/docentes/{codDocente}', [DocenteController::class, 'update'])->middleware('can:manage usuarios');
+        Route::delete('/docentes/{codDocente}', [DocenteController::class, 'destroy'])->middleware('can:manage usuarios');
 
 
-        Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver administrativos');
-        Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:manage administrativos');
-        Route::post('/administrativos/multiple', [AdministrativoController::class, 'storeMultiple'])->middleware('can:manage administrativos');
-        Route::get('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'show'])->middleware('can:ver administrativos');
-        Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:manage administrativos');
-        Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:manage administrativos');
+        Route::get('/administrativos', [AdministrativoController::class, 'index'])->middleware('can:ver usuarios');
+        Route::post('/administrativos', [AdministrativoController::class, 'store'])->middleware('can:manage usuarios');
+        Route::post('/administrativos/multiple', [AdministrativoController::class, 'storeMultiple'])->middleware('can:manage usuarios');
+        Route::get('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'show'])->middleware('can:ver usuarios');
+        Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:manage usuarios');
+        Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:manage usuarios');
 
 
         Route::post('/usuarios/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
@@ -180,12 +182,9 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
 });
 
 
-use App\Http\Controllers\ImageController;
-
 Route::prefix('v1')->group(function () {
-
-    Route::post('/images/upload', [ImageController::class, 'upload']);
-    Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
+    Route::post('/files/upload', [ImageController::class, 'uploadImage']);
+    Route::get( '/files/{filename}', [ImageController::class, 'download']);
 });
 
 

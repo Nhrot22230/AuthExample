@@ -137,9 +137,19 @@ return [
             'path' => storage_path('logs/jwt-auth.log'),
         ],
 
+        'authz' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/authz.log'),
+        ],
+
         'usuarios' => [
             'driver' => 'single',
             'path' => storage_path('logs/usuarios.log'),
+        ],
+
+        'errors' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/errors.log'),
         ],
     ],
 

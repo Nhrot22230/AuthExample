@@ -113,7 +113,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'No se pudo encontrar el usuario. Inicie sesión nuevamente.'], 401);
             }
 
-            $roleScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id);
+            $roleScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id)->orderBy('entity_type')->orderBy('entity_id');
             
             if (!$roleScopeUsuario) {
                 return response()->json(['message' => 'No se encontraron unidades para el usuario.'], 404);
@@ -125,7 +125,6 @@ class AuthController extends Controller
                     'entity' => $roleScopeUsuario->entity
                 ];
             });
-
             return response()->json($unidades, 200);
         } catch (TokenExpiredException $e) {
             return response()->json(['message' => 'El token ha expirado. Por favor, inicie sesión nuevamente.'], 401);

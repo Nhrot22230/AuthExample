@@ -135,7 +135,7 @@ class AdministrativoController extends Controller
             ]);
         }
         catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al validar los datos para crear múltiples administrativos: ' . $e->getMessage());
+            Log::channel('errors')->error('Error al validar los datos para crear múltiples administrativos: ' . $e->getMessage());
             return response()->json(['message' => 'Error al procesar la solicitud'], 422);
         }
 
@@ -164,7 +164,7 @@ class AdministrativoController extends Controller
         }
         catch (\Exception $e) {
             DB::rollBack();
-            Log::channel('usuarios')->error('Error al crear múltiples administrativos: ' . $e->getMessage());
+            Log::channel('errors')->error('Error al crear múltiples administrativos: ' . $e->getMessage());
             return response()->json(['message' => 'Error al procesar la solicitud'], 420);
         }
     }

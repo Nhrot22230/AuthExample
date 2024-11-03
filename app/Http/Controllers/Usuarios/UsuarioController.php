@@ -19,7 +19,7 @@ class UsuarioController extends Controller
             'docente',
             'estudiante',
             'administrativo',
-            ' ',
+            'roles.permissions',
         ])
         ->where(function ($query) use ($search) {
             $query->where('nombre', 'like', "%$search%")

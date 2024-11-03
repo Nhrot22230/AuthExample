@@ -25,7 +25,7 @@ class JWTMiddleware
                 'auth' => $user
             ]);
 
-            $request->merge(['authUser' => $user->load('estudiante', 'administrativo', 'docente')]);
+            $request->merge(['authUser' => $user->load('estudiante', 'administrativo', 'docente', 'roles.permissions')]);
 
             Log::channel('jwt-auth')->info('JWT Middleware', [
                 'request' => $request->all()

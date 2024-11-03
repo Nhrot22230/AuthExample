@@ -126,7 +126,7 @@ class RolePermissionsController extends Controller
                 'usuario_id' => 'required|integer|exists:usuarios,id',
             ]);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al asignar roles a usuario', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al asignar roles a usuario', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al asignar roles a usuario' . $e->getMessage()], 420);
         }
 
@@ -147,7 +147,7 @@ class RolePermissionsController extends Controller
                 'usuario_id' => 'required|integer|exists:usuarios,id',
             ]);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al asignar permisos a usuario', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al asignar permisos a usuario', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al asignar permisos a usuario' . $e->getMessage()], 420);
         }
 

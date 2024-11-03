@@ -168,7 +168,7 @@ class DocenteController extends Controller
                 'docentes.*.Seccion' => 'required|string|exists:secciones,nombre',
             ]);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al validar los datos de los docentes', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al validar los datos de los docentes', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al validar los datos de los docentes'], 400);
         }
 

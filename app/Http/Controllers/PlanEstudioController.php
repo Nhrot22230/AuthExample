@@ -47,10 +47,10 @@ class PlanEstudioController extends Controller
         return response()->json($planesEstudio, 200);
     }
 
-    public function currentByEspecialidad($especialidad_id)
+    public function currentByEspecialidad($id)
     {
         $planEstudio = PlanEstudio::with('cursos', 'semestres')
-            ->where('especialidad_id', $especialidad_id)
+            ->where('especialidad_id', $id)
             ->where('estado', 'activo')
             ->first();
 
@@ -82,7 +82,7 @@ class PlanEstudioController extends Controller
                 'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            Log::channel('errors')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
             return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
         }
 
@@ -123,7 +123,7 @@ class PlanEstudioController extends Controller
 
             return response()->json(['message' => 'Plan de estudio creado exitosamente', 'plan_estudio' => $planEstudio], 201);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al crear el plan de estudio: ' . $e->getMessage()], 500);
         }
     }
@@ -147,7 +147,7 @@ class PlanEstudioController extends Controller
                 'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::channel('usuarios')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
+            Log::channel('errors')->info('Error al validar los datos del plan de estudio', ['error' => $e->errors()]);
             return response()->json(['message' => 'Datos invalidos: ' . $e->getMessage()], 400);
         }
 
@@ -194,7 +194,7 @@ class PlanEstudioController extends Controller
 
             return response()->json(['message' => 'Plan de estudio actualizado exitosamente', 'plan_estudio' => $planEstudio], 200);
         } catch (\Exception $e) {
-            Log::channel('usuarios')->error('Error al actualizar el plan de estudio', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al actualizar el plan de estudio', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al actualizar el plan de estudio: ' . $e->getMessage()], 500);
         }
     }

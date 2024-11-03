@@ -84,7 +84,7 @@ class EspecialidadController extends Controller
                 'facultad_id' => 'required|integer|exists:facultades,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::channel('usuarios')->error($e->getMessage());
+            Log::channel('errors')->error($e->getMessage());
             return response()->json(['message' => 'Error en los datos enviados'], 420);
         }
         $especialidad->nombre = $validatedData['nombre'];
