@@ -250,6 +250,7 @@ class EstudianteRiesgoController extends Controller
             $estudianteRiesgo->ciclo = $ciclo->anho . "-" . $ciclo->periodo;
             $estudianteRiesgo->save();
         }
+        return response()->json("",201);
     }
     /**
      * Show the form for creating a new resource.
