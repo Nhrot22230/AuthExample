@@ -165,6 +165,10 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->middleware('can:manage roles');
         Route::delete('/roles/{id}', [RolePermissionsController::class, 'destroyRole'])->middleware('can:manage roles');
         Route::get('/permissions', [RolePermissionsController::class, 'indexPermissions'])->middleware('can:ver permisos');
+        Route::get('/permissions/my-permissions', [RolePermissionsController::class, 'authUserPermissions']);
+
+        Route::post('/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
+        Route::post('/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:manage roles');
 
         Route::get('/mis-unidades', [AuthController::class, 'obtenerMisUnidades']);
 
@@ -181,7 +185,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
 
         Route::post('/notifications/notify', [NotificationsController::class, 'notifyToUsers']);
-        Route::get('/notifications/myNotifications', [NotificationsController::class, 'notifications']);
+        Route::get('/notifications/my-notifications', [NotificationsController::class, 'notifications']);
         Route::put('/notifications/{id}', [NotificationsController::class, 'update']);
         Route::delete('/notifications/{id}', [NotificationsController::class, 'destroy']);
     });

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\PermissionCategory;
+use App\Models\Authorization\RoleScopeUsuario;
+use App\Models\Authorization\Scope;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Log;
@@ -15,10 +18,10 @@ class RolePermissionsController extends Controller
     {
         $search = request('search', '');
         $per_page = request('per_page', 10);
-        
+
         $roles = Role::withCount('users')
-        ->where('name', 'like', "%$search%")
-        ->paginate($per_page);
+            ->where('name', 'like', "%$search%")
+            ->paginate($per_page);
 
         return response()->json($roles, 200);
     }
@@ -99,5 +102,69 @@ class RolePermissionsController extends Controller
 
         $role->delete();
         return response()->json(['message' => 'Rol eliminado'], 200);
+    }
+
+    public function syncRoles(Request $request)
+    {
+        $request->validate([
+            'usuario_id' => 'required|exists:usuarios,id',
+            'roles' => 'required|array',
+            'roles.*.scope_id' => 'required|exists:scopes,id',
+            'roles.*.role_id' => 'required|exists:roles,id',
+            'roles.*.entity_type' => 'required|string|exists:scopes,entity_type',
+            'roles.*.entity_id' => 'required|integer|min:1'
+        ]);
+
+        $usuario = Usuario::find($request->usuario_id);
+
+        RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
+
+        foreach ($request->roles as $roleData) {
+            RoleScopeUsuario::create([
+                'usuario_id' => $usuario->id,
+                'role_id' => $roleData['role_id'],
+                'scope_id' => $roleData['scope_id'],
+                'entity_type' => $roleData['entity_type'],
+                'entity_id' => $roleData['entity_id'],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Roles correctamente asignados al usuario',
+        ], 200);
+    }
+
+    public function syncPermissions(Request $request)
+    {
+        $request->validate([
+            'usuario_id' => 'required|exists:usuarios,id',
+            'permissions' => 'required|array',
+            'permissions.*' => 'required|exists:permissions,id',
+        ]);
+
+        $usuario = Usuario::find($request->usuario_id);
+        $usuario->syncPermissions($request->permissions);
+
+        return response()->json([
+            'message' => 'Permisos correctamente asignados al usuario',
+        ], 200);
+    }
+
+    public function authUserPermissions(Request $request)
+    {
+        $usuario = $request->authUser;
+        $permissions = $usuario->getAllPermissions();
+        $response = $permissions->map(function ($permission) {
+            return [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'category' => PermissionCategory::find($permission->category_id),
+            ];
+        });
+        $uniqueCategories = $response->pluck('category')->unique('access_path')->values()->pluck('access_path');
+        return response()->json([
+            'permissions' => $response,
+            'access_paths' => $uniqueCategories,
+        ], 200);
     }
 }
