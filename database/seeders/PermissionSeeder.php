@@ -16,7 +16,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permission_categories = [
-            ['name' => 'instituciones', 'access_path' => AccessPath::CONFIGURACION],
+            ['name' => 'instituciones', 'access_path' => AccessPath::CONFIGURACION_SISTEMA],
             ['name' => 'semestres', 'access_path' => AccessPath::SEMESTRES],
             ['name' => 'areas', 'access_path' => AccessPath::UNIDADES],
             ['name' => 'facultades', 'access_path' => AccessPath::UNIDADES],

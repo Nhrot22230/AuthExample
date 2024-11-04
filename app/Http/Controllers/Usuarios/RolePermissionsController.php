@@ -8,12 +8,54 @@ use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\Permission;
 
 class RolePermissionsController extends Controller
 {
+    public function listUserRoles($id)
+    {
+        $usuario = Usuario::find($id);
+
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $rolesScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id)->get();
+        $roles = $usuario->roles;
+
+        $response = $roles->map(function ($role) use ($rolesScopeUsuario) {
+            $roleScopesUsuario = $rolesScopeUsuario->where('role_id', $role->id);
+
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'scopes' => $role->scopes->map(function ($scope) use ($roleScopesUsuario) {
+                    return [
+                        'id' => $scope->id,
+                        'name' => $scope->name,
+                        'entities' => $roleScopesUsuario->where('scope_id', $scope->id)->map(function ($roleScopeUsuario) {
+                            return [
+                                'entity_id' => $roleScopeUsuario->entity_id,
+                                'entity_type' => $roleScopeUsuario->entity_type,
+                                'entity' => $roleScopeUsuario->entity,
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })->toArray()
+            ];
+        });
+
+        return response()->json($response, 200);
+    }
+
+
+    public function indexScopes()
+    {
+        $scopes = Scope::all();
+        return response()->json($scopes, 200);
+    }
+
     public function indexRoles()
     {
         $search = request('search', '');
@@ -23,6 +65,12 @@ class RolePermissionsController extends Controller
             ->where('name', 'like', "%$search%")
             ->paginate($per_page);
 
+        return response()->json($roles, 200);
+    }
+
+    public function indexRolesScopes()
+    {
+        $roles = Role::with('scopes')->get();
         return response()->json($roles, 200);
     }
 
@@ -36,7 +84,7 @@ class RolePermissionsController extends Controller
 
     public function showRole($id)
     {
-        $role = Role::with('permissions')->find($id);
+        $role = Role::with(['permissions', 'scopes'])->find($id);
 
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
@@ -50,9 +98,9 @@ class RolePermissionsController extends Controller
         $request->validate([
             'name' => 'required|string|unique:roles,name',
             'permissions' => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'exists:permissions,name',
             'scopes' => 'nullable|array',
-            'scopes.*' => 'exists:scopes,id'
+            'scopes.*' => 'exists:scopes,id',
         ]);
 
         $role = Role::create($request->only('name'));
@@ -61,13 +109,16 @@ class RolePermissionsController extends Controller
             $role->syncPermissions($request->permissions);
         }
 
+        if ($request->has('scopes')) {
+            $role->scopes()->sync($request->scopes);
+        }
+
         return response()->json($role, 201);
     }
 
     public function updateRole(Request $request, $id)
     {
         $role = Role::find($id);
-
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
@@ -75,9 +126,9 @@ class RolePermissionsController extends Controller
         $request->validate([
             'name' => 'required|string|unique:roles,name,' . $role->id,
             'permissions' => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'exists:permissions,name',
             'scopes' => 'nullable|array',
-            'scopes.*' => 'exists:scopes,id'
+            'scopes.*' => 'exists:scopes,id',
         ]);
 
         $role->update($request->only('name'));
@@ -104,29 +155,39 @@ class RolePermissionsController extends Controller
         return response()->json(['message' => 'Rol eliminado'], 200);
     }
 
-    public function syncRoles(Request $request)
+    public function syncRoles(Request $request, $id)
     {
         $request->validate([
-            'usuario_id' => 'required|exists:usuarios,id',
             'roles' => 'required|array',
-            'roles.*.scope_id' => 'required|exists:scopes,id',
             'roles.*.role_id' => 'required|exists:roles,id',
-            'roles.*.entity_type' => 'required|string|exists:scopes,entity_type',
-            'roles.*.entity_id' => 'required|integer|min:1'
+            'roles.*.scopes' => 'required|array',
+            'roles.*.scopes.*.scope_id' => 'required|exists:scopes,id',
+            'roles.*.scopes.*.entities' => 'required|array',
+            'roles.*.scopes.*.entities.*' => 'required|integer|min:1',
         ]);
 
-        $usuario = Usuario::find($request->usuario_id);
-
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
         RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
 
         foreach ($request->roles as $roleData) {
-            RoleScopeUsuario::create([
-                'usuario_id' => $usuario->id,
-                'role_id' => $roleData['role_id'],
-                'scope_id' => $roleData['scope_id'],
-                'entity_type' => $roleData['entity_type'],
-                'entity_id' => $roleData['entity_id'],
-            ]);
+            $role = Role::find($roleData['role_id']);
+            $usuario->assignRole($role);
+
+            foreach ($roleData['scopes'] as $scopeData) {
+                $scope = Scope::find($scopeData['scope_id']);
+                foreach ($scopeData['entities'] as $entityData) {
+                    RoleScopeUsuario::create([
+                        'role_id' => $role->id,
+                        'scope_id' => $scope->id,
+                        'usuario_id' => $usuario->id,
+                        'entity_id' => $entityData,
+                        'entity_type' => $scope->entity_type,
+                    ]);
+                }
+            }
         }
 
         return response()->json([
@@ -134,15 +195,17 @@ class RolePermissionsController extends Controller
         ], 200);
     }
 
-    public function syncPermissions(Request $request)
+    public function syncPermissions(Request $request, $id)
     {
         $request->validate([
-            'usuario_id' => 'required|exists:usuarios,id',
             'permissions' => 'required|array',
             'permissions.*' => 'required|exists:permissions,id',
         ]);
 
         $usuario = Usuario::find($request->usuario_id);
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
         $usuario->syncPermissions($request->permissions);
 
         return response()->json([

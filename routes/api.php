@@ -159,6 +159,10 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:manage usuarios');
         Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:manage usuarios');
 
+
+
+        Route::get('/scopes', [RolePermissionsController::class, 'indexScopes'])->middleware('can:ver roles');
+        Route::get('/roles-scopes', [RolePermissionsController::class, 'indexRolesScopes'])->middleware('can:ver roles');
         Route::get('/roles', [RolePermissionsController::class, 'indexRoles'])->middleware('can:ver roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
         Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:manage roles');
@@ -167,8 +171,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/permissions', [RolePermissionsController::class, 'indexPermissions'])->middleware('can:ver permisos');
         Route::get('/permissions/my-permissions', [RolePermissionsController::class, 'authUserPermissions']);
 
-        Route::post('/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
-        Route::post('/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:manage roles');
+        Route::post('/usuarios/{id}/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
+        Route::post('/usuarios/{id}/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:manage roles');
 
         Route::get('/mis-unidades', [AuthController::class, 'obtenerMisUnidades']);
 
