@@ -23,6 +23,8 @@ use App\Http\Middleware\JWTMiddleware;
 use App\Http\Controllers\EstudianteRiesgoController;
 use App\Http\Controllers\MatriculaAdicionalController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\NotificacionController;
+
 
 Route::get('/test', function () {
     return response()->json([
@@ -171,6 +173,11 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
         Route::get('/unidades/mine', [AuthController::class, 'getMyUnidades']);
 
+        Route::post('/notificaciones/enviar', [NotificacionController::class, 'sendNotificationToEspecialidad']);  // Enviar notificación a todos los estudiantes de una especialidad
+Route::get('/notificaciones/{estudianteId}/no-leidas', [NotificacionController::class, 'getUnreadNotificationsForStudent']);  // Obtener notificaciones no leídas para un estudiante
+Route::patch('/notificaciones/{id}/marcar-como-leida', [NotificacionController::class, 'marcarComoLeida']);  // Marcar una notificación como leída
+
+
         Route::get('/estudiantesRiesgo/listar_profesor', [EstudianteRiesgoController::class, 'listar_por_especialidad_profesor']);
         Route::get('/estudiantesRiesgo/listar_director', [EstudianteRiesgoController::class, 'listar_por_especialidad_director']);
         Route::get('/estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
@@ -237,6 +244,9 @@ Route::get('/cursos/{cursoId}/horarios', [CursoController::class, 'obtenerHorari
 Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
 
 Route::get('/resultados/jefes-practica/encuestas/{encuestaId}/jp-horarios/{jpHorarioId}', [EncuestaController::class, 'obtenerResultadosDetalleJp']);
+
+//Notificaciones 
+
 
 
 
