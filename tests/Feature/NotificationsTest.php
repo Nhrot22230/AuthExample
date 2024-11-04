@@ -76,7 +76,7 @@ class NotificationsTest extends TestCase
             'usuario_id' => $this->user->id,
         ]);
 
-        $response = $this->getJson('/api/v1/notifications/myNotifications');
+        $response = $this->getJson('/api/v1/notifications/my-notifications');
         
         $response->assertStatus(200);
         $response->assertJsonFragment([

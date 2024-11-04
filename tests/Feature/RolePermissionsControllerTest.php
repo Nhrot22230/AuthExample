@@ -81,7 +81,7 @@ class RolePermissionsControllerTest extends TestCase
 
         $data = [
             'name' => 'Test Role',
-            'permissions' => $permissions->pluck('id')->toArray()
+            'permissions' => $permissions->pluck('name')->toArray()
         ];
 
         $response = $this->postJson('/api/v1/roles', $data);
@@ -111,7 +111,7 @@ class RolePermissionsControllerTest extends TestCase
 
         $data = [
             'name' => 'Updated Role',
-            'permissions' => [$newPermission->id]
+            'permissions' => [$newPermission->name]
         ];
 
         $response = $this->putJson("/api/v1/roles/{$role->id}", $data);

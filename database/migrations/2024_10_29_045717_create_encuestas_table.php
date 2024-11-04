@@ -32,7 +32,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('encuesta_id')->constrained('encuestas')->onDelete('cascade');
             $table->foreignId('pregunta_id')->constrained('preguntas')->onDelete('cascade');
-            $table->boolean('es_modificacion')->default(false)->after('pregunta_id');
+            $table->boolean('es_modificacion')->default(false);
             $table->timestamps();
         });
 
