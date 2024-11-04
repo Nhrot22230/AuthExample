@@ -139,6 +139,7 @@ class EncuestaController extends Controller
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                        'tipo_pregunta' => $pregunta_data['tipo_pregunta']
                     ]);
 
                     $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
@@ -149,6 +150,7 @@ class EncuestaController extends Controller
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                        'tipo_pregunta' => $pregunta_data['tipo_pregunta']
                     ]);
 
                     $encuesta->pregunta()->attach($nuevaPregunta->id);
@@ -271,12 +273,14 @@ class EncuestaController extends Controller
                             if ($pregunta) {
                                 $pregunta->texto_pregunta = $pregunta_data['texto_pregunta'];
                                 $pregunta->tipo_respuesta = $pregunta_data['tipo_respuesta'];
+                                $pregunta->tipo_pregunta = $pregunta_data['tipo_pregunta'];
                                 $pregunta->save();
                             }
                         } else {
                             $nuevaPregunta = Pregunta::create([
                                 'texto_pregunta' => $pregunta_data['texto_pregunta'],
                                 'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                                'tipo_pregunta' => $pregunta_data['tipo_pregunta'],
                             ]);
                             $encuesta->pregunta()->detach($pregunta_data['id']);
                             $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
@@ -289,6 +293,7 @@ class EncuestaController extends Controller
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                        'tipo_pregunta' => $pregunta_data['tipo_pregunta'],
                     ]);
                     $encuesta->pregunta()->attach($nuevaPregunta->id);
                 }
@@ -457,6 +462,7 @@ class EncuestaController extends Controller
                 $respuestaDocente->increment('cant5');
             }
         }
+
     }
 
     protected function registrarRespuestasJefePractica($data, $encuesta, $jpHorarioId)
