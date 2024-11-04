@@ -453,16 +453,35 @@ class EstudianteRiesgoController extends Controller
     {
         try {
             $request->validate([
-                'Semana' => 'required|integer|min:1',
+                'Semana' => 'required',
             ]);
         } catch(ValidationException $e){
-            Log::channel('usuarios')->info('Error al validar el número de semana', ['error' => $e->errors()]);
+            Log::channel('usuarios')->info('Error al validar la semana', ['error' => $e->errors()]);
             return response()->json(['message' => 'Dato inválido: ' . $e->getMessage()], 400);
         }
 
         try {
-            // Obtener el número de semana
-            $semana = (int) $request->Semana;
+            // Obtener el valor de Semana del request
+            $semanaInput = $request->Semana;
+
+            // Inicializar la variable para almacenar la semana
+            $semana = null;
+
+            // Comprobar si el input es un entero
+            if (is_numeric($semanaInput)) {
+                $semana = (int)$semanaInput; // Convertir directamente a entero
+            } else if (preg_match('/^Semana (\d+)$/i', $semanaInput, $matches)) {
+                // Si el input tiene el formato exacto "Semana X" (no sensible a mayúsculas)
+                $semana = (int)$matches[1];
+            } else if (preg_match('/^(\d+)$/', $semanaInput, $matches)) {
+                // Si el input tiene solo el número "X" como cadena, asegurando que sea solo dígitos
+                $semana = (int)$matches[1];
+            }
+
+            // Verificar si se obtuvo un número de semana válido
+            if ($semana === null) {
+                return response()->json(['error' => 'Formato de semana inválido.'], 400);
+            }
             
             // Obtener un informe programado en la semana especificada
             $informe = InformeRiesgo::where('semana', $semana)->first();
