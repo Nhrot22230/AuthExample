@@ -336,7 +336,7 @@ class EncuestaController extends Controller
 
             if ($horario) {
                 $jefePractica = $horario->jefePracticas->firstWhere('id', (int) $jpId);
-                
+
                 if ($jefePractica) {
                     $nombreResponsable = $jefePractica->usuario->nombre." ".
                     $jefePractica->usuario->apellido_paterno." ".$jefePractica->usuario->apellido_materno;
@@ -386,10 +386,10 @@ class EncuestaController extends Controller
 
         try {
             $data = $request->validate([
-                'estudiante_id' => 'required|exists:estudiantes,id', // ID del estudiante
+                'estudiante_id' => 'required|exists:estudiantes,id',
                 'respuestas' => 'required|array',
                 'respuestas.*.pregunta_id' => 'required|exists:preguntas,id',
-                'respuestas.*.respuesta' => 'required|integer|min:1|max:5', // Escala de 1 a 5
+                'respuestas.*.respuesta' => 'required|integer|min:1|max:5',
                 'jp_horario_id' => 'nullable|exists:jp_horario,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -435,7 +435,7 @@ class EncuestaController extends Controller
         foreach ($data['respuestas'] as $respuesta) {
             $encuestaPreguntaId = $respuesta['pregunta_id'];
             $valorRespuesta = $respuesta['respuesta'];
-            
+
             $encuestaPregunta = DB::table('encuesta_pregunta')
                 ->where('id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
