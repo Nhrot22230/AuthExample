@@ -6,6 +6,7 @@ use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\PlanEstudioController;
 use App\Http\Controllers\TemaDeTesisController;
+use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\Universidad\AreaController;
 use App\Http\Controllers\Universidad\CursoController;
 use App\Http\Controllers\Universidad\DepartamentoController;
@@ -125,7 +126,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
-        
+
 
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('can:manage usuarios');
@@ -182,7 +183,11 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
         Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
+        Route::get('/estudiantesRiesgo/obtener_datos_semana', [EstudianteRiesgoController::class, 'obtener_datos_semana']);
         Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+        Route::get('/estudiantesRiesgo/listar_informes_director', [EstudianteRiesgoController::class, 'listar_informes_director']);
+        Route::get('/estudiantesRiesgo/listar_semanas_existentes/{id}', [EstudianteRiesgoController::class, 'listar_semanas_existentes']);
+        Route::delete('/estudiantesRiesgo/eliminar_semana', [EstudianteRiesgoController::class, 'eliminar_semana']);
         Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
         Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
         Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
@@ -196,7 +201,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 });
 
 /*Route::prefix('v1')->group(function () {
-    Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+    //Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+    Route::get('/estudiantesRiesgo/obtener_datos_semana', [EstudianteRiesgoController::class, 'obtener_datos_semana']);
 });*/
 
 Route::prefix('auth')->group(function () {
@@ -213,15 +219,53 @@ Route::middleware(JWTMiddleware::class, 'api')->group(function () {
     });
 });
 
+//Ruta que con el ID del estudiante te saca todos los cursos en los que esta matriculado el semestre actual (JP)
+Route::get('/estudiantes/{estudianteId}/cursos', [HorarioController::class, 'obtenerCursosEstudiante']);
+
+//Ruta que con el ID de horario (obtenido de la previa ruta) te da un listado de los Jps para evaluar
+Route::get('/horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
+
+//Ruta que con el ID del estudiante puede listar el curso y los docentes que está matriculado el semestre actual
+Route::get('/estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
+
+//Ruta que te muestra los datos de una encuesta, las preguntas asociadas, si fuera JP te pide el idJP, si fuera docente no necesita
+Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaController::class, 'obtenerDetalleEncuesta']);
+
+//Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
+//Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado, tambien jp_horario_id
+//Actualmente solo sirve para guardar respuestas de docentes y JPs que no sean texto
+Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
+
+
+//Usando encuestaID obtengo la lista de cursos asociados a esa encuesta
+Route::get('/encuestas/{encuestaId}/cursos', [EncuestaController::class, 'obtenerCursosEncuesta']);
+
+//Usando el cursoId previo, obtengo la lista de docentes
+Route::get('/cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
+
+//Usando el cursoId previo, obtengo la lista de horarios (JP)
+Route::get('/cursos/{cursoId}/horarios', [CursoController::class, 'obtenerHorariosPorCurso']);
+
+
+//Usando la encuestaId de arriba, junto con cursoId y horarioId devuelto obtengo los resultados para ese docente
+Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
+
+Route::get('/resultados/jefes-practica/encuestas/{encuestaId}/jp-horarios/{jpHorarioId}', [EncuestaController::class, 'obtenerResultadosDetalleJp']);
+
+
+
+
+Route::get('/semestreActual', [SemestreController::class, 'obtenerSemestreActual']);
 
 Route::prefix('v1')->group(function () {
-    Route::post('/files/upload', [ImageController::class, 'uploadImage']);
-    Route::get( '/files/{filename}', [ImageController::class, 'download']);
+    Route::post('/images/upload', [ImageController::class, 'upload']);
+    Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
 });
-
-
-Route::get('/encuesta-docente', [EncuestaController::class, 'indexEncuestaDocente']);
-
-
-Route::get('/encuesta-jefe-practica', [EncuestaController::class, 'indexEncuestaJefePractica']);
-
+Route::get('/encuestas/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
+Route::get('/encuestas-nueva-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
+Route::get('/encuestas-nueva-cant/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
+Route::get('/encuestas-nueva-preg/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'obtenerPreguntasUltimaEncuesta']);
+Route::post('/encuestas-nueva/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'registrarNuevaEncuesta']);
+Route::get('/encuestas-cursos/{encuesta_id}', [EncuestaController::class, 'mostrarCursos']);
+Route::get('/encuestas-preguntas/{encuesta_id}', [EncuestaController::class, 'listarPreguntas']);
+Route::put('/encuestas/{especialidad_id}/{encuesta_id}', [EncuestaController::class, 'gestionarEncuesta']);

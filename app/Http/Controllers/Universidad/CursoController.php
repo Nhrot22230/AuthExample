@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
 use App\Models\Curso;
+use App\Models\Horario;
 use Illuminate\Http\Request;
 
 class CursoController extends Controller
@@ -118,4 +119,46 @@ class CursoController extends Controller
         $curso->delete();
         return response()->json(['message' => 'Curso eliminado'], 200);
     }
+
+    public function obtenerDocentesPorCurso($cursoId)
+    {
+        // Obtener los horarios asociados al curso
+        $horarios = Horario::where('curso_id', $cursoId)->with('docentes.usuario')->get();
+
+        // Estructurar la respuesta con los docentes y su información
+        $docentesPorHorario = $horarios->map(function ($horario) {
+            return [
+                'horario_id' => $horario->id,
+                'horario_nombre' => $horario->nombre,
+                'docentes' => $horario->docentes->map(function ($docente) {
+                    $usuario = $docente->usuario;
+                    return [
+                        'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+                        'docente_id' => $docente->id,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($docentesPorHorario);
+    }
+
+    public function obtenerHorariosPorCurso($cursoId)
+    {
+        // Obtener los horarios asociados al curso especificado
+        $horarios = Horario::where('curso_id', $cursoId)
+            ->select('id', 'nombre') // Seleccionamos solo los campos necesarios
+            ->get();
+
+        // Estructurar la respuesta para devolver los horarios
+        $horariosData = $horarios->map(function ($horario) {
+            return [
+                'horario_id' => $horario->id,
+                'horario_nombre' => $horario->nombre,
+            ];
+        });
+
+        return response()->json($horariosData);
+    }
+
 }

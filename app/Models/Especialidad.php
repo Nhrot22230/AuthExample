@@ -41,5 +41,10 @@ class Especialidad extends Model
     public function estudiantesRiesgo()
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_especialidad', 'id');
+
+    public function encuestas()
+    {
+        return $this->hasMany(Encuesta::class);
+
     }
 }

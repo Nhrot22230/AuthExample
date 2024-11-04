@@ -31,5 +31,6 @@ class DatabaseSeeder extends Seeder
             // Otros seeders que puedas tener
         );
         
+        $this->call(HorarioSeeder::class);
     }
 }

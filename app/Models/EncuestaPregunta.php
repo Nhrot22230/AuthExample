@@ -25,9 +25,9 @@ class EncuestaPregunta extends Model
         return $this->belongsTo(Pregunta::class);
     }
 
-    public function respuestaPregunta()
+    public function respuestasPreguntaDocente()
     {
-        return $this->hasOne(RespuestaPregunta::class, 'id');
+        return $this->hasOne(RespuestasPreguntaDocente::class, 'respuesta_pregunta_docente_id');
     }
 
     public function textoRespuestas()
