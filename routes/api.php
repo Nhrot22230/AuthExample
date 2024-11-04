@@ -103,8 +103,10 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_especialidad');
         Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes eliminar el middleware si no deseas autorización
         Route::get('/horarios/cursos/{cursoId}', [MatriculaAdicionalController::class, 'getHorariosByCurso'])->middleware('can:ver horarios');
-        Route::get('/matricula-adicional/{id}', [MatriculaAdicionalController::class, 'getById'])->middleware('can:ver mis matriculas_adicionales'); // Ajusta el nombre del permiso según sea necesario
-
+        Route::get('/matricula-adicional/{id}', [MatriculaAdicionalController::class, 'getById'])->middleware('can:ver mis matriculas_adicionales');
+        Route::patch('/matricula-adicional/{id}/rechazar', [MatriculaAdicionalController::class, 'rechazar'])->middleware('can:ver matriculas_especialidad'); 
+        Route::patch('/matricula-adicional/aprobar-dc/{id}', [MatriculaAdicionalController::class, 'aprobarPorDC'])->middleware('can:ver matriculas_especialidad');
+        Route::patch('/matricula-adicional/aprobar-sa/{id}', [MatriculaAdicionalController::class, 'aprobarPorSA'])->middleware('can:ver matriculas_especialidad');
 
         Route::get('/semestres', [SemestreController::class, 'indexAll'])->middleware('can:ver semestres');
         Route::get('/semestres/paginated', [SemestreController::class, 'index'])->middleware('can:ver semestres');
