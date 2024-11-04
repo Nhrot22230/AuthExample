@@ -9,12 +9,14 @@ class MatriculaAdicional extends Model
 {
     use HasFactory;
 
+    protected $table = 'matricula_adicionals';
+
     protected $fillable = [
-        'estudiante_id', 
-        'especialidad_id', 
-        'motivo', 
-        'justificacion', 
-        'estado', 
+        'estudiante_id',
+        'especialidad_id',
+        'motivo',
+        'justificacion',
+        'estado',
         'motivo_rechazo',
         'curso_id',
         'horario_id'

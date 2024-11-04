@@ -18,7 +18,7 @@ class MatriculaAdicionalFactory extends Factory
     public function definition()
     {
 
-        
+
         return [
             // Selecciona un estudiante aleatorio
             'estudiante_id' => function () {
@@ -26,7 +26,7 @@ class MatriculaAdicionalFactory extends Factory
                 return $estudiante->id;
              },
 
-    // Usa la especialidad del estudiante seleccionado
+            // Usa la especialidad del estudiante seleccionado
             'especialidad_id' => function (array $attributes) {
                 return Estudiante::find($attributes['estudiante_id'])->especialidad_id;
             },
@@ -38,7 +38,7 @@ class MatriculaAdicionalFactory extends Factory
                 return Horario::find($attributes['horario_id'])->curso_id;
             },
 
-         
+
             'motivo' => $this->faker->sentence(),
             'justificacion' => $this->faker->paragraph(),
             'estado' => $this->faker->randomElement( ['Pendiente DC', 'Pendiente SA', 'Rechazado','Aprobado'] ),

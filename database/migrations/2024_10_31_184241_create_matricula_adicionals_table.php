@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade'); // Relación con la tabla estudiantes
             $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade'); // Relación con la tabla especialidades
             $table->string('motivo');
-       
+
             $table->text('justificacion');
             $table->enum('estado', ['Pendiente DC', 'Pendiente SA', 'Rechazado','Aprobado']);
             $table->string('motivo_rechazo')->nullable();
@@ -26,9 +26,7 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('matricula_adicionals');
