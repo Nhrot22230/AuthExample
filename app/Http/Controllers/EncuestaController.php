@@ -441,7 +441,7 @@ class EncuestaController extends Controller
             $valorRespuesta = $respuesta['respuesta'];
 
             $encuestaPregunta = DB::table('encuesta_pregunta')
-                ->where('id', $encuestaPreguntaId)
+                ->where('pregunta_id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
                 ->first();
 
@@ -482,10 +482,9 @@ class EncuestaController extends Controller
             $valorRespuesta = $respuesta['respuesta'];
 
             $encuestaPregunta = DB::table('encuesta_pregunta')
-                ->where('id', $encuestaPreguntaId)
+                ->where('pregunta_id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
                 ->first();
-
             if (!$encuestaPregunta) {
                 throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }

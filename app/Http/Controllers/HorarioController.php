@@ -21,7 +21,7 @@ class HorarioController extends Controller
             ->whereHas('estudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
-            ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps'])
+            ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps', 'docentes.usuario']) // Cargar docentes y usuario
             ->get();
 
         // Procesar los horarios para estructurar los datos de los cursos y los JPs evaluados
@@ -33,11 +33,16 @@ class HorarioController extends Controller
                 })
                 ->count();
 
+            // Obtener el nombre completo del primer docente asociado al horario
+            $docente = $horario->docentes->first();
+            $nombreDocente = $docente ? $docente->usuario->nombre . ' ' . $docente->usuario->apellido_paterno . ' ' . $docente->usuario->apellido_materno : 'Sin docente asignado';
+
             return [
                 'horario_id' => $horario->id,
                 'curso_id' => $horario->curso->id,
                 'curso_nombre' => $horario->curso->nombre,
                 'jps_evaluados' => $jpsEvaluados,
+                'nombre_docente' => $nombreDocente,
             ];
         });
 
@@ -100,10 +105,16 @@ class HorarioController extends Controller
             ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
-            ->with(['curso', 'horarioEstudiantes' => function ($query) use ($estudianteId) {
-                $query->where('estudiante_id', $estudianteId)
-                    ->select('horario_id', 'estudiante_id', 'encuestaDocente');
-            }, 'encuestas'])  // Incluimos la relación con encuestas
+            ->with([
+                'curso', 
+                'horarioEstudiantes' => function ($query) use ($estudianteId) {
+                    $query->where('estudiante_id', $estudianteId)
+                        ->select('horario_id', 'estudiante_id', 'encuestaDocente');
+                },
+                'encuestas' => function ($query) {
+                    $query->where('tipo_encuesta', 'docente');
+                }
+            ])
             ->get();
 
         $cursos = $horarios->map(function ($horario) {
