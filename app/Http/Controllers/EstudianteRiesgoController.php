@@ -141,6 +141,7 @@ class EstudianteRiesgoController extends Controller
 
     public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
+        $numero_semana = (int)$numero_semana;
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
@@ -356,7 +357,7 @@ class EstudianteRiesgoController extends Controller
             ->values()
             ->toArray();
         foreach ($informes as $i){
-            agregar_informe_estudiante($i, $idEstudiante);
+            $this->agregar_informe_estudiante((string)$i, $idEstudiante);
         }
     }
 
@@ -388,7 +389,7 @@ class EstudianteRiesgoController extends Controller
                     'fecha' => $alumno['Fecha'],
                     'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
                 ]);
-                crear_informes_estudiante($nuevoEstudiante->id, $request->Especialidad);
+                $this->crear_informes_estudiante($nuevoEstudiante->id, $request->Especialidad);
             }catch (ValidationException $e){
                 Log::channel('usuarios')->info('Error al cargar el alumno', ['error' => $e->errors()]);
                 //return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
@@ -434,7 +435,7 @@ class EstudianteRiesgoController extends Controller
             return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
         }
         $idEspecialidad = $request->Especialidad;
-        $semana = $request->Semana;
+        $semana = (int) $request->Semana;
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = $ciclo->fecha_inicio;
         $fechaFin = $ciclo->fecha_fin;
