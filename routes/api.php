@@ -159,23 +159,12 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'update'])->middleware('can:manage usuarios');
         Route::delete('/administrativos/{codAdministrativo}', [AdministrativoController::class, 'destroy'])->middleware('can:manage usuarios');
 
-
-        Route::post('/usuarios/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
-        Route::post('/usuarios/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:manage permisos');
-
-
         Route::get('/roles', [RolePermissionsController::class, 'indexRoles'])->middleware('can:ver roles');
-        Route::get('/roles/paginated', [RolePermissionsController::class, 'indexRolesPaginated'])->middleware('can:ver roles');
-        Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:manage roles');
         Route::get('/roles/{id}', [RolePermissionsController::class, 'showRole'])->middleware('can:ver roles');
+        Route::post('/roles', [RolePermissionsController::class, 'storeRole'])->middleware('can:manage roles');
         Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->middleware('can:manage roles');
         Route::delete('/roles/{id}', [RolePermissionsController::class, 'destroyRole'])->middleware('can:manage roles');
-
-
         Route::get('/permissions', [RolePermissionsController::class, 'indexPermissions'])->middleware('can:ver permisos');
-        Route::get('/permissions/paginated', [RolePermissionsController::class, 'indexPermissionsPaginated'])->middleware('can:ver permisos');
-        Route::get('/permissions/{id}', [RolePermissionsController::class, 'showPermission'])->middleware('can:ver permisos');
-        Route::put('/permissions/{id}', [RolePermissionsController::class, 'updatePermission'])->middleware('can:manage permisos');
 
         Route::get('/mis-unidades', [AuthController::class, 'obtenerMisUnidades']);
 

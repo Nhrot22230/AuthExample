@@ -92,7 +92,7 @@ class UsuariosSeeder extends Seeder
             'area_id' => $random_area->id,
         ]);
 
-        $directorRol = Role::findByName('directorCarrera');
+        $directorRol = Role::findByName('Director de Carrera');
         $director->assignRole($directorRol);
 
         // Factor de multiplicación para la creación masiva de registros

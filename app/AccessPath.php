@@ -27,4 +27,9 @@ enum AccessPath: string
         }
         return $array;
     }
+
+    public static function random(): string
+    {
+        return array_rand(self::toArray());
+    }
 }
