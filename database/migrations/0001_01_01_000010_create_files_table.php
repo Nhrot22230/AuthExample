@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->index()->unique();
             $table->enum('file_type', ['image', 'video', 'audio', 'document']);
             $table->string('mime_type')->nullable();
             $table->unsignedBigInteger('size')->nullable();

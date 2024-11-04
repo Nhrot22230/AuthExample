@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ImageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\InstitucionController;
@@ -22,6 +21,7 @@ use App\Http\Controllers\Usuarios\RolePermissionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JWTMiddleware;
 use App\Http\Controllers\EstudianteRiesgoController;
+use App\Http\Controllers\FileController;
 use App\Http\Middleware\AuthzMiddleware;
 use App\Models\Area;
 use App\Models\Curso;
@@ -258,9 +258,13 @@ Route::get('/resultados/jefes-practica/encuestas/{encuestaId}/jp-horarios/{jpHor
 Route::get('/semestreActual', [SemestreController::class, 'obtenerSemestreActual']);
 
 Route::prefix('v1')->group(function () {
-    Route::post('/images/upload', [ImageController::class, 'upload']);
-    Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
+    Route::post('/files/upload', [FileController::class, 'uploadFile']);
+    Route::get('/files/{filename}', [FileController::class, 'download']);
+    Route::get('/files', [FileController::class, 'listFiles']); // Listar archivos con opción de filtro
+    Route::delete('/files/{filename}', [FileController::class, 'deleteFile']); // Eliminar un archivo
+    Route::get('/files/{filename}/metadata', [FileController::class, 'getFileMetadata']); // Obtener metadatos
 });
+
 Route::get('/encuestas/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
 Route::get('/encuestas-nueva-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);
 Route::get('/encuestas-nueva-cant/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'countPreguntasLatestEncuesta']);
