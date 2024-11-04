@@ -18,11 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UsuariosSeeder::class);
         $this->call(AssignRolesAndPermissionsSeeder::class);
         $this->call(TemaDeTesisSeeder::class);
-
-        
-        $this->call(EncuestaSeeder::class);
-        $this->call(PreguntaSeeder::class);
-        $this->call(EncuestaPreguntaSeeder::class);
         $this->call(PlanEstudioSeeder::class);
         $this->call(EstudianteRiesgoSeeder::class);
         $this->call(HorariosSeeder::class);
@@ -30,7 +25,10 @@ class DatabaseSeeder extends Seeder
             MatriculaAdicionalSeeder::class,
             // Otros seeders que puedas tener
         );
-        
         $this->call(HorarioSeeder::class);
+        $this->call(EncuestaSeeder::class);
+        $this->call(PreguntaSeeder::class);
+        $this->call(EncuestaPreguntaSeeder::class);
+
     }
 }

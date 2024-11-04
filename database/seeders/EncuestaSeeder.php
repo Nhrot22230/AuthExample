@@ -15,9 +15,13 @@ class EncuestaSeeder extends Seeder
 
     public function run(): void
     {
-        $especialidadesConCursos = Curso::distinct()
-            ->pluck('especialidad_id')
-            ->take(2);
+        $especialidadesConCursosYHorarios = DB::table('especialidades')
+            ->join('cursos', 'especialidades.id', '=', 'cursos.especialidad_id')
+            ->join('horarios', 'cursos.id', '=', 'horarios.curso_id')
+            ->select('especialidades.id')
+            ->distinct()
+            ->limit(2)
+            ->pluck('especialidades.id');
 
 
         Encuesta::create([
@@ -26,7 +30,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-0',
             'tipo_encuesta' => 'docente',
             'disponible' => false,
-            'especialidad_id' => $especialidadesConCursos->get(0)
+            'especialidad_id' => $especialidadesConCursosYHorarios[0]
         ]);
 
         Encuesta::create([
@@ -35,7 +39,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-0',
             'tipo_encuesta' => 'jefe_practica',
             'disponible' => false,
-            'especialidad_id' => $especialidadesConCursos->get(0),
+            'especialidad_id' => $especialidadesConCursosYHorarios[0]
         ]);
 
         Encuesta::create([
@@ -44,7 +48,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-1',
             'tipo_encuesta' => 'docente',
             'disponible' => true,
-            'especialidad_id' => $especialidadesConCursos->get(0),
+            'especialidad_id' => $especialidadesConCursosYHorarios[0]
         ]);
 
         Encuesta::create([
@@ -53,7 +57,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-1',
             'tipo_encuesta' => 'jefe_practica',
             'disponible' => true,
-            'especialidad_id' => $especialidadesConCursos->get(0),
+            'especialidad_id' => $especialidadesConCursosYHorarios[0]
         ]);
 
         Encuesta::create([
@@ -62,7 +66,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-0',
             'tipo_encuesta' => 'docente',
             'disponible' => false,
-            'especialidad_id' => $especialidadesConCursos->get(1),
+            'especialidad_id' => $especialidadesConCursosYHorarios[1]
         ]);
 
         Encuesta::create([
@@ -71,7 +75,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-0',
             'tipo_encuesta' => 'jefe_practica',
             'disponible' => false,
-            'especialidad_id' => $especialidadesConCursos->get(1),
+            'especialidad_id' => $especialidadesConCursosYHorarios[1]
         ]);
 
         Encuesta::create([
@@ -80,7 +84,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-1',
             'tipo_encuesta' => 'docente',
             'disponible' => true,
-            'especialidad_id' => $especialidadesConCursos->get(1),
+            'especialidad_id' => $especialidadesConCursosYHorarios[1]
         ]);
 
         Encuesta::create([
@@ -89,7 +93,7 @@ class EncuestaSeeder extends Seeder
             'nombre_encuesta' => '2024-1',
             'tipo_encuesta' => 'jefe_practica',
             'disponible' => true,
-            'especialidad_id' => $especialidadesConCursos->get(1),
+            'especialidad_id' => $especialidadesConCursosYHorarios[1]
         ]);
 
     }
