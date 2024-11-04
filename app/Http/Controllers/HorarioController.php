@@ -97,16 +97,17 @@ class HorarioController extends Controller
     {
         $semestre = Semestre::where('estado', 'activo')->first();
         if (!$semestre) {
-            return response()->json(['error' => 'No hay un semestre activo'], 404);
+            return response()->json(['message' => 'No hay un semestre activo'], 404);
         }
         $semestre_id = $semestre->id;
-
+    
         $horarios = Horario::where('semestre_id', $semestre_id)
             ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
             ->with([
                 'curso', 
+                'docentes.usuario', // Cargar la relación de docentes y usuarios
                 'horarioEstudiantes' => function ($query) use ($estudianteId) {
                     $query->where('estudiante_id', $estudianteId)
                         ->select('horario_id', 'estudiante_id', 'encuestaDocente');
@@ -116,23 +117,28 @@ class HorarioController extends Controller
                 }
             ])
             ->get();
-
+    
         $cursos = $horarios->map(function ($horario) {
             $estadoEncuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
-
+    
             $encuestas = $horario->encuestas->map(function ($encuesta) {
                 return $encuesta->id;
             });
-
+    
+            // Obtener el nombre del primer docente (si existe)
+            $docente = $horario->docentes->first();
+            $nombreDocente = $docente ? $docente->usuario->nombre . ' ' . $docente->usuario->apellido_paterno . ' ' . $docente->usuario->apellido_materno : null;
+    
             return [
                 'horario_id' => $horario->id,
                 'curso_id' => $horario->curso->id,
+                'docente_nombre' => $nombreDocente,
                 'curso_nombre' => $horario->curso->nombre,
                 'estado_encuesta' => $estadoEncuesta,
                 'encuestas' => $encuestas,
             ];
         });
-
+    
         return response()->json([
             'cursos' => $cursos,
         ]);
