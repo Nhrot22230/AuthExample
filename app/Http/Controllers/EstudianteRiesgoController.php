@@ -424,7 +424,7 @@ class EstudianteRiesgoController extends Controller
 
     public function eliminar_semana(Request $request)
     {
-        try{
+        try {
             $request->validate([
                 'Especialidad' => 'required',
                 'Semana' => 'required',
@@ -449,14 +449,79 @@ class EstudianteRiesgoController extends Controller
         return response()->json("",201);
     }
 
+    public function obtener_datos_semana(Request $request)
+    {
+        try {
+            $request->validate([
+                'Semana' => 'required|integer|min:1',
+            ]);
+        } catch(ValidationException $e){
+            Log::channel('usuarios')->info('Error al validar el número de semana', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Dato inválido: ' . $e->getMessage()], 400);
+        }
+
+        try {
+            // Obtener el número de semana
+            $semana = (int) $request->Semana;
+            
+            // Obtener un informe programado en la semana especificada
+            $informe = InformeRiesgo::where('semana', $semana)->first();
+
+            if (!$informe) {
+                return response()->json(['error' => 'No se encontró un informe para la semana especificada.'], 404);
+            }
+            
+            // Obtener la fecha del informe de la semana especificada
+            $fecha = new DateTime($informe->fecha);
+            
+            // Estructura final
+            $data_semana = [
+                'Semana' => 'Semana ' . $semana, 
+                'Fecha' => $this->convertir_formato_fecha($fecha), 
+                'Estado' => $fecha <= now() ? 'EJECUTADA' : 'NO EJECUTADA',
+            ];
+
+            return response()->json($data_semana);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function convertir_formato_fecha($fecha)
+    {
+        // Array de traducción de meses
+        $mesesEspanol = [
+            'January' => 'Enero', 'February' => 'Febrero', 'March' => 'Marzo', 
+            'April' => 'Abril', 'May' => 'Mayo', 'June' => 'Junio',
+            'July' => 'Julio', 'August' => 'Agosto', 'September' => 'Septiembre',
+            'October' => 'Octubre', 'November' => 'Noviembre', 'December' => 'Diciembre'
+        ];
+
+        // Formatea la fecha a "Mes Día"
+        $mesIngles = $fecha->format('F');
+        $dia = $fecha->format('d');
+
+        // Traduce el mes al español y concatena con el día
+        $mesEspanol = $mesesEspanol[$mesIngles] ?? $mesIngles;
+        $fechaFormateada = "{$mesEspanol} {$dia}";
+
+        return $fechaFormateada;
+    }
+
     public function obtener_estadisticas_informes(Request $request)
     {
         try {
+            $request->validate([
+                'IdEspecialidad' => 'required',
+            ]);
+        } catch(ValidationException $e){
+            Log::channel('usuarios')->info('Error al validar la especialidad', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Dato inválido: ' . $e->getMessage()], 400);
+        }
+
+        try {
             $especialidad = $request->IdEspecialidad;
-            // Verifica si el ID de especialidad se recibe
-            if (is_null($especialidad)) {
-                return response()->json(['error' => 'IdEspecialidad is required'], 400);
-            }
+
             // Obtener todos los estudiantes en riesgo para la especialidad dada
             $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)->get();
 
