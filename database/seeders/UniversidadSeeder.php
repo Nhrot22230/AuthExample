@@ -64,8 +64,6 @@ class UniversidadSeeder extends Seeder
         }
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
 
-        Curso::factory(200)->create();
-        Curso::factory()->count(1000)->paraFacultad(5)->create();
-        
+        Curso::factory(6000)->create();        
     }
 }
