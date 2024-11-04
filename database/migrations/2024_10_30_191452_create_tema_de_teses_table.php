@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('estado_jurado', ['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido'])->default('pendiente');
             $table->date('fecha_enviado')->nullable();
             $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
-            $table->string('comentarios')->nullable();
+            $table->text('comentarios')->nullable();
             $table->timestamps();
         });
 

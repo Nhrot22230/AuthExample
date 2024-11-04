@@ -14,8 +14,7 @@ class TemaDeTesisFactory extends Factory
 
     public function definition(): array
     {
-        // Obtiene una especialidad aleatoria o usa el ID 28 (Ingeniería de Sistemas)
-        $especialidadId = random_int(0, 1) ? 28 : Especialidad::where('facultad_id', 5)->inRandomOrder()->first()->id;
+        $especialidadId = Especialidad::where('facultad_id', 5)->inRandomOrder()->first()->id;
 
         // Obtiene un estado aleatorio
         $estado = $this->faker->randomElement(['aprobado', 'pendiente', 'desaprobado']);

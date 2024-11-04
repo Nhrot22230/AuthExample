@@ -65,10 +65,11 @@ class UsuariosSeeder extends Seeder
         $secretario->assignRole($secretarioRole);
 
 
-        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first() ?? Especialidad::factory()->create(['facultad_id' => 5]);
-        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first() ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
+        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first()
+            ?? Especialidad::factory()->create(['facultad_id' => 5]);
+        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first()
+            ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
         
-        // Crear usuario director de carrera
         $director = Usuario::create([
             'nombre' => 'director',
             'apellido_paterno' => 'director',
@@ -78,15 +79,14 @@ class UsuariosSeeder extends Seeder
             'estado' => 'activo',
         ]);
 
-        // Crear el usuario director de carrera en Ingeniería de Sistemas
         Docente::create([
             'usuario_id' => $director->id,
             'codigoDocente' => 'director',
             'tipo' => 'TC',
             'especialidad_id' => $random_especialidad->id,
-            // 'seccion_id' => ,
             'area_id' => $random_area->id,
         ]);
+
 
         $directorRol = Role::findByName('directorCarrera');
         $director->assignRole($directorRol);
