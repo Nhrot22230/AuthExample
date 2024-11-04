@@ -61,7 +61,6 @@ class EstudianteRiesgoController extends Controller
                 'IdEspecialidad'=> 'required',
                 'search' => 'required',
                 'informes' => 'required',
-                'NombreProfesor' => 'required',
             ]);
         } catch(ValidationException $e){
             Log::channel('usuarios')->info('Error al validar los datos del actualizado de informes', ['error' => $e->errors()]);
