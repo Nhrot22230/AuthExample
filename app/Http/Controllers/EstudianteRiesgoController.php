@@ -144,12 +144,17 @@ class EstudianteRiesgoController extends Controller
         $ciclo = Semestre::where('estado', 'activo')->first();
         $fechaInicio = new DateTime($ciclo->fecha_inicio);
         $fechaInicio->modify("+{$numero_semana} weeks");
-        InformeRiesgo::create([
-            'semana' => $numero_semana,
-            'estado' => 'Pendiente',
-            'fecha' => $fechaInicio,
-            'codigo_alumno_riesgo' => $IdAlumnoRiesgo,
-        ]);
+        $informeExistente = InformeRiesgo::where('semana', $numero_semana)
+            ->where('codigo_alumno_riesgo', $IdAlumnoRiesgo)
+            ->exists();
+        if (!$informeExistente) {
+            InformeRiesgo::create([
+                'semana' => $numero_semana,
+                'estado' => 'Pendiente',
+                'fecha' => $fechaInicio,
+                'codigo_alumno_riesgo' => $IdAlumnoRiesgo,
+            ]);
+        }
     }
 
     public function crear_informes(Request $request)
@@ -336,6 +341,25 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
+    public function crear_informes_estudiante($idEstudiante, $idEspecialidad)
+    {
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        $fechaInicio = $ciclo->fecha_inicio;
+        $fechaFin = $ciclo->fecha_fin;
+        $informes = InformeRiesgo::whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->whereHas('alumno_riesgo', function ($query) use ($idEspecialidad) {
+                $query->where('codigo_especialidad', $idEspecialidad);
+            })
+            ->pluck('semana')
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+        foreach ($informes as $i){
+            agregar_informe_estudiante($i, $idEstudiante);
+        }
+    }
+
     public function carga_alumnos_riesgo(Request $request)
     {
         try{
@@ -355,7 +379,7 @@ class EstudianteRiesgoController extends Controller
         $ciclo = Semestre::where('estado', 'activo')->first();
         foreach ($request->alumnos as $alumno){
             try {
-                EstudianteRiesgo::create([
+                $nuevoEstudiante = EstudianteRiesgo::create([
                     'codigo_estudiante' => $alumno['Codigo'],
                     'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
                     'codigo_especialidad' => $request->Especialidad,
@@ -364,12 +388,64 @@ class EstudianteRiesgoController extends Controller
                     'fecha' => $alumno['Fecha'],
                     'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
                 ]);
+                crear_informes_estudiante($nuevoEstudiante->id, $request->Especialidad);
             }catch (ValidationException $e){
                 Log::channel('usuarios')->info('Error al cargar el alumno', ['error' => $e->errors()]);
-                return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+                //return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
                 continue;
             }
         }
+        return response()->json("",201);
+    }
+
+    public function listar_semanas_existentes($idEspecialidad)
+    {
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        $fechaInicio = $ciclo->fecha_inicio;
+        $fechaFin = $ciclo->fecha_fin;
+        $informes = InformeRiesgo::whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->whereHas('alumno_riesgo', function ($query) use ($idEspecialidad) {
+                    $query->where('codigo_especialidad', $idEspecialidad);
+                    })
+                ->pluck('semana')
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+        $resultado = [];
+        foreach ($informes as $i)
+        {
+            $resultado[] = [
+              'Semana' => $i
+            ];
+        }
+        return response()->json($resultado);
+    }
+
+    public function eliminar_semana(Request $request)
+    {
+        try{
+            $request->validate([
+                'Especialidad' => 'required',
+                'Semana' => 'required',
+            ]);
+        } catch(ValidationException $e){
+            Log::channel('usuarios')->info('Error al validar los datos de eliminacion de semana en informes', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+        }
+        $idEspecialidad = $request->Especialidad;
+        $semana = $request->Semana;
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        $fechaInicio = $ciclo->fecha_inicio;
+        $fechaFin = $ciclo->fecha_fin;
+
+        $deletedCount = InformeRiesgo::where('semana', $semana)
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->whereHas('estudianteRiesgo', function ($query) use ($idEspecialidad) {
+                $query->where('codigo_especialidad', $idEspecialidad);
+            })
+            ->delete();
+
         return response()->json("",201);
     }
 
