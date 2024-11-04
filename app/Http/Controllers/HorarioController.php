@@ -21,7 +21,7 @@ class HorarioController extends Controller
             ->whereHas('estudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
-            ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps'])
+            ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps', 'docentes.usuario']) // Cargar docentes y usuario
             ->get();
 
         // Procesar los horarios para estructurar los datos de los cursos y los JPs evaluados
@@ -33,11 +33,16 @@ class HorarioController extends Controller
                 })
                 ->count();
 
+            // Obtener el nombre completo del primer docente asociado al horario
+            $docente = $horario->docentes->first();
+            $nombreDocente = $docente ? $docente->usuario->nombre . ' ' . $docente->usuario->apellido_paterno . ' ' . $docente->usuario->apellido_materno : 'Sin docente asignado';
+
             return [
                 'horario_id' => $horario->id,
                 'curso_id' => $horario->curso->id,
                 'curso_nombre' => $horario->curso->nombre,
                 'jps_evaluados' => $jpsEvaluados,
+                'nombre_docente' => $nombreDocente,
             ];
         });
 
@@ -92,36 +97,48 @@ class HorarioController extends Controller
     {
         $semestre = Semestre::where('estado', 'activo')->first();
         if (!$semestre) {
-            return response()->json(['error' => 'No hay un semestre activo'], 404);
+            return response()->json(['message' => 'No hay un semestre activo'], 404);
         }
         $semestre_id = $semestre->id;
-
+    
         $horarios = Horario::where('semestre_id', $semestre_id)
             ->whereHas('horarioEstudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
-            ->with(['curso', 'horarioEstudiantes' => function ($query) use ($estudianteId) {
-                $query->where('estudiante_id', $estudianteId)
-                    ->select('horario_id', 'estudiante_id', 'encuestaDocente');
-            }, 'encuestas'])  // Incluimos la relación con encuestas
+            ->with([
+                'curso', 
+                'docentes.usuario', // Cargar la relación de docentes y usuarios
+                'horarioEstudiantes' => function ($query) use ($estudianteId) {
+                    $query->where('estudiante_id', $estudianteId)
+                        ->select('horario_id', 'estudiante_id', 'encuestaDocente');
+                },
+                'encuestas' => function ($query) {
+                    $query->where('tipo_encuesta', 'docente');
+                }
+            ])
             ->get();
-
+    
         $cursos = $horarios->map(function ($horario) {
             $estadoEncuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
-
+    
             $encuestas = $horario->encuestas->map(function ($encuesta) {
                 return $encuesta->id;
             });
-
+    
+            // Obtener el nombre del primer docente (si existe)
+            $docente = $horario->docentes->first();
+            $nombreDocente = $docente ? $docente->usuario->nombre . ' ' . $docente->usuario->apellido_paterno . ' ' . $docente->usuario->apellido_materno : null;
+    
             return [
                 'horario_id' => $horario->id,
                 'curso_id' => $horario->curso->id,
+                'docente_nombre' => $nombreDocente,
                 'curso_nombre' => $horario->curso->nombre,
                 'estado_encuesta' => $estadoEncuesta,
                 'encuestas' => $encuestas,
             ];
         });
-
+    
         return response()->json([
             'cursos' => $cursos,
         ]);
