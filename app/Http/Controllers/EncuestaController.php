@@ -210,7 +210,7 @@ class EncuestaController extends Controller
         }
 
         $preguntas = $encuesta->pregunta()
-            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta')
+            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta', 'preguntas.tipo_pregunta')
             ->get();
 
         return response()->json([
