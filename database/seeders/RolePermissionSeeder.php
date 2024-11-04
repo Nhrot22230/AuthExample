@@ -170,6 +170,7 @@ class RolePermissionSeeder extends Seeder
             ->orWhere('category', '=', 'solicitudes')
             ->orWhere('category', '=', 'cursos')
             ->orWhere('category', '=', 'docentes')
+            ->orWhere('category', '=', 'especialidades')
             ->get();
 
         $role->syncPermissions($permissions);
