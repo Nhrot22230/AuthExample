@@ -11,6 +11,7 @@ use App\Models\Semestre;
 use App\Models\RespuestasPreguntaDocente;
 use App\Models\HorarioEstudiante;
 use App\Models\RespuestasPreguntaJP;
+use App\Models\JefePractica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -364,11 +365,14 @@ class EncuestaController extends Controller
             'tipo_encuesta' => $tipoEncuesta === 'docente' ? 'Encuesta Docente' : 'Encuesta Jefe de Práctica',
             'disponible' => $encuesta->disponible,
             'nombre_responsable' => $nombreResponsable,
-            'preguntas' => $encuesta->pregunta->map(function ($pregunta) {
+            'preguntas' => $encuesta->pregunta->filter(function ($pregunta) {
+                return in_array($pregunta->tipo_respuesta, ['porcentaje', 'likert']);
+            })->map(function ($pregunta) {
                 return [
                     'id' => $pregunta->id,
                     'tipo_respuesta' => $pregunta->tipo_respuesta,
                     'texto_pregunta' => $pregunta->texto_pregunta,
+                    'tipo_pregunta' => $pregunta->tipo_pregunta,
                 ];
             }),
         ];
@@ -588,4 +592,63 @@ class EncuestaController extends Controller
 
         return response()->json($resultadoEncuesta);
     }
+
+    public function obtenerResultadosDetalleJp($encuestaId, $jpHorarioId)
+    {
+        // Obtener la información del JP asociado directamente a través de jp_horario_id
+        $jefePractica = JefePractica::with(['usuario', 'horario.curso'])->findOrFail($jpHorarioId);
+        $usuario = $jefePractica->usuario;
+        $horario = $jefePractica->horario;
+
+        // Obtener preguntas y respuestas usando consultas directas, filtrando por jp_horario_id
+        $preguntasConRespuestas = DB::table('encuesta_pregunta')
+            ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
+            ->leftJoin('respuesta_pregunta_jp', function($join) use ($jpHorarioId) {
+                $join->on('encuesta_pregunta.id', '=', 'respuesta_pregunta_jp.encuesta_pregunta_id')
+                    ->where('respuesta_pregunta_jp.jp_horario_id', '=', $jpHorarioId);
+            })
+            ->select(
+                'preguntas.id',
+                'preguntas.texto_pregunta',
+                'respuesta_pregunta_jp.cant1',
+                'respuesta_pregunta_jp.cant2',
+                'respuesta_pregunta_jp.cant3',
+                'respuesta_pregunta_jp.cant4',
+                'respuesta_pregunta_jp.cant5'
+            )
+            ->where('encuesta_pregunta.encuesta_id', $encuestaId)
+            ->get();
+
+        // Estructurar las preguntas y sus respuestas en el formato deseado
+        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) {
+            return [
+                'pregunta_id' => $pregunta->id,
+                'texto_pregunta' => $pregunta->texto_pregunta,
+                'respuestas' => [
+                    'Totalmente de acuerdo' => $pregunta->cant5 ?? 0,
+                    'De acuerdo' => $pregunta->cant4 ?? 0,
+                    'Ni de acuerdo ni en desacuerdo' => $pregunta->cant3 ?? 0,
+                    'En desacuerdo' => $pregunta->cant2 ?? 0,
+                    'Totalmente en desacuerdo' => $pregunta->cant1 ?? 0,
+                ],
+            ];
+        });
+
+        // Estructurar la respuesta final
+        $resultadoEncuesta = [
+            'jefe_practica' => [
+                'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+                'codigo' => $usuario->codigo,
+            ],
+            'curso' => [
+                'id' => $horario->curso->id,
+                'nombre' => $horario->curso->nombre,
+            ],
+            'detalles_preguntas' => $detallesPreguntas,
+        ];
+
+        return response()->json($resultadoEncuesta);
+    }
+
+
 }
