@@ -9,7 +9,6 @@ use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Encuesta extends Model
 {
     use HasFactory;
-
     protected $fillable = [
         'fecha_inicio',
         'fecha_fin',

@@ -161,45 +161,19 @@ class RolePermissionSeeder extends Seeder
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('secretarioAcademico');
-        $permissions = Permission::where('category', '=', 'planes de estudio')
-            ->orWhere('category', '=', 'horarios')
-            ->orWhere('category', '=', 'areas')
-            ->orWhere('category', '=', 'departamentos')
-            ->orWhere('category', '=', 'facultades')
-            ->orWhere('category', '=', 'tema de tesis') // Corrige la categoría aquí
-            ->orWhere('category', '=', 'solicitudes')
-            ->orWhere('category', '=', 'cursos')
-            ->orWhere('category', '=', 'docentes')
-            ->orWhere('category', '=', 'especialidades')
-            ->get();
-
+        $permissions = Permission::all();
         $role->syncPermissions($permissions);
 
-
         $role = Role::findByName('directorCarrera');
-        $permissions = Permission::where('category', '=', 'planes de estudio')
-            ->orWhere('category', '=', 'horarios')
-            ->orWhere('category', '=', 'areas')
-            ->orWhere('category', '=', 'departamentos')
-            ->orWhere('category', '=', 'facultades')
-            ->orWhere('category', '=', 'tema de tesis')
-            ->orWhere('category', '=', 'solicitudes')
-            ->orWhere('category', '=', 'cursos')
-            ->orWhere('category', '=', 'jefes de práctica')
-            ->orWhere('category', '=', 'instituciones')
-            ->orWhere('category', '=', 'especialidades')
-            ->get();
+        $permissions = Permission::all();
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('docente');
-        $permissions = Permission::where('name', 'like', 'ver %')
-            ->orWhere('name', 'like', 'editar %')
-            ->get();
+        $permissions = Permission::all();
         $role->syncPermissions($permissions);
 
         $role = Role::findByName('estudiante');
-        $permissions = Permission::where('name', 'like', 'ver %')
-            ->get();
+        $permissions = Permission::all();
         $role->syncPermissions($permissions);
     }
 }
