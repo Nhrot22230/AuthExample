@@ -142,4 +142,23 @@ class CursoController extends Controller
 
         return response()->json($docentesPorHorario);
     }
+
+    public function obtenerHorariosPorCurso($cursoId)
+    {
+        // Obtener los horarios asociados al curso especificado
+        $horarios = Horario::where('curso_id', $cursoId)
+            ->select('id', 'nombre') // Seleccionamos solo los campos necesarios
+            ->get();
+
+        // Estructurar la respuesta para devolver los horarios
+        $horariosData = $horarios->map(function ($horario) {
+            return [
+                'horario_id' => $horario->id,
+                'horario_nombre' => $horario->nombre,
+            ];
+        });
+
+        return response()->json($horariosData);
+    }
+
 }

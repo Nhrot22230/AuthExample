@@ -227,8 +227,16 @@ Route::get('/encuestas/{encuestaId}/cursos', [EncuestaController::class, 'obtene
 //Usando el cursoId previo, obtengo la lista de docentes
 Route::get('/cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
 
+//Usando el cursoId previo, obtengo la lista de horarios (JP)
+Route::get('/cursos/{cursoId}/horarios', [CursoController::class, 'obtenerHorariosPorCurso']);
+
+
 //Usando la encuestaId de arriba, junto con cursoId y horarioId devuelto obtengo los resultados para ese docente
 Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
+
+Route::get('/resultados/jefes-practica/encuestas/{encuestaId}/jp-horarios/{jpHorarioId}', [EncuestaController::class, 'obtenerResultadosDetalleJp']);
+
+
 
 
 Route::get('/semestreActual', [SemestreController::class, 'obtenerSemestreActual']);
