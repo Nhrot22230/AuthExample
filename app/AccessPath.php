@@ -4,23 +4,28 @@ namespace App;
 
 enum AccessPath: string
 {
-    case ROOT                   = '/';
-    case PERSONAS               = 'Personas';
-    case UNIDADES               = 'Unidades';
-    case CURSOS                 = 'Cursos';
-    case CONFIGURACION_SISTEMA  = 'ConfiguracionSistema';
-    case SEMESTRES              = 'Semestres';
-    case PREGUNTAS_FRECUENTES   = 'PreguntasFrecuentes';
-    case PEDIDOS_HORARIOS       = 'PedidosHorarios';
-    case PLAN_ESTUDIOS          = 'PlanEstudios';
-    case JEFE_PRACTICA          = 'JefePractica';
-    case CANDIDATURAS           = 'Candidaturas';
-    case SOLICITUDES_ENCUENTAS  = 'SolicitudesEncuestas';
-    case TRAMITES_ACADEMICOS    = 'TramitesAcademicos';
-    case MIS_CANDIDATURAS       = 'MisCandidaturas';
-    case MIS_UNIDADES           = 'MisUnidades';
-    case MIS_CURSOS             = 'MisCursos';
-    case MIS_ENCUESTAS          = 'MisEncuestas';
+    case CANDIDATURAS                       = 'Candidaturas';
+    case CONFIGURACION_PERSONAL             = 'ConfiguracionPersonal';
+    case CONFIGURACION_SISTEMA              = 'ConfiguracionSistema';
+    case CURSOS                             = 'Cursos';
+    case JEFE_PRACTICA                      = 'JefePractica';
+    case JURADOS_TESIS_SECRETARIO_ACADEMICO = 'Jurado tesis secretario academico';
+    case MATRICULAS_ADICIONALES              = 'MatriculasAdicionales';
+    case MIS_CANDIDATURAS                   = 'MisCandidaturas';
+    case MIS_CURSOS                         = 'MisCursos';
+    case MIS_ENCUESTAS                      = 'MisEncuestas';
+    case MIS_UNIDADES                       = 'MisUnidades';
+    case PEDIDOS_HORARIOS                   = 'PedidosHorarios';
+    case PERSONAS                           = 'Personas';
+    case PLAN_ESTUDIOS                      = 'PlanDeEstudios';
+    case PREGUNTAS_FRECUENTES               = 'PreguntasFrecuentes';
+    case PREGUNTAS_FRECUENTES_ADMIN         = 'PreguntasFrecuentesAdmin';
+    case ROOT                               = '/';
+    case SEMESTRES                          = 'Semestres';
+    case SOLICITUDES_ENCUENTAS              = 'SolicitudesEncuestas';
+    case SOLICITUDES_ENCUESTAS_ADMIN        = 'SolicitudesEncuestasAdmin';
+    case TRAMITES_ACADEMICOS                = 'TramitesAcademicos';
+    case UNIDADES                           = 'Unidades';
 
     public static function toArray(): array
     {

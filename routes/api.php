@@ -107,10 +107,10 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete ('/plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:manage planes de estudio');
 
 
-        Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:crear matriculas_adicionales');
+        Route::post('/matriculas-adicionales', [MatriculaAdicionalController::class, 'store'])->middleware('can:manage matriculas_adicionales');
         //Route::get('/matriculas-adicionales', [MatriculaAdicionalController::class, 'getAll'])->middleware('can:ver matriculas_adicionales');
         Route::get('/matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']) ->middleware('can:ver matriculas_especialidad');
-        Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes eliminar el middleware si no deseas autorización
+        Route::get('/matriculas-adicionales/estudiante/{estudianteId}', [MatriculaAdicionalController::class, 'getByEstudiante'])->middleware('can:ver mis matriculas_adicionales'); // Puedes manageel middleware si no deseas autorización
         Route::get('/horarios/cursos/{cursoId}', [MatriculaAdicionalController::class, 'getHorariosByCurso'])->middleware('can:ver horarios');
         Route::get('/matricula-adicional/{id}', [MatriculaAdicionalController::class, 'getById'])->middleware('can:ver mis matriculas_adicionales'); // Ajusta el nombre del permiso según sea necesario
 
@@ -124,8 +124,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:manage semestres');
         Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:manage semestres');
 
-        Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:editar semestres');
-        Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:eliminar semestres');
+        Route::put('/semestres/{id}', [SemestreController::class, 'update'])->middleware('can:manage semestres');
+        Route::delete('/semestres/{id}', [SemestreController::class, 'destroy'])->middleware('can:managesemestres');
 
 
         Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('can:ver usuarios');
@@ -182,7 +182,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::get('/estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
         Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
-        Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
+        Route::post('/estudiantesRiesgo/manage_informes', [EstudianteRiesgoController::class, 'manage_informes']);
         Route::get('/estudiantesRiesgo/obtener_datos_semana', [EstudianteRiesgoController::class, 'obtener_datos_semana']);
         Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
         Route::get('/estudiantesRiesgo/listar_informes_director', [EstudianteRiesgoController::class, 'listar_informes_director']);
@@ -190,7 +190,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::delete('/estudiantesRiesgo/eliminar_semana', [EstudianteRiesgoController::class, 'eliminar_semana']);
         Route::get('/temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
         Route::get('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
-        Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:editar temas de tesis');
+        Route::put('/temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:manage temas de tesis');
 
 
         Route::post('/notifications/notify', [NotificationsController::class, 'notifyToUsers']);
