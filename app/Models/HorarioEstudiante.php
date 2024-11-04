@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class HorarioEstudiante extends Model
 {
+    protected $table = 'estudiante_horario';
+    
     use HasFactory;
 
     protected $fillable = [
@@ -27,6 +29,6 @@ class HorarioEstudiante extends Model
 
     public function horarioEstudianteJps()
     {
-        return $this->hasMany(HorarioEstudianteJp::class);
+        return $this->hasMany(HorarioEstudianteJp::class, 'estudiante_horario_id', 'id');
     }
 }

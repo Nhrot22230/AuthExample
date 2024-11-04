@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class JefePractica extends Model
 {
+    protected $table = 'jp_horario';
+    
     protected $fillable = [
         'usuario_id',
         'horario_id',
@@ -21,8 +23,8 @@ class JefePractica extends Model
         return $this->belongsTo(Horario::class);
     }
 
-    public function horarioEstudianteJPs()
+    public function horarioEstudianteJps()
     {
-        return $this->hasMany(HorarioEstudianteJp::class);
+        return $this->hasMany(HorarioEstudianteJp::class, 'jp_horario_id', 'id');
     }
 }

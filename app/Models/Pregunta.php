@@ -16,7 +16,13 @@ class Pregunta extends Model
         'tipo_respuesta',
     ];
 
+    protected $hidden = ['created_at', 'updated_at', 'pivot'];
+
     public function encuesta(): BelongsToMany {
         return $this->belongsToMany(Encuesta::class, 'encuesta_pregunta');
+    }
+    public function respuestasPreguntaDocente()
+    {
+        return $this->hasOne(RespuestasPreguntaDocente::class);
     }
 }

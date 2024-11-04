@@ -154,4 +154,19 @@ class SemestreController extends Controller
             return response()->json(['message' => 'IDs inválidos'], 400);
         }
     }
+    public function obtenerSemestreActual()
+    {
+        $semestreActual = Semestre::where('estado', 'activo')
+            ->orderBy('anho', 'desc')
+            ->orderBy('periodo', 'desc')
+            ->first(['id', 'anho', 'periodo']); // Selecciona solo los campos específicos
+
+        if (!$semestreActual) {
+            return response()->json(['error' => 'No se encontró un semestre activo'], 404);
+        }
+
+        return response()->json($semestreActual);
+    }
+
+
 }

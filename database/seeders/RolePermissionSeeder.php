@@ -8,9 +8,7 @@ use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+
     public function run(): void
     {
         $roles = [
@@ -146,7 +144,9 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'ver matriculas_especialidad', 'category' => 'solicitudes'],
             ['name' => 'ver mis matriculas_adicionales', 'category' => 'solicitudes'],
             ['name' => 'ver matriculas_facultad', 'category' => 'solicitudes'],
-            
+
+            ['name' => 'gestionar encuestas', 'category' => 'encuestas']
+
         ];
 
         foreach ($roles as $role) {
@@ -183,11 +183,11 @@ class RolePermissionSeeder extends Seeder
             ->orWhere('category', '=', 'departamentos')
             ->orWhere('category', '=', 'facultades')
             ->orWhere('category', '=', 'tema de tesis')
-            ->orWhere('category', '=', 'solicitudes') 
-            ->orWhere('category', '=', 'cursos') 
+            ->orWhere('category', '=', 'solicitudes')
+            ->orWhere('category', '=', 'cursos')
             ->orWhere('category', '=', 'jefes de práctica')
             ->orWhere('category', '=', 'instituciones')
-            ->orWhere('category', '=', 'especialidades') 
+            ->orWhere('category', '=', 'especialidades')
             ->get();
         $role->syncPermissions($permissions);
 
