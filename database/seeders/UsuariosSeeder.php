@@ -64,7 +64,12 @@ class UsuariosSeeder extends Seeder
         $secretarioRole = Role::findByName('secretarioAcademico');
         $secretario->assignRole($secretarioRole);
 
-        // Crear usuario director de carrera
+
+        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first()
+            ?? Especialidad::factory()->create(['facultad_id' => 5]);
+        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first()
+            ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
+        
         $director = Usuario::create([
             'nombre' => 'director',
             'apellido_paterno' => 'director',
@@ -74,30 +79,23 @@ class UsuariosSeeder extends Seeder
             'estado' => 'activo',
         ]);
 
-        // Seleccionar o crear un área específica para Ingeniería de Sistemas (ID 28)
-        $random_area_sistemas = Area::where('especialidad_id', 28)->inRandomOrder()->first();
-        if (!$random_area_sistemas) {
-            $random_area_sistemas = Area::create([
-                'especialidad_id' => 28,
-                'nombre' => 'Área de Ingeniería de Sistemas'
-            ]);
-        }
-
-        // Crear el usuario director de carrera en Ingeniería de Sistemas
         Docente::create([
             'usuario_id' => $director->id,
             'codigoDocente' => 'director',
             'tipo' => 'TC',
-            'especialidad_id' => 28,
-            'seccion_id' => 45,
-            'area_id' => $random_area_sistemas->id,
+            'especialidad_id' => $random_especialidad->id,
+            'area_id' => $random_area->id,
         ]);
+
+
+        $directorRol = Role::findByName('directorCarrera');
+        $director->assignRole($directorRol);
 
         // Factor de multiplicación para la creación masiva de registros
         $factor = 30;
 
         // Crear docentes en general
-        Docente::factory(8 * $factor)->create();
+        Docente::factory(10 * $factor)->create();
 
         // Crear docentes que pertenezcan a FACI
         Docente::factory(10 * $factor)->fromFacultad(5)->create();
