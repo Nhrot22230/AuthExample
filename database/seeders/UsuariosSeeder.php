@@ -91,6 +91,26 @@ class UsuariosSeeder extends Seeder
         $directorRol = Role::findByName('directorCarrera');
         $director->assignRole($directorRol);
 
+
+        $alumno = Usuario::create([
+            'nombre' => 'estudiante',
+            'apellido_paterno' => 'estudiante',
+            'apellido_materno' => 'estudiante',
+            'email' => 'estudiante@gmail.com',
+            'password' => Hash::make('12345678'),
+            'estado' => 'activo',
+        ]);
+
+        Estudiante::create([
+            'usuario_id' => $alumno->id,
+            'codigoEstudiante' => 'estudiante',
+            'especialidad_id' => $random_especialidad->id,
+        ]);
+
+        $alumnoRol = Role::findByName('estudiante');
+        $alumno->assignRole($alumnoRol);
+
+
         // Factor de multiplicación para la creación masiva de registros
         $factor = 30;
 
