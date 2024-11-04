@@ -374,7 +374,7 @@ class EncuestaController extends Controller
                     'texto_pregunta' => $pregunta->texto_pregunta,
                     'tipo_pregunta' => $pregunta->tipo_pregunta,
                 ];
-            }),
+            })->values(),
         ];
 
         return response()->json($detalleEncuesta);
