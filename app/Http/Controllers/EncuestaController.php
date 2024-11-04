@@ -182,23 +182,23 @@ class EncuestaController extends Controller
         if (!$encuesta) {
             return response()->json(['message' => 'Encuesta no encontrada.'], 404);
         }
-
         $semestreActivo = Semestre::where('estado', 'activo')->first();
         if (!$semestreActivo) {
             return response()->json(['message' => 'No hay semestre activo.'], 404);
         }
-        $horariosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)->pluck('curso_id');
-        $cursosNoAsociados = Curso::where('especialidad_id', $encuesta->especialidad_id)
-            ->whereNotIn('id', $horariosAsociados)
+        $horariosAsociados = $encuesta->horario()
+            ->where('semestre_id', $semestreActivo->id)
+            ->pluck('curso_id')
+            ->toArray();
+        $cursos = Curso::where('especialidad_id', $encuesta->especialidad_id)
             ->select('id', 'nombre')
-            ->get();
-        $cursosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)
-            ->with('curso:id,nombre')
             ->get()
-            ->pluck('curso');
+            ->map(function ($curso) use ($horariosAsociados) {
+                $curso->asociado = in_array($curso->id, $horariosAsociados);
+                return $curso;
+            });
         return response()->json([
-            'cursos_asociados' => $cursosAsociados,
-            'cursos_no_asociados' => $cursosNoAsociados,
+            'cursos' => $cursos,
         ]);
     }
 
@@ -210,7 +210,7 @@ class EncuestaController extends Controller
         }
 
         $preguntas = $encuesta->pregunta()
-            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta')
+            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta', 'preguntas.tipo_pregunta')
             ->get();
 
         return response()->json([
@@ -374,7 +374,7 @@ class EncuestaController extends Controller
                     'texto_pregunta' => $pregunta->texto_pregunta,
                     'tipo_pregunta' => $pregunta->tipo_pregunta,
                 ];
-            }),
+            })->values(),
         ];
 
         return response()->json($detalleEncuesta);
