@@ -188,7 +188,6 @@ Route::get('/encuestas/{encuestaId}/horarios/{horarioId}/{jpId?}', [EncuestaCont
 //Ruta para guardar los resultados de las preguntas de la encuesta para un determinado horario
 //Me tiene que llegar como request el idEstudiante y las respuestas de lo que ha marcado, tambien jp_horario_id
 //Actualmente solo sirve para guardar respuestas de docentes y JPs que no sean texto
-//Pendiente de revisar: Validacion correcta del tipo de encuestas
 Route::post('/encuestas/{encuestaId}/horarios/{horarioId}/respuestas', [EncuestaController::class, 'registrarRespuestas']);
 
 
@@ -202,6 +201,7 @@ Route::get('/cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocent
 Route::get('/resultados/docentes/encuestas/{encuestaId}/horarios/{horarioId}', [EncuestaController::class, 'obtenerResultadosDetalleDocente']);
 
 
+Route::get('/semestreActual', [SemestreController::class, 'obtenerSemestreActual']);
 
 
 
