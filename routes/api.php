@@ -175,6 +175,7 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         Route::put('/estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
         Route::post('/estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
         Route::post('/estudiantesRiesgo/crear_informes', [EstudianteRiesgoController::class, 'crear_informes']);
+        Route::get('/estudiantesRiesgo/obtener_datos_semana', [EstudianteRiesgoController::class, 'obtener_datos_semana']);
         Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
         Route::get('/estudiantesRiesgo/listar_informes_director', [EstudianteRiesgoController::class, 'listar_informes_director']);
         Route::get('/estudiantesRiesgo/listar_semanas_existentes/{id}', [EstudianteRiesgoController::class, 'listar_semanas_existentes']);
@@ -186,7 +187,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
 });
 
 /*Route::prefix('v1')->group(function () {
-    Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+    //Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
+    Route::get('/estudiantesRiesgo/obtener_datos_semana', [EstudianteRiesgoController::class, 'obtener_datos_semana']);
 });*/
 
 Route::prefix('auth')->group(function () {
