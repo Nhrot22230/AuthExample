@@ -172,7 +172,7 @@ class EncuestaController extends Controller
             ], 201);
         } catch (\Exception $e){
             DB::rollBack();
-            return response()->json(['error' => 'Error al realizar el registro.'], 500);
+            return response()->json(['message' => 'Error al realizar el registro.'], 500);
         }
     }
 
@@ -182,23 +182,23 @@ class EncuestaController extends Controller
         if (!$encuesta) {
             return response()->json(['message' => 'Encuesta no encontrada.'], 404);
         }
-
         $semestreActivo = Semestre::where('estado', 'activo')->first();
         if (!$semestreActivo) {
             return response()->json(['message' => 'No hay semestre activo.'], 404);
         }
-        $horariosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)->pluck('curso_id');
-        $cursosNoAsociados = Curso::where('especialidad_id', $encuesta->especialidad_id)
-            ->whereNotIn('id', $horariosAsociados)
+        $horariosAsociados = $encuesta->horario()
+            ->where('semestre_id', $semestreActivo->id)
+            ->pluck('curso_id')
+            ->toArray();
+        $cursos = Curso::where('especialidad_id', $encuesta->especialidad_id)
             ->select('id', 'nombre')
-            ->get();
-        $cursosAsociados = $encuesta->horario()->where('semestre_id', $semestreActivo->id)
-            ->with('curso:id,nombre')
             ->get()
-            ->pluck('curso');
+            ->map(function ($curso) use ($horariosAsociados) {
+                $curso->asociado = in_array($curso->id, $horariosAsociados);
+                return $curso;
+            });
         return response()->json([
-            'cursos_asociados' => $cursosAsociados,
-            'cursos_no_asociados' => $cursosNoAsociados,
+            'cursos' => $cursos,
         ]);
     }
 
@@ -210,7 +210,7 @@ class EncuestaController extends Controller
         }
 
         $preguntas = $encuesta->pregunta()
-            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta')
+            ->select('preguntas.id as pregunta_id', 'preguntas.texto_pregunta', 'preguntas.tipo_respuesta', 'preguntas.tipo_pregunta')
             ->get();
 
         return response()->json([
@@ -328,7 +328,7 @@ class EncuestaController extends Controller
                     $docente->usuario->apellido_paterno . " " .$docente->usuario->apellido_materno;
                 }
             } else {
-                return response()->json(['error' => 'Horario no encontrado'], 404);
+                return response()->json(['message' => 'Horario no encontrado'], 404);
             }
         } elseif ($tipoEncuesta === 'jefe_practica') {
             $encuesta->load(['horario.jefePracticas.usuario']);
@@ -345,10 +345,10 @@ class EncuestaController extends Controller
 
                 }
                 else{
-                    return response()->json(['error' => 'JP no encontrado'], 404);
+                    return response()->json(['message' => 'JP no encontrado'], 404);
                 }
             }else {
-                return response()->json(['error' => 'Horario no encontrado'], 404);
+                return response()->json(['message' => 'Horario no encontrado'], 404);
             }
         }
 
@@ -374,7 +374,7 @@ class EncuestaController extends Controller
                     'texto_pregunta' => $pregunta->texto_pregunta,
                     'tipo_pregunta' => $pregunta->tipo_pregunta,
                 ];
-            }),
+            })->values(),
         ];
 
         return response()->json($detalleEncuesta);
@@ -385,7 +385,7 @@ class EncuestaController extends Controller
         $encuesta = Encuesta::with('horario', 'pregunta')->findOrFail($encuestaId);
 
         if (!$encuesta->horario->contains('id', $horarioId)) {
-            return response()->json(['error' => 'El horario no está asociado a esta encuesta'], 400);
+            return response()->json(['message' => 'El horario no está asociado a esta encuesta'], 400);
         }
 
         try {
@@ -397,7 +397,7 @@ class EncuestaController extends Controller
                 'jp_horario_id' => 'nullable|exists:jp_horario,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            return response()->json(['messages' => $e->errors()], 422);
         }
 
         $estudianteMatriculado = HorarioEstudiante::where('horario_id', $horarioId)
@@ -405,7 +405,7 @@ class EncuestaController extends Controller
             ->exists();
 
         if (!$estudianteMatriculado) {
-            return response()->json(['error' => 'El estudiante no está matriculado en el horario especificado'], 400);
+            return response()->json(['message' => 'El estudiante no está matriculado en el horario especificado'], 400);
         }
 
         try {
@@ -417,7 +417,7 @@ class EncuestaController extends Controller
                 return response()->json(['message' => 'Respuestas de docente registradas exitosamente'], 200);
             } elseif ($encuesta->tipo_encuesta === 'jefe_practica') {
                 if (empty($data['jp_horario_id'])) {
-                    return response()->json(['error' => 'jp_horario_id es requerido para la encuesta de jefe de práctica'], 400);
+                    return response()->json(['message' => 'jp_horario_id es requerido para la encuesta de jefe de práctica'], 400);
                 }
 
                 $this->registrarRespuestasJefePractica($data, $encuesta, $data['jp_horario_id']);
@@ -430,7 +430,7 @@ class EncuestaController extends Controller
                 return response()->json(['message' => 'Respuestas de jefe de práctica registradas exitosamente'], 200);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         }
     }
 
@@ -441,7 +441,7 @@ class EncuestaController extends Controller
             $valorRespuesta = $respuesta['respuesta'];
 
             $encuestaPregunta = DB::table('encuesta_pregunta')
-                ->where('id', $encuestaPreguntaId)
+                ->where('pregunta_id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
                 ->first();
 
@@ -482,10 +482,9 @@ class EncuestaController extends Controller
             $valorRespuesta = $respuesta['respuesta'];
 
             $encuestaPregunta = DB::table('encuesta_pregunta')
-                ->where('id', $encuestaPreguntaId)
+                ->where('pregunta_id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
                 ->first();
-
             if (!$encuestaPregunta) {
                 throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }
@@ -543,7 +542,7 @@ class EncuestaController extends Controller
         $horario = Horario::with(['curso', 'docentes.usuario'])->findOrFail($horarioId);
         $docente = $horario->docentes->first();
         if (!$docente) {
-            return response()->json(['error' => 'Docente no encontrado para el horario'], 404);
+            return response()->json(['message' => 'Docente no encontrado para el horario'], 404);
         }
         $usuario = $docente->usuario;
 
@@ -557,6 +556,7 @@ class EncuestaController extends Controller
             ->select(
                 'preguntas.id',
                 'preguntas.texto_pregunta',
+                'preguntas.tipo_respuesta',
                 'respuesta_pregunta_docente.cant1',
                 'respuesta_pregunta_docente.cant2',
                 'respuesta_pregunta_docente.cant3',
@@ -571,12 +571,13 @@ class EncuestaController extends Controller
             return [
                 'pregunta_id' => $pregunta->id,
                 'texto_pregunta' => $pregunta->texto_pregunta,
+                'tipo_respuesta' =>$pregunta->tipo_respuesta,
                 'respuestas' => [
-                    'Totalmente de acuerdo' => $pregunta->cant5 ?? 0,
-                    'De acuerdo' => $pregunta->cant4 ?? 0,
-                    'Ni de acuerdo ni en desacuerdo' => $pregunta->cant3 ?? 0,
-                    'En desacuerdo' => $pregunta->cant2 ?? 0,
-                    'Totalmente en desacuerdo' => $pregunta->cant1 ?? 0,
+                    'cant5' => $pregunta->cant5 ?? 0,
+                    'cant4' => $pregunta->cant4 ?? 0,
+                    'cant3' => $pregunta->cant3 ?? 0,
+                    'cant2' => $pregunta->cant2 ?? 0,
+                    'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
         });
@@ -610,6 +611,7 @@ class EncuestaController extends Controller
             ->select(
                 'preguntas.id',
                 'preguntas.texto_pregunta',
+                'preguntas.tipo_respuesta',
                 'respuesta_pregunta_jp.cant1',
                 'respuesta_pregunta_jp.cant2',
                 'respuesta_pregunta_jp.cant3',
@@ -624,12 +626,13 @@ class EncuestaController extends Controller
             return [
                 'pregunta_id' => $pregunta->id,
                 'texto_pregunta' => $pregunta->texto_pregunta,
+                'tipo_respuesta' => $pregunta->tipo_respuesta,
                 'respuestas' => [
-                    'Totalmente de acuerdo' => $pregunta->cant5 ?? 0,
-                    'De acuerdo' => $pregunta->cant4 ?? 0,
-                    'Ni de acuerdo ni en desacuerdo' => $pregunta->cant3 ?? 0,
-                    'En desacuerdo' => $pregunta->cant2 ?? 0,
-                    'Totalmente en desacuerdo' => $pregunta->cant1 ?? 0,
+                    'cant5' => $pregunta->cant5 ?? 0,
+                    'cant4' => $pregunta->cant4 ?? 0,
+                    'cant3' => $pregunta->cant3 ?? 0,
+                    'cant2' => $pregunta->cant2 ?? 0,
+                    'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
         });

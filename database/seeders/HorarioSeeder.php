@@ -32,17 +32,24 @@ class HorarioSeeder extends Seeder
         $encuestas = Encuesta::all();
 
         foreach ($horarios as $horario) {
-            $encuestasAleatorias = $encuestas->random(rand(1, 3));
-
-            foreach ($encuestasAleatorias as $encuesta) {
-                DB::table('encuesta_horario')->insert([
-                    'encuesta_id' => $encuesta->id,
-                    'horario_id' => $horario->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            $encuestaDocente = $encuestas->where('tipo_encuesta', 'docente')->random();
+            $encuestaJefePractica = $encuestas->where('tipo_encuesta', 'jefe_practica')->random();
+        
+            DB::table('encuesta_horario')->insert([
+                'encuesta_id' => $encuestaDocente->id,
+                'horario_id' => $horario->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        
+            DB::table('encuesta_horario')->insert([
+                'encuesta_id' => $encuestaJefePractica->id,
+                'horario_id' => $horario->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
+        
 
         foreach ($horarios as $horario) {
             $assignedEstudiantes = $estudiantes->random(5);
@@ -51,7 +58,7 @@ class HorarioSeeder extends Seeder
                 HorarioEstudiante::create([
                     'estudiante_id' => $estudiante->id,
                     'horario_id' => $horario->id,
-                    'encuestaDocente' => true,
+                    'encuestaDocente' => false,
                 ]);
             }
         }
@@ -79,7 +86,7 @@ class HorarioSeeder extends Seeder
                 HorarioEstudianteJp::create([
                     'estudiante_horario_id' => $horarioEstudiante->id,
                     'jp_horario_id' => $jefePractica->id,
-                    'encuestaJP' => true,
+                    'encuestaJP' => false,
                 ]);
             }
         }
