@@ -24,9 +24,13 @@ class MatriculaAdicionalController extends Controller
         'motivo_rechazo' => 'nullable|string',
     ]);
 
-    // Si la validación falla, retorna un error
+    // Si la validación falla, retorna un mensaje de error
     if ($validator->fails()) {
-        return response()->json($validator->errors(), 400);
+        // Crear un string con los campos requeridos
+        $missingFields = implode(', ', array_keys($validator->errors()->toArray()));
+        return response()->json([
+            'message' => 'Los siguientes campos son obligatorios: ' . $missingFields
+        ], 400);
     }
 
     // Crear una nueva matrícula adicional
@@ -42,8 +46,13 @@ class MatriculaAdicionalController extends Controller
     ]);
 
     // Retornar la respuesta
-    return response()->json($matricula, 201);
+    return response()->json([
+        'message' => 'Matrícula adicional creada con éxito.',
+        'matricula' => $matricula,
+    ], 201);
 }
+
+    
 
     public function getAll()
     {
