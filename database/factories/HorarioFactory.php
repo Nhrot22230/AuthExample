@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Curso;
+use App\Models\Especialidad;
 use App\Models\Semestre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,8 @@ class HorarioFactory extends Factory
     public function definition(): array
     {
         // Selecciona un curso y un semestre al azar de la base de datos
-        $curso = Curso::inRandomOrder()->first();
+        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first();
+        $curso = Curso::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first();
         $semestre = Semestre::inRandomOrder()->first();
 
         return [

@@ -14,6 +14,6 @@ class EncuestaSeeder extends Seeder
 
     public function run(): void
     {
-        Encuesta::factory(5)->create();
+        Encuesta::factory(50)->create();
     }
 }

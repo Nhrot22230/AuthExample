@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class CursoFactory extends Factory
 {
     /**
-     * Define the model's default state.
+     * Define el estado por defecto del modelo.
      *
      * @return array<string, mixed>
      */
@@ -40,5 +40,23 @@ class CursoFactory extends Factory
             'pb' => $this->faker->randomFloat(2, 0, 4),
             'me' => $this->faker->randomElement([0, 1, 2, 3, 4, 5]),
         ];
+    }
+
+    /**
+     * Define un estado personalizado para asociar cursos a una facultad específica.
+     *
+     * @param int $facultadId
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function paraFacultad(int $facultadId)
+    {
+        return $this->state(function (array $attributes) use ($facultadId) {
+            $especialidad = Especialidad::where('facultad_id', $facultadId)->inRandomOrder()->first()
+                ?? Especialidad::factory()->create(['facultad_id' => $facultadId]);
+            
+            return [
+                'especialidad_id' => $especialidad->id,
+            ];
+        });
     }
 }

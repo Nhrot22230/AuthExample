@@ -24,11 +24,9 @@ class HorarioSeeder extends Seeder
      */
     public function run(): void
     {
-        Horario::factory(300)->create();
-
+        Horario::factory(200)->create();
         $horarios = Horario::all();
         $estudiantes = Estudiante::all();
-
         $encuestas = Encuesta::all();
 
         foreach ($horarios as $horario) {

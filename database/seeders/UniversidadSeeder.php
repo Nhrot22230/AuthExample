@@ -20,7 +20,7 @@ class UniversidadSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {
+    {   
         Institucion::factory(5)->create();
         Facultad::factory(20)->create();
         Departamento::factory(30)->create();
@@ -64,6 +64,8 @@ class UniversidadSeeder extends Seeder
         }
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
 
-        Curso::factory(5000)->create();
+        Curso::factory(200)->create();
+        Curso::factory()->count(1000)->paraFacultad(5)->create();
+        
     }
 }
