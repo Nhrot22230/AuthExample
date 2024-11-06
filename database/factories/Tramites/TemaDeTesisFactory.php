@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Tramites;
 
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Especialidad;

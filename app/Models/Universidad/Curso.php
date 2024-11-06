@@ -1,9 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
+use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\Matricula\Horario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Curso extends Model
 {
@@ -23,27 +28,27 @@ class Curso extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
     }
 
-    public function planesEstudio()
+    public function planesEstudio(): BelongsToMany
     {
         return $this->belongsToMany(PlanEstudio::class, 'plan_estudio_curso');
     }
 
-    public function requisitos()
+    public function requisitos(): HasMany
     {
         return $this->hasMany(Requisito::class, 'curso_id', 'id');
     }
 
-    public function horarios()
+    public function horarios(): HasMany
     {
         return $this->hasMany(Horario::class);
     }
 
-    public function estudiantesRiesgo()
+    public function estudiantesRiesgo(): HasMany
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_curso', 'id');
     }

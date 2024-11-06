@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
-use App\Models\Universidad\Curso;
-use App\Models\Universidad\Especialidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PlanEstudio extends Model
 {
@@ -17,17 +17,17 @@ class PlanEstudio extends Model
         'estado',
     ];
 
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
     }
 
-    public function semestres()
+    public function semestres(): BelongsToMany
     {
         return $this->belongsToMany(Semestre::class, 'plan_estudio_semestre');
     }
 
-    public function cursos()
+    public function cursos(): BelongsToMany
     {
         return $this->belongsToMany(Curso::class, 'plan_estudio_curso')
                     ->withPivot('nivel', 'creditosReq');

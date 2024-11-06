@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
-use App\Models\Especialidad;
+use App\Models\Universidad\Especialidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 

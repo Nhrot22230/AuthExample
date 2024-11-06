@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Authorization;
 
+use App\Http\Controllers\Controller;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Usuarios\Usuario;
 use Exception;

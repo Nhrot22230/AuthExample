@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Controllers\Usuarios;
 
-use App\Models\Usuario;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Solicitudes;
 
+use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Solicitudes\MatriculaAdicional;
 use App\Models\Universidad\Semestre;

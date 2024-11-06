@@ -2,16 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Area;
-use App\Models\Curso;
-use App\Models\Departamento;
-use App\Models\Especialidad;
-use App\Models\Facultad;
 use App\Models\Institucion;
-use App\Models\PlanEstudio;
-use App\Models\Seccion;
-use App\Models\Semestre;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
+use App\Models\Universidad\Semestre;
 use Illuminate\Database\Seeder;
 
 class UniversidadSeeder extends Seeder
@@ -20,14 +18,14 @@ class UniversidadSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {   
+    {
         Institucion::factory(5)->create();
         Facultad::factory(20)->create();
         Departamento::factory(30)->create();
         Especialidad::factory(100)->create();
         Seccion::factory(50)->create();
         Area::factory(10)->create();
-        
+
         $int_year_now = date('Y');
         $anhos = range(
             $int_year_now - 10,

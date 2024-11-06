@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Usuarios;
 
+use App\Models\Universidad\Facultad;
+use Database\Factories\Usuarios\AdministrativoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Administrativo extends Model
 {
-    /** @use HasFactory<\Database\Factories\AdministrativoFactory> */
+    /** @use HasFactory<AdministrativoFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -18,12 +21,12 @@ class Administrativo extends Model
         'facultad_id',
     ];
 
-    public function usuario()
+    public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class);
     }
 
-    public function facultad()
+    public function facultad(): BelongsTo
     {
         return $this->belongsTo(Facultad::class);
     }

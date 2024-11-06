@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Encuestas;
 
+use App\Http\Controllers\Controller;
 use App\Models\Encuestas\Encuesta;
 use App\Models\Encuestas\Pregunta;
 use App\Models\Encuestas\RespuestasPreguntaDocente;

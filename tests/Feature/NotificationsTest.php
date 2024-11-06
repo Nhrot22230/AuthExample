@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Notifications;
-use App\Models\Usuario;
+use App\Models\Usuarios\Notifications;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -34,7 +34,7 @@ class NotificationsTest extends TestCase
             'message_type' => 'info',
             'usuarios' => [$user2->id, $user3->id]
         ];
-        
+
         $response = $this->postJson('/api/v1/notifications/notify', $data);
         $response->assertStatus(200);
         $response->assertJsonCount(2);
@@ -65,7 +65,7 @@ class NotificationsTest extends TestCase
         ];
 
         $response = $this->postJson('/api/v1/notifications/notify', $data);
-        
+
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['title', 'message', 'message_type', 'usuarios']);
     }
@@ -77,7 +77,7 @@ class NotificationsTest extends TestCase
         ]);
 
         $response = $this->getJson('/api/v1/notifications/my-notifications');
-        
+
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'id' => $notification->id,
@@ -93,9 +93,9 @@ class NotificationsTest extends TestCase
         ]);
 
         $data = ['status' => true];
-        
+
         $response = $this->putJson("/api/v1/notifications/{$notification->id}", $data);
-        
+
         $response->assertStatus(200);
         $this->assertDatabaseHas('notifications', [
             'id' => $notification->id,
@@ -111,7 +111,7 @@ class NotificationsTest extends TestCase
         ]);
 
         $response = $this->putJson("/api/v1/notifications/{$notification->id}", []);
-        
+
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['status']);
     }
@@ -125,9 +125,9 @@ class NotificationsTest extends TestCase
         ]);
 
         $data = ['status' => true];
-        
+
         $response = $this->putJson("/api/v1/notifications/{$notification->id}", $data);
-        
+
         $response->assertStatus(404);
     }
 
@@ -138,7 +138,7 @@ class NotificationsTest extends TestCase
         ]);
 
         $response = $this->deleteJson("/api/v1/notifications/{$notification->id}");
-        
+
         $response->assertStatus(200);
         $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
     }
@@ -151,7 +151,7 @@ class NotificationsTest extends TestCase
         ]);
 
         $response = $this->deleteJson("/api/v1/notifications/{$notification->id}");
-        
+
         $response->assertStatus(404);
         $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
     }

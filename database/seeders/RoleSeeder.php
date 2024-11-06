@@ -2,15 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Area;
-use App\Models\Authorization\Permission;
-use App\Models\Authorization\Scope;
 use App\Models\Authorization\Role;
-use App\Models\Curso;
-use App\Models\Departamento;
-use App\Models\Especialidad;
-use App\Models\Facultad;
-use App\Models\Seccion;
+use App\Models\Authorization\Scope;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
 use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
@@ -28,7 +27,7 @@ class RoleSeeder extends Seeder
             ['name' => 'Curso', 'entity_type' => Curso::class],
             ['name' => 'Area', 'entity_type' => Area::class],
         ];
-        
+
         $roles = [
             'Administrador',
             'Secretario Académico',
@@ -42,7 +41,7 @@ class RoleSeeder extends Seeder
 
         foreach ($scopes as $scope) Scope::firstOrCreate($scope);
         foreach ($roles as $role) Role::firstOrCreate(['name' => $role]);
-        
+
         Role::findByName('Asistente')->scopes()->attach(Scope::all());
         Role::findByName('Secretario Académico')->scopes()->attach(Scope::where('name', 'Facultad')->first());
         Role::findByName('Coordinador')->scopes()->attach(Scope::where('name', 'Departamento')->first());

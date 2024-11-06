@@ -1,29 +1,32 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Matricula;
 
+use App\Models\Usuarios\Estudiante;
+use Database\Factories\Matricula\HorarioEstudianteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HorarioEstudiante extends Model
 {
-    /** @use HasFactory<\Database\Factories\HorarioEstudianteFactory> */
+    /** @use HasFactory<HorarioEstudianteFactory> */
     use HasFactory;
 
     protected $table = 'estudiante_horario';
-    
+
     protected $fillable = [
         'estudiante_id',
         'horario_id',
         'encuestaDocente',
     ];
 
-    public function estudiante()
+    public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Estudiante::class);
     }
 
-    public function horario()
+    public function horario(): BelongsTo
     {
         return $this->belongsTo(Horario::class);
     }

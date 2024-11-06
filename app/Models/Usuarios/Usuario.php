@@ -1,10 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Usuarios;
 
 use App\Models\Authorization\RoleScopeUsuario;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Matricula\Horario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
@@ -12,9 +16,9 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class Usuario extends Authenticatable implements JWTSubject
 {
-    use HasFactory, 
-    Notifiable, 
-    HasRoles, 
+    use HasFactory,
+    Notifiable,
+    HasRoles,
     HasPermissions;
 
     public function roleScopeUsuarios()
@@ -22,7 +26,7 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasMany(RoleScopeUsuario::class, 'usuario_id')->with('entity');
     }
 
-    public function notifications()
+    public function notifications(): HasMany
     {
         return $this->hasMany(Notifications::class);
     }
@@ -44,26 +48,26 @@ class Usuario extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-    public function docente()
+    public function docente(): HasOne
     {
         return $this->hasOne(Docente::class);
     }
 
-    public function estudiante()
+    public function estudiante(): HasOne
     {
         return $this->hasOne(Estudiante::class);
     }
 
-    public function administrativo()
+    public function administrativo(): HasOne
     {
         return $this->hasOne(Administrativo::class);
     }
 
-    public function horarios()
+    public function horarios(): HasManyThrough
     {
         return $this->hasManyThrough(Horario::class, JefePractica::class, 'usuario_id', 'id', 'id', 'horario_id');
     }
-    public function jefePracticas()
+    public function jefePracticas(): HasMany
     {
         return $this->hasMany(JefePractica::class, 'usuario_id', 'id');
     }
@@ -72,7 +76,7 @@ class Usuario extends Authenticatable implements JWTSubject
      *
      * @return mixed
      */
-    public function getJWTIdentifier()
+    public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
     }
@@ -82,7 +86,7 @@ class Usuario extends Authenticatable implements JWTSubject
      *
      * @return array
      */
-    public function getJWTCustomClaims()
+    public function getJWTCustomClaims(): array
     {
         // return [
         //     'roles' => $this->getRoleNames(),

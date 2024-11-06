@@ -1,13 +1,22 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Usuarios;
 
+use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\Matricula\Horario;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Seccion;
+use Database\Factories\Usuarios\DocenteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Docente extends Model
 {
-    /** @use HasFactory<\Database\Factories\DocenteFactory> */
+    /** @use HasFactory<DocenteFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -19,32 +28,32 @@ class Docente extends Model
         'area_id',
     ];
 
-    public function usuario()
+    public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class);
     }
 
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
     }
 
-    public function area()
+    public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class);
     }
 
-    public function seccion()
+    public function seccion(): BelongsTo
     {
         return $this->belongsTo(Seccion::class);
     }
 
-    public function horarios()
+    public function horarios(): BelongsToMany
     {
         return $this->belongsToMany(Horario::class, 'docente_horario');
     }
 
-    public function estudiantesRiesgo()
+    public function estudiantesRiesgo(): HasMany
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_docente', 'codigoDocente');
     }

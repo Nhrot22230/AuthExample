@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Usuarios;
 
 use App\Models\Universidad\Area;
 use App\Models\Universidad\Departamento;

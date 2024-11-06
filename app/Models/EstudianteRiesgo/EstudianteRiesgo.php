@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\EstudianteRiesgo;
 
 use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class EstudianteRiesgo extends Model
 {
@@ -31,32 +35,32 @@ class EstudianteRiesgo extends Model
     ];
 
     // Relaciones
-    public function estudiante()
+    public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Estudiante::class, 'codigo_estudiante', 'codigoEstudiante');
     }
 
-    public function curso()
+    public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class, 'codigo_curso', 'id');
     }
 
-    public function docente()
+    public function docente(): BelongsTo
     {
         return $this->belongsTo(Docente::class, 'codigo_docente', 'codigoDocente');
     }
 
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class, 'codigo_especialidad', 'id');
     }
 
-    public function informes()
+    public function informes(): HasMany
     {
         return $this->hasMany(InformeRiesgo::class, 'codigo_alumno_riesgo', 'id');
     }
 
-    public function usuario()
+    public function usuario(): HasOneThrough
     {
         return $this->hasOneThrough(
             Usuario::class,

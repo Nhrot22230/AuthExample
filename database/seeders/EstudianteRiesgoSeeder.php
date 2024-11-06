@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Estudiante;
-use App\Models\EstudianteRiesgo;
-use App\Models\InformeRiesgo;
-use App\Models\Especialidad;
-use App\Models\Curso;
-use App\Models\Docente;
+use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\EstudianteRiesgo\InformeRiesgo;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
 use Illuminate\Database\Seeder;
 
 class EstudianteRiesgoSeeder extends Seeder

@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Docente;
-use App\Models\Administrativo;
-use App\Models\Estudiante;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 

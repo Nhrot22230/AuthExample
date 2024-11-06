@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
-use App\Models\Universidad\Departamento;
-use App\Models\Universidad\Especialidad;
+use Database\Factories\Universidad\FacultadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Facultad extends Model
 {
-    /** @use HasFactory<\Database\Factories\FacultadFactory> */
+    /** @use HasFactory<FacultadFactory> */
     use HasFactory;
 
     protected $table = 'facultades';
@@ -20,12 +20,12 @@ class Facultad extends Model
         'anexo'
     ];
 
-    public function departamentos()
+    public function departamentos(): HasMany
     {
         return $this->hasMany(Departamento::class);
     }
 
-    public function especialidades()
+    public function especialidades(): HasMany
     {
         return $this->hasMany(Especialidad::class);
     }

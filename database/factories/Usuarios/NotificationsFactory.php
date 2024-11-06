@@ -1,12 +1,13 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Usuarios;
 
+use App\Models\Usuarios\Notifications;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Usuarios\Notifications>
+ * @extends Factory<Notifications>
  */
 class NotificationsFactory extends Factory
 {
@@ -15,7 +16,7 @@ class NotificationsFactory extends Factory
      *
      * @var string
      */
-    protected $model = \App\Models\Usuarios\Notifications::class;
+    protected $model = Notifications::class;
 
     /**
      * Define the model's default state.

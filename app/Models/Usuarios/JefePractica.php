@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Usuarios;
 
-use App\Models\Usuarios\Usuario;
+use App\Models\Matricula\Horario;
+use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Database\Eloquent\Model;
 
 class JefePractica extends Model

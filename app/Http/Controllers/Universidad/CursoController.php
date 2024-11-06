@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
-use App\Models\Curso;
-use App\Models\Horario;
+use App\Models\Matricula\Horario;
+use App\Models\Universidad\Curso;
 use Illuminate\Http\Request;
 
 class CursoController extends Controller

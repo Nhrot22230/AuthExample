@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Usuarios;
 
+use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\Matricula\Horario;
+use App\Models\Matricula\HorarioEstudiante;
 use App\Models\Universidad\Especialidad;
-use App\Models\Usuarios\Usuario;
-use Database\Factories\EstudianteFactory;
+use Database\Factories\Usuarios\EstudianteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

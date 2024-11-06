@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Models\Universidad;
 
-use App\Models\PlanEstudio;
-use App\Models\Especialidad;
-use App\Models\Curso;
-use App\Models\Semestre;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\PlanEstudio;
+use App\Models\Universidad\Semestre;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;

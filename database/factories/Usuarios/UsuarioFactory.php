@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Usuarios;
 
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,11 +18,11 @@ class UsuarioFactory extends Factory
      */
     protected $model = Usuario::class;
 
-    protected static string $hashedPassword;
+    protected static string $hashedPassword = "";
 
     public function definition(): array
     {
-        if (!self::$hashedPassword) {
+        if (self::$hashedPassword == "") {
             self::$hashedPassword = Hash::make('password');
         }
 

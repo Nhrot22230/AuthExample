@@ -2,8 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\TemaDeTesis;
+use App\Models\Tramites\TemaDeTesis;
 use Illuminate\Database\Seeder;
 
 class TemaDeTesisSeeder extends Seeder
@@ -12,6 +11,6 @@ class TemaDeTesisSeeder extends Seeder
     {
 
         $cantidad = 400;
-        TemaDeTesis::factory($cantidad)->create(); 
+        TemaDeTesis::factory($cantidad)->create();
     }
 }

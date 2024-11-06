@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
-use App\Models\Administrativo;
-use App\Models\Usuario;
+use App\Models\Usuarios\Administrativo;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

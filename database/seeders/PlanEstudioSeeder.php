@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Curso;
-use App\Models\Especialidad;
-use App\Models\PlanEstudio;
-use App\Models\Semestre;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\PlanEstudio;
+use App\Models\Universidad\Semestre;
 use Illuminate\Database\Seeder;
 
 class PlanEstudioSeeder extends Seeder
@@ -21,7 +20,7 @@ class PlanEstudioSeeder extends Seeder
         $plan_estudio = PlanEstudio::factory()->create([
             'especialidad_id' => $especialidad->id,
         ]);
-        
+
         // Obtener los cursos asociados a la especialidad
         $cursos = $especialidad->cursos;
 

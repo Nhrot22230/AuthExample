@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
-use App\Models\Universidad\Departamento;
 use App\Models\Usuarios\Docente;
+use Database\Factories\Universidad\SeccionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Seccion extends Model
 {
-    /** @use HasFactory<\Database\Factories\SeccionFactory> */
+    /** @use HasFactory<SeccionFactory> */
     use HasFactory;
 
     protected $table = 'secciones';
@@ -19,12 +21,12 @@ class Seccion extends Model
         'departamento_id'
     ];
 
-    public function departamento()
+    public function departamento(): BelongsTo
     {
         return $this->belongsTo(Departamento::class);
     }
 
-    public function docentes()
+    public function docentes(): HasMany
     {
         return $this->hasMany(Docente::class);
     }

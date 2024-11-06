@@ -2,14 +2,14 @@
 
 namespace Tests\Unit;
 
-use App\Models\Curso;
-use App\Models\Docente;
-use App\Models\Especialidad;
-use App\Models\Estudiante;
-use Tests\TestCase;
-use App\Models\EstudianteRiesgo;
-use App\Models\InformeRiesgo;
+use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\EstudianteRiesgo\InformeRiesgo;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class EstudianteRiesgoControllerTest extends TestCase
 {
@@ -75,7 +75,7 @@ class EstudianteRiesgoControllerTest extends TestCase
                     $informeRiesgoData['desempenho'] = null; // Sin desempeño si está pendiente
                     $previousReportResponded = false; // El informe actual no está respondido
                 }
-                
+
                 InformeRiesgo::factory()->create($informeRiesgoData);
             }
         }

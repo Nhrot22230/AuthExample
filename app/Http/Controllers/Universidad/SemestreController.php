@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
-use App\Models\Institucion;
-use App\Models\Semestre;
+use App\Models\Universidad\Semestre;
 use Illuminate\Http\Request;
 
 class SemestreController extends Controller

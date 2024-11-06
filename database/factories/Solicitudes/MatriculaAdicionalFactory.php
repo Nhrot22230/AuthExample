@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Solicitudes;
 
 use App\Models\Matricula\Horario;
 use App\Models\Solicitudes\MatriculaAdicional;
@@ -8,7 +8,7 @@ use App\Models\Usuarios\Estudiante;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Solicitudes\MatriculaAdicional>
+ * @extends Factory<MatriculaAdicional>
  */
 class MatriculaAdicionalFactory extends Factory
 {

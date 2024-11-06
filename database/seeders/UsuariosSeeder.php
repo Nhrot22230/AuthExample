@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Administrativo;
-use App\Models\Docente;
-use App\Models\Estudiante;
-use App\Models\Usuario;
-use App\Models\Area;
-use App\Models\Especialidad;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Administrativo;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -65,7 +65,7 @@ class UsuariosSeeder extends Seeder
             ?? Especialidad::factory()->create(['facultad_id' => 5]);
         $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first()
             ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
-        
+
         $director = Usuario::create([
             'nombre' => 'director',
             'apellido_paterno' => 'director',

@@ -2,20 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Horario;
-use App\Models\Estudiante;
-use App\Models\HorarioEstudiante;
-use App\Models\HorarioEstudianteJp;
-use App\Models\JefePractica;
-use App\Models\Docente;
-use App\Models\Usuario;
-use App\Models\Encuesta;
-
+use App\Models\Encuestas\Encuesta;
+use App\Models\Matricula\Horario;
+use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Matricula\HorarioEstudianteJp;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
+use App\Models\Usuarios\JefePractica;
+use App\Models\Usuarios\Usuario;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 
 class HorarioSeeder extends Seeder
 {
@@ -30,18 +27,18 @@ class HorarioSeeder extends Seeder
         $encuestas = Encuesta::all();
 
         foreach ($horarios as $horario) {
-            $encuestaDocente = $encuestas->where('tipo_encuesta', 'docente')->first() ?? 
+            $encuestaDocente = $encuestas->where('tipo_encuesta', 'docente')->first() ??
             Encuesta::factory()->create(['tipo_encuesta' => 'docente']);
-            $encuestaJefePractica = $encuestas->where('tipo_encuesta', 'jefe_practica')->first() ?? 
+            $encuestaJefePractica = $encuestas->where('tipo_encuesta', 'jefe_practica')->first() ??
             Encuesta::factory()->create(['tipo_encuesta' => 'jefe_practica']);
-        
+
             DB::table('encuesta_horario')->insert([
                 'encuesta_id' => $encuestaDocente->id,
                 'horario_id' => $horario->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        
+
             DB::table('encuesta_horario')->insert([
                 'encuesta_id' => $encuestaJefePractica->id,
                 'horario_id' => $horario->id,
@@ -49,7 +46,7 @@ class HorarioSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-        
+
 
         foreach ($horarios as $horario) {
             $assignedEstudiantes = $estudiantes->random(5);

@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Encuestas;
 
+use App\Models\Matricula\Horario;
 use App\Models\Universidad\Especialidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Encuesta extends Model
@@ -30,7 +32,7 @@ class Encuesta extends Model
         return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta') -> withPivot('es_modificacion');
     }
 
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
     }

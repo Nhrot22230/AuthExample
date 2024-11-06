@@ -1,11 +1,12 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Universidad;
 
+use App\Models\Universidad\Facultad;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Universidad\Facultad>
+ * @extends Factory<Facultad>
  */
 class FacultadFactory extends Factory
 {

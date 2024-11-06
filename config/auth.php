@@ -22,7 +22,7 @@ return [
     'defaults' => [
         'guard' => 'api',
         'passwords' => 'users',
-    ], 
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -95,7 +95,7 @@ return [
 
         'usuarios' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Usuario::class,
+            'model' => \App\Models\Usuarios\Usuario::class,
         ],
     ],
 

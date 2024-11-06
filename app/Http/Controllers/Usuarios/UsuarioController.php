@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUsuarioRequest;
-use App\Models\Usuario;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 

@@ -2,17 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\Area;
 use App\Models\Authorization\Permission;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
-use App\Models\Facultad;
-use App\Models\Especialidad;
-use App\Models\Curso;
-use App\Models\Departamento;
-use App\Models\Seccion;
-use App\Models\Usuario;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,7 +32,7 @@ class AuthzMiddlewareTest extends TestCase
         Scope::create(['name' => 'facultad', 'entity_type' => Facultad::class]);
         Scope::create(['name' => 'especialidad', 'entity_type' => Especialidad::class]);
     }
-    
+
     #[Test]
     public function it_allows_direct_access_to_especialidad()
     {
@@ -40,13 +40,13 @@ class AuthzMiddlewareTest extends TestCase
         $user = Usuario::factory()->create([
             'password' => Hash::make('password123')
         ]);
-        
+
         $role = Role::findByName('Docente');
         $scope = Scope::where('name', 'especialidad')->first();
-        
-        $role->scopes()->attach($scope);
+
+        $role->scopes->attach($scope);
         $user->assignRole($role);
-        
+
         RoleScopeUsuario::create([
             'role_id' => $role->id,
             'scope_id' => $scope->id,

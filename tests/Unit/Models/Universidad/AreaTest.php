@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models\Universidad;
 
-use App\Models\Area;
-use App\Models\Especialidad;
-use App\Models\Docente;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Docente;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;

@@ -1,12 +1,13 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Universidad;
 
+use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Universidad\Curso>
+ * @extends Factory<Curso>
  */
 class CursoFactory extends Factory
 {
@@ -46,7 +47,7 @@ class CursoFactory extends Factory
      * Define un estado personalizado para asociar cursos a una facultad específica.
      *
      * @param int $facultadId
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * @return Factory
      */
     public function paraFacultad(int $facultadId)
     {

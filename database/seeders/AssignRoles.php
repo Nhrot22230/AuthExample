@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Administrativo;
 use App\Models\Authorization\Permission;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
-use App\Models\Curso;
-use App\Models\Docente;
-use App\Models\Estudiante;
-use App\Models\Usuario;
+use App\Models\Universidad\Curso;
+use App\Models\Usuarios\Administrativo;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -40,11 +40,11 @@ class AssignRoles extends Seeder
 
         $estudiante_role = Role::findByName('Estudiante');
         $estudiante_role->syncPermissions(Permission::where('name', 'ver cursos')->get());
-        
-        
+
+
         $administrador = Usuario::where('email', 'admin@gmail.com')->first();
         $administrador->assignRole('Administrador');
-        
+
 
         $docentes = Docente::inRandomOrder()->limit(10)->get();
         foreach ($docentes as $docente) {

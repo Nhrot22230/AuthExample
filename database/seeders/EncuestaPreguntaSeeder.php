@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Encuesta;
-use App\Models\Pregunta;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Encuestas\Encuesta;
+use App\Models\Encuestas\Pregunta;
 use Illuminate\Database\Seeder;
 
 class EncuestaPreguntaSeeder extends Seeder

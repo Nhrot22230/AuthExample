@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Encuestas;
 
+use App\Models\Matricula\Horario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RespuestasPreguntaDocente extends Model
 {
@@ -27,7 +29,7 @@ class RespuestasPreguntaDocente extends Model
     }
 
     // Relación con Horario
-    public function horario()
+    public function horario(): BelongsTo
     {
         return $this->belongsTo(Horario::class);
     }

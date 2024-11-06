@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
-use App\Models\Docente;
-use App\Models\Especialidad;
-use App\Models\Seccion;
-use App\Models\Usuario;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Seccion;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

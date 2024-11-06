@@ -1,9 +1,11 @@
 <?php
 namespace App\Models\Authorization;
 
-use App\Models\Usuario;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class RoleScopeUsuario extends Model
 {
@@ -17,22 +19,22 @@ class RoleScopeUsuario extends Model
         'entity_id'
     ];
 
-    public function role()
+    public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
 
-    public function scope()
+    public function scope(): BelongsTo
     {
         return $this->belongsTo(Scope::class);
     }
 
-    public function usuario()
+    public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class);
     }
 
-    public function entity()
+    public function entity(): MorphTo
     {
         return $this->morphTo();
     }

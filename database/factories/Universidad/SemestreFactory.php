@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Universidad;
 
 use App\Models\Universidad\Semestre;
 use Illuminate\Database\Eloquent\Factories\Factory;

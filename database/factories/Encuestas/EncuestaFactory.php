@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Encuestas;
 
 use App\Models\Universidad\Especialidad;
 use Illuminate\Database\Eloquent\Factories\Factory;

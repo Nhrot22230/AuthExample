@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Universidad;
 
+use App\Http\Controllers\Controller;
 use App\Models\Universidad\PlanEstudio;
 use App\Models\Universidad\Requisito;
 use Illuminate\Http\Request;

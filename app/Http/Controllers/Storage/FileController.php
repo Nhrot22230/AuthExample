@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Storage;
 
+use App\Http\Controllers\Controller;
 use App\Models\Storage\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -66,11 +67,11 @@ class FileController extends Controller
     public function listFiles(Request $request)
     {
         $query = File::query();
-        
+
         if ($request->has('file_type')) {
             $query->where('file_type', $request->file_type);
         }
-        
+
         $files = $query->get();
         return response()->json($files, 200);
     }

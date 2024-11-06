@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\EstudianteRiesgo;
 
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\EstudianteRiesgo\InformeRiesgo;

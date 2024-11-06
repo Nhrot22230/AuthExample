@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\EstudianteRiesgo;
 
+use App\Http\Controllers\Controller;
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\EstudianteRiesgo\InformeRiesgo;
 use App\Models\Universidad\Curso;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Matricula;
 
 use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;

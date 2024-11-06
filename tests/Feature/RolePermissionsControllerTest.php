@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Authorization\Role;
 use App\Models\Authorization\Permission;
-use App\Models\Usuario;
+use App\Models\Authorization\Role;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ class RolePermissionsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         Role::factory()->create(['name' => 'Super Admin']);
         Role::findByName('Super Admin')->givePermissionTo(Permission::create(['name' => 'manage roles']));
         Role::findByName('Super Admin')->givePermissionTo(Permission::create(['name' => 'ver roles']));
@@ -134,7 +134,7 @@ class RolePermissionsControllerTest extends TestCase
         $role = Role::factory()->create();
 
         $response = $this->deleteJson("/api/v1/roles/{$role->id}");
-        
+
         $response->assertStatus(200);
         $response->assertJson(['message' => 'Rol eliminado']);
         $this->assertDatabaseMissing('roles', ['id' => $role->id]);

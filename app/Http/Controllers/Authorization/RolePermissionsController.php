@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Usuarios;
+namespace App\Http\Controllers\Authorization;
 
 use App\Http\Controllers\Controller;
 use App\Models\Authorization\Permission;
@@ -9,11 +9,12 @@ use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
 use App\Models\Usuarios\Usuario;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RolePermissionsController extends Controller
 {
-    public function listUserRoles($id)
+    public function listUserRoles($id): JsonResponse
     {
         $usuario = Usuario::find($id);
 
@@ -50,13 +51,13 @@ class RolePermissionsController extends Controller
     }
 
 
-    public function indexScopes()
+    public function indexScopes(): JsonResponse
     {
         $scopes = Scope::all();
         return response()->json($scopes, 200);
     }
 
-    public function indexRoles()
+    public function indexRoles(): JsonResponse
     {
         $search = request('search', '');
         $per_page = request('per_page', 10);
@@ -68,13 +69,13 @@ class RolePermissionsController extends Controller
         return response()->json($roles, 200);
     }
 
-    public function indexRolesScopes()
+    public function indexRolesScopes(): JsonResponse
     {
         $roles = Role::with('scopes')->get();
         return response()->json($roles, 200);
     }
 
-    public function indexPermissions()
+    public function indexPermissions(): JsonResponse
     {
         $search = request('search', '');
         $permissions = Permission::where('name', 'like', "%$search%")->get();
@@ -82,7 +83,7 @@ class RolePermissionsController extends Controller
         return response()->json($permissions, 200);
     }
 
-    public function showRole($id)
+    public function showRole($id): JsonResponse
     {
         $role = Role::with(['permissions', 'scopes'])->find($id);
 
@@ -93,7 +94,7 @@ class RolePermissionsController extends Controller
         return response()->json($role, 200);
     }
 
-    public function storeRole(Request $request)
+    public function storeRole(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|unique:roles,name',
@@ -116,7 +117,7 @@ class RolePermissionsController extends Controller
         return response()->json($role, 201);
     }
 
-    public function updateRole(Request $request, $id)
+    public function updateRole(Request $request, $id): JsonResponse
     {
         $role = Role::find($id);
         if (!$role) {
@@ -143,7 +144,7 @@ class RolePermissionsController extends Controller
         return response()->json($role, 200);
     }
 
-    public function destroyRole($id)
+    public function destroyRole($id): JsonResponse
     {
         $role = Role::find($id);
 
@@ -155,7 +156,7 @@ class RolePermissionsController extends Controller
         return response()->json(['message' => 'Rol eliminado'], 200);
     }
 
-    public function syncRoles(Request $request, $id)
+    public function syncRoles(Request $request, $id): JsonResponse
     {
         $request->validate([
             'roles' => 'required|array',
@@ -195,7 +196,7 @@ class RolePermissionsController extends Controller
         ], 200);
     }
 
-    public function syncPermissions(Request $request, $id)
+    public function syncPermissions(Request $request, $id): JsonResponse
     {
         $request->validate([
             'permissions' => 'required|array',
@@ -213,7 +214,7 @@ class RolePermissionsController extends Controller
         ], 200);
     }
 
-    public function authUserPermissions(Request $request)
+    public function authUserPermissions(Request $request): JsonResponse
     {
         $usuario = $request->authUser;
         $permissions = $usuario->getAllPermissions();

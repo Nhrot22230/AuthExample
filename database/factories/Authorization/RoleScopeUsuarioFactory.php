@@ -2,16 +2,16 @@
 
 namespace Database\Factories\Authorization;
 
-use App\Models\Area;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
-use App\Models\Curso;
-use App\Models\Departamento;
-use App\Models\Especialidad;
-use App\Models\Facultad;
-use App\Models\Seccion;
-use App\Models\Usuario;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

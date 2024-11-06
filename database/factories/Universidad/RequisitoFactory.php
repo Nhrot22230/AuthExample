@@ -1,13 +1,14 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Universidad;
 
 use App\Models\Universidad\Curso;
 use App\Models\Universidad\PlanEstudio;
+use App\Models\Universidad\Requisito;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Universidad\Requisito>
+ * @extends Factory<Requisito>
  */
 class RequisitoFactory extends Factory
 {

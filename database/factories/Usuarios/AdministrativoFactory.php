@@ -1,13 +1,14 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Usuarios;
 
 use App\Models\Universidad\Facultad;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Usuarios\Administrativo>
+ * @extends Factory<Administrativo>
  */
 class AdministrativoFactory extends Factory
 {

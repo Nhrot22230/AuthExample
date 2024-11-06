@@ -1,13 +1,14 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Matricula;
 
+use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
 use App\Models\Universidad\Semestre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Matricula\Horario>
+ * @extends Factory<Horario>
  */
 class HorarioFactory extends Factory
 {

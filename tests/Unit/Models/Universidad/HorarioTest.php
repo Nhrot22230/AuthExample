@@ -2,13 +2,13 @@
 
 namespace Tests\Unit\Models\Universidad;
 
-use App\Models\Horario;
-use App\Models\Curso;
-use App\Models\Semestre;
-use App\Models\Docente;
-use App\Models\JefePractica;
-use App\Models\Encuesta;
-use App\Models\HorarioEstudiante;
+use App\Models\Encuestas\Encuesta;
+use App\Models\Matricula\Horario;
+use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Semestre;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\JefePractica;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;

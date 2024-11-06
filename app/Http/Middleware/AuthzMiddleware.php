@@ -3,16 +3,15 @@
 namespace App\Http\Middleware;
 
 use App\Models\Authorization\RoleScopeUsuario;
-use App\Models\Curso;
-use App\Models\Especialidad;
-use App\Models\Facultad;
-use App\Models\Departamento;
-use App\Models\Seccion;
-use App\Models\Area;
+use App\Models\Universidad\Area;
+use App\Models\Universidad\Curso;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
 
 class AuthzMiddleware
 {
@@ -24,7 +23,7 @@ class AuthzMiddleware
         if (!$user) {
             return response()->json(['message' => 'Usuario no autenticado'], 403);
         }
-        
+
         if ($user->hasRole('Administrador')) {
             Log::channel('authz')->info("User: {$user->email} has ADMINISTRATOR access to {$permission} on {$entityType}");
             return $next($request);
@@ -35,7 +34,7 @@ class AuthzMiddleware
             ->where('entity_type', $entityType)
             ->where('entity_id', $entityId)
             ->exists();
-       
+
         if ($hasDirectAccess && $user->can($permission)) {
             Log::channel('authz')->info("User: {$user->email} has DIRECT access to {$permission} on {$entityType}");
             return $next($request);

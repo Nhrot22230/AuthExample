@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
+use App\Models\Matricula\Horario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Semestre extends Model
 {
@@ -17,12 +20,12 @@ class Semestre extends Model
         'estado',
     ];
 
-    public function horarios()
+    public function horarios(): HasMany
     {
         return $this->hasMany(Horario::class);
     }
 
-    public function planEstudio()
+    public function planEstudio(): BelongsToMany
     {
         return $this->belongsToMany(PlanEstudio::class, 'plan_estudio_semestre');
     }

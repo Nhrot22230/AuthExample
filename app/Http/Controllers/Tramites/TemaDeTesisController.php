@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Tramites;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tramites\TemaDeTesis;
 use Illuminate\Http\Request;
 

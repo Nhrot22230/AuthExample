@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Universidad;
 
-use App\Models\Universidad\Curso;
+use Database\Factories\Universidad\RequisitoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Requisito extends Model
 {
-    /** @use HasFactory<\Database\Factories\RequisitoFactory> */
+    /** @use HasFactory<RequisitoFactory> */
     use HasFactory;
 
     protected $fillable = [

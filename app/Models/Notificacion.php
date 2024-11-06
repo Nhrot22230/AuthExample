@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Estudiante;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

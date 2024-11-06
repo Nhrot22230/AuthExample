@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Encuestas;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EncuestaPregunta extends Model
 {
@@ -15,7 +16,7 @@ class EncuestaPregunta extends Model
         'pregunta_id',
     ];
 
-    public function encuesta()
+    public function encuesta(): BelongsTo
     {
         return $this->belongsTo(Encuesta::class);
     }

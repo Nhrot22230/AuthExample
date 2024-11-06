@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Tramites;
 
 use App\Models\Universidad\Especialidad;
 use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Estudiante;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TemaDeTesis extends Model
 {
@@ -25,31 +29,31 @@ class TemaDeTesis extends Model
     ];
 
     // Relación con estudiantes (muchos a muchos)
-    public function estudiantes()
+    public function estudiantes(): BelongsToMany
     {
         return $this->belongsToMany(Estudiante::class, 'estudiante_tema_tesis', 'tema_tesis_id', 'estudiante_id');
     }
 
     // Relación con docentes como asesores (muchos a muchos)
-    public function asesores()
+    public function asesores(): BelongsToMany
     {
         return $this->belongsToMany(Docente::class, 'asesor_tema_tesis', 'tema_tesis_id', 'docente_id');
     }
 
     // Relación con docentes como jurados (muchos a muchos)
-    public function jurados()
+    public function jurados(): BelongsToMany
     {
         return $this->belongsToMany(Docente::class, 'jurado_tema_tesis', 'tema_tesis_id', 'docente_id');
     }
 
     // Relación con Especialidad (uno a muchos)
-    public function especialidad()
+    public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
     }
 
     // Relación con Observaciones (uno a muchos)
-    public function observaciones()
+    public function observaciones(): HasMany
     {
         return $this->hasMany(Observacion::class);
     }

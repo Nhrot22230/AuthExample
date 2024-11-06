@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
-use App\Models\Especialidad;
-use App\Models\Estudiante;
-use App\Models\Usuario;
+use App\Models\Universidad\Especialidad;
+use App\Models\Usuarios\Estudiante;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
