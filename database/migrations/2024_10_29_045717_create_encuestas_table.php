@@ -35,6 +35,7 @@ return new class extends Migration
             $table->boolean('es_modificacion')->default(false);
             $table->timestamps();
         });
+        
 
         Schema::create('encuesta_horario', function (Blueprint $table) {
             $table->id();

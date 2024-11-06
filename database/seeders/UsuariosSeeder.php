@@ -61,10 +61,11 @@ class UsuariosSeeder extends Seeder
         $secretario->assignRole($secretarioRole);
 
 
-        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first() ?? Especialidad::factory()->create(['facultad_id' => 5]);
-        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first() ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
+        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first()
+            ?? Especialidad::factory()->create(['facultad_id' => 5]);
+        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first()
+            ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
         
-        // Crear usuario director de carrera
         $director = Usuario::create([
             'nombre' => 'director',
             'apellido_paterno' => 'director',
@@ -82,28 +83,40 @@ class UsuariosSeeder extends Seeder
             ]);
         }
 
-        // Crear el usuario director de carrera en Ingeniería de Sistemas
         Docente::create([
             'usuario_id' => $director->id,
             'codigoDocente' => 'director',
             'tipo' => 'TC',
             'especialidad_id' => $random_especialidad->id,
-            // 'seccion_id' => ,
             'area_id' => $random_area->id,
         ]);
 
         $directorRol = Role::findByName('Director de Carrera');
         $director->assignRole($directorRol);
 
-        // Factor de multiplicación para la creación masiva de registros
-        $factor = 30;
 
-        // Crear docentes en general
+        $alumno = Usuario::create([
+            'nombre' => 'estudiante',
+            'apellido_paterno' => 'estudiante',
+            'apellido_materno' => 'estudiante',
+            'email' => 'estudiante@gmail.com',
+            'password' => Hash::make('12345678'),
+            'estado' => 'activo',
+        ]);
+
+        Estudiante::create([
+            'usuario_id' => $alumno->id,
+            'codigoEstudiante' => 'estudiante',
+            'especialidad_id' => $random_especialidad->id,
+        ]);
+
+        $alumnoRol = Role::findByName('estudiante');
+        $alumno->assignRole($alumnoRol);
+
+        $factor = 1;
         Docente::factory(10 * $factor)->create();
-
-        // Crear docentes que pertenezcan a FACI
-        Docente::factory(10 * $factor)->fromFacultad(5)->create();
+        Docente::factory(2 * $factor)->fromFacultad(5)->create();
         Estudiante::factory(50 * $factor)->create();
-        Administrativo::factory(1 * $factor)->create();
+        Administrativo::factory(10 * $factor)->create();
     }
 }

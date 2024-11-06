@@ -22,16 +22,32 @@ class PlanEstudioSeeder extends Seeder
             'especialidad_id' => $especialidad->id,
         ]);
         
-        $cursos = Curso::inRandomOrder()->limit(20)->get() ?? Curso::factory(20)->create();
+        // Obtener los cursos asociados a la especialidad
+        $cursos = $especialidad->cursos;
 
-        foreach ($cursos as $curso) {
+        // Si hay menos de 20 cursos, crear los faltantes
+        if ($cursos->count() < 20) {
+            $cursosFaltantes = Curso::factory(20 - $cursos->count())->create([
+                'especialidad_id' => $especialidad->id
+            ]);
+            $cursos = $cursos->merge($cursosFaltantes);
+        }
+
+        // Seleccionar 20 cursos aleatorios
+        $cursosAleatorios = $cursos->random(min(20, $cursos->count()));
+
+        foreach ($cursosAleatorios as $curso) {
             $plan_estudio->cursos()->attach($curso, [
                 'nivel' => random_int(0, 10),
                 'creditosReq' => random_int(1, 20),
             ]);
         }
 
-        $semestres = Semestre::inRandomOrder()->limit(random_int(1,4))->get() ?? Semestre::factory(4)->create();
+        // Obtener o crear semestres
+        $semestres = Semestre::inRandomOrder()->limit(random_int(1, 4))->get();
+        if ($semestres->isEmpty()) {
+            $semestres = Semestre::factory(4)->create();
+        }
         $plan_estudio->semestres()->attach($semestres);
     }
 }

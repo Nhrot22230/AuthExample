@@ -11,33 +11,7 @@ class TemaDeTesisSeeder extends Seeder
     public function run(): void
     {
 
-        $cantidad = 10;
-        TemaDeTesis::factory($cantidad)->create(
-            [
-                'estado' => 'aprobado',
-            ]
-        );
-
-        TemaDeTesis::factory($cantidad)->create(
-            [
-                'estado' => 'aprobado',
-                'estado_jurado' => 'aprobado',
-
-            ]
-        );
-
-        TemaDeTesis::factory($cantidad)->create(
-            [
-                'estado' => 'aprobado',
-                'estado_jurado' => 'desaprobado',
-            ]
-        );
-
-        TemaDeTesis::factory($cantidad)->create(
-            [
-                'estado' => 'aprobado',
-                'estado_jurado' => 'pendiente',
-            ]
-        ); 
+        $cantidad = 400;
+        TemaDeTesis::factory($cantidad)->create(); 
     }
 }

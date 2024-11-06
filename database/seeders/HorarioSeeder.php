@@ -25,15 +25,15 @@ class HorarioSeeder extends Seeder
     public function run(): void
     {
         Horario::factory(50)->create();
-
         $horarios = Horario::all();
         $estudiantes = Estudiante::all();
-
         $encuestas = Encuesta::all();
 
         foreach ($horarios as $horario) {
-            $encuestaDocente = $encuestas->where('tipo_encuesta', 'docente')->random();
-            $encuestaJefePractica = $encuestas->where('tipo_encuesta', 'jefe_practica')->random();
+            $encuestaDocente = $encuestas->where('tipo_encuesta', 'docente')->first() ?? 
+            Encuesta::factory()->create(['tipo_encuesta' => 'docente']);
+            $encuestaJefePractica = $encuestas->where('tipo_encuesta', 'jefe_practica')->first() ?? 
+            Encuesta::factory()->create(['tipo_encuesta' => 'jefe_practica']);
         
             DB::table('encuesta_horario')->insert([
                 'encuesta_id' => $encuestaDocente->id,

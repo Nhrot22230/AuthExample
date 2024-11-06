@@ -45,25 +45,21 @@ class DocenteFactory extends Factory
     public function fromFacultad($facultadId)
     {
         return $this->state(function (array $attributes) use ($facultadId) {
-            // Obtiene una seccion aleatoria de la facultad especificada
             $random_seccion = Seccion::whereHas('departamento.facultad', function ($query) use ($facultadId) {
                 $query->where('id', $facultadId);
             })->inRandomOrder()->first();
 
             if (!$random_seccion) {
-                // Crea un departamento y sección si no existen para la facultad
                 $random_departamento = Departamento::where('facultad_id', $facultadId)->inRandomOrder()->first() 
                     ?? Departamento::factory()->create(['facultad_id' => $facultadId]);
                 $random_seccion = Seccion::factory()->create(['departamento_id' => $random_departamento->id]);
             }
 
-            // Obtiene una especialidad aleatoria de la facultad especificada
             $random_especialidad = Especialidad::where('facultad_id', $facultadId)->inRandomOrder()->first();
             if (!$random_especialidad) {
                 $random_especialidad = Especialidad::factory()->create(['facultad_id' => $facultadId]);
             }
 
-            // Obtiene un área aleatoria de la especialidad especificada
             $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first()
                 ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
 

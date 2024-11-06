@@ -253,8 +253,8 @@ class EstudianteRiesgoController extends Controller
     {
         try{
             $request->validate([
-                'CodigoProfesor'=> 'required',
-                'Especialidad' => 'required',
+                'CodigoProfesor'=> 'nullable',
+                'Especialidad' => 'nullable',
                 'Estado' => 'nullable',
                 'Riesgo' => 'nullable',
                 'Busqueda' => 'nullable',

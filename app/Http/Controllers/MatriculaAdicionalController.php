@@ -24,9 +24,13 @@ class MatriculaAdicionalController extends Controller
         'motivo_rechazo' => 'nullable|string',
     ]);
 
-    // Si la validación falla, retorna un error
+    // Si la validación falla, retorna un mensaje de error
     if ($validator->fails()) {
-        return response()->json($validator->errors(), 400);
+        // Crear un string con los campos requeridos
+        $missingFields = implode(', ', array_keys($validator->errors()->toArray()));
+        return response()->json([
+            'message' => 'Los siguientes campos son obligatorios: ' . $missingFields
+        ], 400);
     }
 
     // Crear una nueva matrícula adicional
@@ -42,8 +46,13 @@ class MatriculaAdicionalController extends Controller
     ]);
 
     // Retornar la respuesta
-    return response()->json($matricula, 201);
+    return response()->json([
+        'message' => 'Matrícula adicional creada con éxito.',
+        'matricula' => $matricula,
+    ], 201);
 }
+
+    
 
     public function getAll()
     {
@@ -296,6 +305,61 @@ public function getHorariosByCurso(Request $request, $cursoId)
     ];
 
     return response()->json($response);
+}
+
+public function rechazar(Request $request, $id)
+{
+    // Validar la solicitud
+    $request->validate([
+        'motivo_rechazo' => 'required|string|max:255',
+    ]);
+
+    // Encontrar la matrícula
+    $matricula = MatriculaAdicional::findOrFail($id);
+
+    // Cambiar el estado y actualizar el motivo de rechazo
+    $matricula->estado = 'Rechazado';
+    $matricula->motivo_rechazo = $request->motivo_rechazo;
+
+    // Guardar los cambios
+    $matricula->save();
+
+    return response()->json([
+        'message' => 'Matrícula rechazada con éxito.',
+        'matricula' => $matricula,
+    ]);
+}
+
+public function aprobarPorDC($id)
+{
+    $matricula = MatriculaAdicional::findOrFail($id);
+
+    // Verifica si el estado es 'Pendiente DC'
+    if ($matricula->estado !== 'Pendiente DC') {
+        return response()->json(['message' => 'El estado de la matrícula no es válido para esta acción.'], 400);
+    }
+
+    // Cambia el estado a 'Pendiente SA'
+    $matricula->estado = 'Pendiente SA';
+    $matricula->save();
+
+    return response()->json(['message' => 'Matrícula actualizada a Pendiente SA.']);
+}
+
+public function aprobarPorSA($id)
+{
+    $matricula = MatriculaAdicional::findOrFail($id);
+
+    // Verifica si el estado es 'Pendiente SA'
+    if ($matricula->estado !== 'Pendiente SA') {
+        return response()->json(['message' => 'El estado de la matrícula no es válido para esta acción.'], 400);
+    }
+
+    // Cambia el estado a 'Aprobado'
+    $matricula->estado = 'Aprobado';
+    $matricula->save();
+
+    return response()->json(['message' => 'Matrícula aprobada.']);
 }
 
 }

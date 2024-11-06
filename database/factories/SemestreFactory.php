@@ -17,12 +17,12 @@ class SemestreFactory extends Factory
      */
     public function definition(): array
     {
-        $anho = $this->faker->numberBetween(2010, 2025);
-        $periodo = $this->faker->randomElement(['0', '1', '2', '3']);
+        $anho = $this->faker->numberBetween(2022, 2025);
+        $periodo = $this->faker->randomElement(['0', '1', '2']);
         
         while (Semestre::where('anho', $anho)->where('periodo', $periodo)->exists()) {
-            $anho = $this->faker->numberBetween(2010, 2025);
-            $periodo = $this->faker->randomElement(['0', '1', '2', '3']);
+            $anho = $this->faker->numberBetween(2022, 2025);
+            $periodo = $this->faker->randomElement(['0', '1', '2']);
         }
 
         return [

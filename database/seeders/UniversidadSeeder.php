@@ -20,7 +20,7 @@ class UniversidadSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {
+    {   
         Institucion::factory(5)->create();
         Facultad::factory(20)->create();
         Departamento::factory(30)->create();

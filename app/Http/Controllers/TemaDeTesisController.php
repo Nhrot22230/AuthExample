@@ -16,7 +16,7 @@ class TemaDeTesisController extends Controller
         $facultad_id = $request->input('facultad_id', null);
         $especialidad_id = $request->input('especialidad_id', null);
         $estado_jurado = $request->input('estado_jurado', null);
-
+        $rol = $request->input('rol', null); // Nuevo parámetro para el rol
 
         $query = TemaDeTesis::with([
             'especialidad',
@@ -34,19 +34,20 @@ class TemaDeTesisController extends Controller
             })
             ->when($estado_jurado, function ($query) use ($estado_jurado) {
                 $query->where('estado_jurado', $estado_jurado);
-            });
+            })
+            ->when($rol === 'director', function ($query) {
+                $query->whereIn('estado_jurado', ['vencido', 'desaprobado', 'aprobado', 'enviado', 'pendiente']);
+            })
+            ->where('estado', 'aprobado');
 
-
-
-        // Si hay términos de búsqueda, dividir y aplicar cada término en los campos correspondientes
+        // Filtrar por términos de búsqueda
         if ($search) {
             $terms = explode(' ', $search);
-
             foreach ($terms as $term) {
                 $query->where(function ($q) use ($term) {
                     $q->where('titulo', 'like', "%$term%")
                         ->orWhere('resumen', 'like', "%$term%")
-                        ->orWhere('estado_jurado', 'like', "%$term%") // Búsqueda en el campo estado_jurado
+                        ->orWhere('estado_jurado', 'like', "%$term%")
                         ->orWhereHas('estudiantes', function ($q) use ($term) {
                             $q->where('codigoEstudiante', 'like', "%$term%")
                                 ->orWhereHas('usuario', function ($q) use ($term) {
@@ -63,6 +64,7 @@ class TemaDeTesisController extends Controller
 
         return response()->json($temasDeTesis, 200);
     }
+
 
     // Método para mostrar un tema de tesis específico
     public function show($id)

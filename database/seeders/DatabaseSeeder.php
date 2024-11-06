@@ -20,9 +20,8 @@ class DatabaseSeeder extends Seeder
         $this->call(TemaDeTesisSeeder::class);
         $this->call(PlanEstudioSeeder::class);
         $this->call(EstudianteRiesgoSeeder::class);
-        $this->call(HorariosSeeder::class);
-        $this->call(MatriculaAdicionalSeeder::class,);
-        //$this->call(HorarioSeeder::class);
+        $this->call(HorarioSeeder::class);
+        $this->call(MatriculaAdicionalSeeder::class);
         $this->call(EncuestaSeeder::class);
         $this->call(PreguntaSeeder::class);
         $this->call(EncuestaPreguntaSeeder::class);
