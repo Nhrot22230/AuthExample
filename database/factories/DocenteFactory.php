@@ -16,7 +16,6 @@ class DocenteFactory extends Factory
 
     public function definition(): array
     {
-        // Lógica por defecto sin filtro de facultad
         $random_seccion = Seccion::inRandomOrder()->first();
         if (!$random_seccion) {
             $random_departamento = Departamento::inRandomOrder()->first() ?? Departamento::factory()->create();
@@ -24,13 +23,9 @@ class DocenteFactory extends Factory
         }
 
         $facultad = $random_seccion->departamento->facultad;
-        $random_especialidad = Especialidad::where('facultad_id', $facultad->id)->inRandomOrder()->first();
+        $random_especialidad = Especialidad::where('facultad_id', $facultad->id)->inRandomOrder()->first() ?? $random_especialidad = Especialidad::factory()->create(['facultad_id' => $facultad->id]);        
 
-        if (!$random_especialidad) {
-            $random_especialidad = Especialidad::factory()->create(['facultad_id' => $facultad->id]);
-        }
-
-        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first();
+        $random_area = Area::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first() ?? Area::factory()->create(['especialidad_id' => $random_especialidad->id]);
 
         return [
             'usuario_id' => Usuario::factory(),
