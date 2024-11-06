@@ -8,10 +8,24 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        api: __DIR__.'/../routes/api.php',
-        web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
+        using: function () {
+            $dir = new RecursiveDirectoryIterator(base_path('routes/api'));
+            $iterator = new RecursiveIteratorIterator($dir);
+            $files = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+
+            foreach ($files as $file) {
+                Route::middleware([JWTMiddleware::class, 'api'])
+                    ->prefix('api/v1')
+                    ->group($file[0]);
+            }
+
+            Route::prefix('api')
+                ->group(base_path('routes/auth/authentication.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/web.php'));
+        }
     )
     ->withMiddleware(function (Middleware $middleware) {
         //

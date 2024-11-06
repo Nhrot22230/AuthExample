@@ -44,7 +44,7 @@ class AuthzMiddlewareTest extends TestCase
         $role = Role::findByName('Docente');
         $scope = Scope::where('name', 'especialidad')->first();
 
-        $role->scopes->attach($scope);
+        $role->scopes([])->attach($scope);
         $user->assignRole($role);
 
         RoleScopeUsuario::create([

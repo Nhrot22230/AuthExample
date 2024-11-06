@@ -26,30 +26,16 @@ class RoleScopeUsuarioFactory extends Factory
      */
     public function definition(): array
     {
-        do {
-            $role = Role::factory()->create();
-            $scope = Scope::factory()->create();
-            $usuario = Usuario::factory()->create();
+        $entityType = $this->faker->randomElement([
+            Departamento::class,
+            Curso::class,
+            Area::class,
+            Facultad::class,
+            Especialidad::class,
+            Seccion::class,
+        ]);
 
-            $entityType = $this->faker->randomElement([
-                Departamento::class,
-                Curso::class,
-                Area::class,
-                Facultad::class,
-                Especialidad::class,
-                Seccion::class,
-            ]);
-
-            $entity = $entityType::factory()->create();
-
-            $exists = RoleScopeUsuario::where('role_id', $role->id)
-                ->where('scope_id', $scope->id)
-                ->where('usuario_id', $usuario->id)
-                ->where('entity_id', $entity->id)
-                ->where('entity_type', $entityType)
-                ->exists();
-        } while ($exists);
-
+        $entity = $entityType::factory()->create();
         return [
             'role_id' => Role::factory(),
             'scope_id' => Scope::factory(),

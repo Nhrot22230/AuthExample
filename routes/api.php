@@ -1,9 +1,8 @@
 <?php
 
-$dir = new RecursiveDirectoryIterator(__DIR__.'/api');
-$iterator = new RecursiveIteratorIterator($dir);
-$regex = new RegexIterator($iterator, '/^.+\.php$/i', RegexIterator::GET_MATCH);
+use Illuminate\Support\Facades\Route;
 
-foreach ($regex as $files) {
-    require_once $files[0];
-}
+Route::get("/",function () {
+    return response()->json(["message" => "Hello World!"]);
+});
+
