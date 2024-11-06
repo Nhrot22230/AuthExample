@@ -2,6 +2,7 @@
 
 namespace App\Models\Authorization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 class Role extends SpatieRole
@@ -13,7 +14,7 @@ class Role extends SpatieRole
         'guard_name',
     ];
 
-    public function scopes()
+    public function scopes(): BelongsToMany
     {
         return $this->belongsToMany(Scope::class, 'role_scopes', 'role_id', 'scope_id');
     }

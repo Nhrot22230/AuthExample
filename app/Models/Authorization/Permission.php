@@ -12,10 +12,10 @@ class Permission extends SpatiePermission
     protected $fillable = [
         'name',
         'guard_name',
-        'category_id',
+        'permission_category_id',
     ];
 
-    public function category()
+    public function permission_category()
     {
         return $this->belongsTo(PermissionCategory::class);
     }

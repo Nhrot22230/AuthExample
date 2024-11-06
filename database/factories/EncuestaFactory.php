@@ -13,7 +13,7 @@ class EncuestaFactory extends Factory
     public function definition(): array
 
     {
-        $especialidadRandom = Especialidad::where('facultad_id', 5)->inRandomOrder()->first();
+        $especialidadRandom = Especialidad::inRandomOrder()->first() ?? Especialidad::factory()->create();
         return [
             'fecha_inicio' => $this->faker->date(),
             'fecha_fin' => $this->faker->date(),

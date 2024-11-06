@@ -33,7 +33,7 @@ class RequisitoFactory extends Factory
                     'especialidad_id' => $random_plan_estudio->especialidad_id,
                 ]
             )->create(),
-            'notaMinima' => $this->faker->random_int(0, 11),
+            'notaMinima' => $this->faker->numberBetween(0, 11),
         ];
     }
 }

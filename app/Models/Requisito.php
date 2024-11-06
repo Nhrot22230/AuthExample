@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Requisito extends Model
 {
@@ -18,13 +19,18 @@ class Requisito extends Model
         'notaMinima',
     ];
 
-    public function curso()
+    public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
     }
 
-    public function cursoRequisito()
+    public function cursoRequisito(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
+    }
+
+    public function planEstudio(): BelongsTo
+    {
+        return $this->belongsTo(PlanEstudio::class);
     }
 }

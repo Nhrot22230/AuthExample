@@ -15,5 +15,6 @@ class Notifications extends Model
         'message_type',
         'usuario_id',
         'status',
+        'url_path'
     ];
 }

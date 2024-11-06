@@ -5,11 +5,10 @@ namespace Database\Factories;
 use App\Models\Semestre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Semestre>
- */
 class SemestreFactory extends Factory
 {
+    protected $model = Semestre::class;
+
     /**
      * Define the model's default state.
      *
@@ -17,13 +16,15 @@ class SemestreFactory extends Factory
      */
     public function definition(): array
     {
-        $anho = $this->faker->numberBetween(2022, 2025);
-        $periodo = $this->faker->randomElement(['0', '1', '2']);
-        
-        while (Semestre::where('anho', $anho)->where('periodo', $periodo)->exists()) {
-            $anho = $this->faker->numberBetween(2022, 2025);
+        static $combinations = [];
+
+        do {
+            $anho = $this->faker->year;
             $periodo = $this->faker->randomElement(['0', '1', '2']);
-        }
+            $uniqueKey = "$anho-$periodo";
+        } while (in_array($uniqueKey, $combinations));
+
+        $combinations[] = $uniqueKey;
 
         return [
             'anho' => $anho,

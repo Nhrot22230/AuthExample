@@ -14,9 +14,7 @@ class HorarioFactory extends Factory
 {
     public function definition(): array
     {
-        // Selecciona un curso y un semestre al azar de la base de datos
-        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first();
-        $curso = Curso::where('especialidad_id', $random_especialidad->id)->inRandomOrder()->first();
+        $curso = Curso::inRandomOrder()->first() ?? Curso::factory()->create();
         $semestre = Semestre::inRandomOrder()->first();
 
         return [

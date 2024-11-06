@@ -55,17 +55,17 @@ class PermissionSeeder extends Seeder
             ['name' => 'usuarios',                          'access_path' => AccessPath::PERSONAS],
         ];
 
-        foreach ($permission_categories as $permission_category) {
-            $category = PermissionCategory::create($permission_category);
+        foreach ($permission_categories as $pc) {
+            $permission_category = PermissionCategory::create($pc);
             
             Permission::create([
-                'name' => 'ver ' . $permission_category['name'],
-                'category_id' => $category->id
+                'name' => 'ver ' . $pc['name'],
+                'permission_category_id' => $permission_category->id
             ]);
 
             Permission::create([
-                'name' => 'manage ' . $permission_category['name'],
-                'category_id' => $category->id
+                'name' => 'manage ' . $pc['name'],
+                'permission_category_id' => $permission_category->id
             ]);
         }
     }

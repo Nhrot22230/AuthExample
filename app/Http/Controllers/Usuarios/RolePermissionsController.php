@@ -110,7 +110,7 @@ class RolePermissionsController extends Controller
         }
 
         if ($request->has('scopes')) {
-            $role->scopes()->sync($request->scopes);
+            $role->scopes->sync($request->scopes);
         }
 
         return response()->json($role, 201);
@@ -221,10 +221,10 @@ class RolePermissionsController extends Controller
             return [
                 'id' => $permission->id,
                 'name' => $permission->name,
-                'category' => PermissionCategory::find($permission->category_id),
+                'permission_category' => PermissionCategory::find($permission->permission_category_id),
             ];
         });
-        $uniqueCategories = $response->pluck('category')->unique('access_path')->values()->pluck('access_path');
+        $uniqueCategories = $response->pluck('permission_category')->unique('access_path')->values()->pluck('access_path');
         return response()->json([
             'permissions' => $response,
             'access_paths' => $uniqueCategories,

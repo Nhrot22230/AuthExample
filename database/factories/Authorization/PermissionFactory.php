@@ -27,7 +27,7 @@ class PermissionFactory extends Factory
         return [
             'name' => $this->faker->name,
             'guard_name' => 'api',
-            'category_id' => PermissionCategory::factory(),
+            'permission_category_id' => PermissionCategory::factory(),
         ];
     }
 }

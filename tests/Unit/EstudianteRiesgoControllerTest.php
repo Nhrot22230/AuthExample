@@ -76,16 +76,12 @@ class EstudianteRiesgoControllerTest extends TestCase
                     $previousReportResponded = false; // El informe actual no está respondido
                 }
                 
-                dump($informeRiesgoData);
                 InformeRiesgo::factory()->create($informeRiesgoData);
             }
         }
 
         // Simular la llamada a tu endpoint
         $response = $this->actingAs($this->getRandomUser())->get('/api/v1/estudiantesRiesgo/obtener_estadisticas_informes?IdEspecialidad=' . $especialidad->id);
-
-        // Imprimir la respuesta JSON
-        dump($response->json()); // Esto mostrará la respuesta JSON y continuará la ejecución
 
         // Verificar que la respuesta es correcta
         $response->assertStatus(200)

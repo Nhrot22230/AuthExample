@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('message_type', ['info', 'warning', 'error', 'success']);
             $table->foreignId('usuario_id')->constrained('usuarios');
             $table->boolean('status')->default(false);
+            $table->string('url_path')->default('');
             $table->timestamps();
         });
     }

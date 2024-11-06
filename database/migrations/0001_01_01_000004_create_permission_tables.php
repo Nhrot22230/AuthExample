@@ -33,7 +33,7 @@ return new class extends Migration
             $table->unique(['name', 'guard_name']);
 
             /* Custom fields */
-            $table->foreignId('category_id')->nullable()->constrained('permission_categories')->onDelete('set null');
+            $table->foreignId('permission_category_id')->nullable()->constrained('permission_categories')->onDelete('set null');
             /* End custom fields */
         });
 

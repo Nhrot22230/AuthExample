@@ -9,7 +9,13 @@ class RoleScopeUsuario extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['role_id', 'scope_id', 'usuario_id', 'entity_id', 'entity_type'];
+    protected $fillable = [
+        'role_id',
+        'scope_id',
+        'usuario_id',
+        'entity_type',
+        'entity_id'
+    ];
 
     public function role()
     {
@@ -28,6 +34,6 @@ class RoleScopeUsuario extends Model
 
     public function entity()
     {
-        return $this->morphTo()->withDefault();
+        return $this->morphTo();
     }
 }

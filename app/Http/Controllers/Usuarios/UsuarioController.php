@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Usuarios;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateUsuarioRequest;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,19 +22,19 @@ class UsuarioController extends Controller
             'administrativo',
             'roles.permissions',
         ])
-        ->where(function ($query) use ($search) {
-            $query->where('nombre', 'like', "%$search%")
-                ->orWhere('apellido_paterno', 'like', "%$search%")
-                ->orWhere('apellido_materno', 'like', "%$search%")
-                ->orWhere('email', 'like', "%$search%");
-        })
-        ->when($tipoUsuario, fn($query) => $query->whereHas($tipoUsuario))
-        ->paginate($perPage)
-        ->appends([
-            'tipo_usuario' => $tipoUsuario,
-            'search' => $search,
-            'per_page' => $perPage,
-        ]);
+            ->where(function ($query) use ($search) {
+                $query->where('nombre', 'like', "%$search%")
+                    ->orWhere('apellido_paterno', 'like', "%$search%")
+                    ->orWhere('apellido_materno', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            })
+            ->when($tipoUsuario, fn($query) => $query->whereHas($tipoUsuario))
+            ->paginate($perPage)
+            ->appends([
+                'tipo_usuario' => $tipoUsuario,
+                'search' => $search,
+                'per_page' => $perPage,
+            ]);
         return response()->json($usuarios, 200);
     }
 
@@ -66,46 +67,44 @@ class UsuarioController extends Controller
         $usuario->email = $validatedData['email'];
         $usuario->password = Hash::make($validatedData['password']);
         $usuario->estado = $validatedData['estado'] ?? 'activo';
-        $usuario->google_id = $validatedData['google_id'];
-        $usuario->picture = $validatedData['picture'];
+        $usuario->google_id = $validatedData['google_id'] ?? null;
+        $usuario->picture = $validatedData['picture'] ?? null;
         $usuario->save();
 
         return response()->json(['message' => 'Usuario creado exitosamente', 'usuario' => $usuario], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateUsuarioRequest $request, $id)
     {
         $usuario = Usuario::find($id);
         if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'nullable|string|max:255',
-            'apellido_materno' => 'nullable|string|max:255',
-            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->id,
-            'password' => 'nullable|string|min:8',
-            'estado' => 'nullable|string|max:50',
-            'google_id' => 'nullable|string|max:255',
-            'picture' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'nombre' => 'nullable|string|max:255',
+                'apellido_paterno' => 'nullable|string|max:255',
+                'apellido_materno' => 'nullable|string|max:255',
+                'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->id,
+                'password' => 'nullable|string|min:8',
+                'estado' => 'nullable|string|max:50',
+                'google_id' => 'nullable|string|max:255',
+                'picture' => 'nullable|string|max:255',
+            ]);
 
-        $usuario->nombre = $validatedData['nombre'];
-        $usuario->apellido_paterno = $validatedData['apellido_paterno'];
-        $usuario->apellido_materno = $validatedData['apellido_materno'];
-        $usuario->email = $validatedData['email'];
-        if (!empty($validatedData['password'])) {
-            $usuario->password = Hash::make($validatedData['password']);
+            if (!empty($validatedData['password'])) {
+                $validatedData['password'] = Hash::make($validatedData['password']);
+            } else {
+                unset($validatedData['password']);
+            }
+            $usuario->update($validatedData);
+            return response()->json(['message' => 'Usuario actualizado exitosamente', 'usuario' => $usuario], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al actualizar el usuario: '. $e->getMessage()], 400);
         }
-
-        $usuario->estado = $validatedData['estado'] ?? $usuario->estado;
-        $usuario->google_id = $validatedData['google_id'] ?? $usuario->google_id;
-        $usuario->picture = $validatedData['picture'] ?? $usuario->picture;
-
-        $usuario->save();
-        return response()->json(['message' => 'Usuario actualizado exitosamente', 'usuario' => $usuario], 200);
     }
+
 
     public function destroy($id)
     {

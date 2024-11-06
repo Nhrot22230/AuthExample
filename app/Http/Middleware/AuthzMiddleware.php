@@ -18,7 +18,7 @@ class AuthzMiddleware
 {
     public function handle(Request $request, Closure $next, $permission, $entityType)
     {
-        Log::channel('authz')->info('Checking permission: ' . $permission . ' on ' . $entityType);
+        Log::channel('authz')->info("Checking permission: {$permission} on {$entityType}");
 
         $user = $request->authUser;
         if (!$user) {
@@ -26,7 +26,7 @@ class AuthzMiddleware
         }
         
         if ($user->hasRole('Administrador')) {
-            Log::channel('authz')->info('User: ' . $user->email . ' has ADMINISTRATOR access to ' . $permission . ' on ' . $entityType);
+            Log::channel('authz')->info("User: {$user->email} has ADMINISTRATOR access to {$permission} on {$entityType}");
             return $next($request);
         }
 
@@ -37,14 +37,14 @@ class AuthzMiddleware
             ->exists();
        
         if ($hasDirectAccess && $user->can($permission)) {
-            Log::channel('authz')->info('User: ' . $user->email . ' has DIRECT access to ' . $permission . ' on ' . $entityType);
+            Log::channel('authz')->info("User: {$user->email} has DIRECT access to {$permission} on {$entityType}");
             return $next($request);
         }
 
         $allUserAccess = RoleScopeUsuario::where('usuario_id', $user->id)->get();
         foreach ($allUserAccess as $access) {
             if ($this->checkHierarchyAccess($access, $entityType, $entityId)) {
-                Log::channel('authz')->info('User: ' . $user->email . ' has HIERARCHY access to ' . $permission . ' on ' . $entityType);
+                Log::channel('authz')->info("User: {$user->email} has HIERARCHY access to {$permission} on {$entityType}");
                 return $next($request);
             }
         }

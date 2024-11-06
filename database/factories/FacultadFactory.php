@@ -29,13 +29,12 @@ class FacultadFactory extends Factory
                            $this->faker->randomElement($grupo_2) . ' ' .
                            $this->faker->randomElement($grupo_3);
 
-        // Abreviatura de la facultad son las letras mayusculas del nombre de la facultad
         $abreviatura = strtoupper(preg_replace('/[^A-Z]/', '', $nombre_facultad));
         
         return [
             'nombre' => $nombre_facultad,
             'abreviatura' => $abreviatura,
-            'anexo' => $this->faker->word,
+            'anexo' => $this->faker->randomNumber(5)
         ];
     }
 }

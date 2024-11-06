@@ -214,7 +214,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-Route::middleware(JWTMiddleware::class, 'api')->group(function () {
+Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/me', [AuthController::class, 'me']);

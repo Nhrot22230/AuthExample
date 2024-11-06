@@ -27,20 +27,3 @@ class Semestre extends Model
         return $this->belongsToMany(PlanEstudio::class, 'plan_estudio_semestre');
     }
 }
-
-// Semestre: 2024-1, 1 enero, 5 julio
-
-// Director de carrera crea un semestre -> no es precisa
-
-
-
-// TODO: Curso y semestre (? 
-
-
-// Gestion de plan de estudios
-// Planes de estudio -> prototipos 
-// Director de carrera -> asigna cursos a estos prototipos
-// Director de carrera -> asigna un requisitos a estos prototipos
-// Director de carrera -> asigna un semestre a estos prototipos
-
-
