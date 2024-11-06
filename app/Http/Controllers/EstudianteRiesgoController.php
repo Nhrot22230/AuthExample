@@ -255,9 +255,9 @@ class EstudianteRiesgoController extends Controller
             $request->validate([
                 'CodigoProfesor'=> 'required',
                 'Especialidad' => 'required',
-                'Estado' => 'required',
-                'Riesgo' => 'required',
-                'Busqueda' => 'required',
+                'Estado' => 'nullable',
+                'Riesgo' => 'nullable',
+                'Busqueda' => 'nullable',
             ]);
         } catch(ValidationException $e){
             Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);

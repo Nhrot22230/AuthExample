@@ -10,7 +10,7 @@ enum AccessPath: string
     case CURSOS                             = 'Cursos';
     case JEFE_PRACTICA                      = 'JefePractica';
     case JURADOS_TESIS_SECRETARIO_ACADEMICO = 'Jurado tesis secretario academico';
-    case MATRICULAS_ADICIONALES              = 'MatriculasAdicionales';
+    case MATRICULAS_ADICIONALES             = 'MatriculasAdicionales';
     case MIS_CANDIDATURAS                   = 'MisCandidaturas';
     case MIS_CURSOS                         = 'MisCursos';
     case MIS_ENCUESTAS                      = 'MisEncuestas';
@@ -18,8 +18,6 @@ enum AccessPath: string
     case PEDIDOS_HORARIOS                   = 'PedidosHorarios';
     case PERSONAS                           = 'Personas';
     case PLAN_ESTUDIOS                      = 'PlanDeEstudios';
-    case PREGUNTAS_FRECUENTES               = 'PreguntasFrecuentes';
-    case PREGUNTAS_FRECUENTES_ADMIN         = 'PreguntasFrecuentesAdmin';
     case ROOT                               = '/';
     case SEMESTRES                          = 'Semestres';
     case SOLICITUDES_ENCUENTAS              = 'SolicitudesEncuestas';

@@ -160,7 +160,7 @@ class RolePermissionsController extends Controller
         $request->validate([
             'roles' => 'required|array',
             'roles.*.role_id' => 'required|exists:roles,id',
-            'roles.*.scopes' => 'required|array',
+            'roles.*.scopes' => 'nullable|array',
             'roles.*.scopes.*.scope_id' => 'required|exists:scopes,id',
             'roles.*.scopes.*.entities' => 'required|array',
             'roles.*.scopes.*.entities.*' => 'required|integer|min:1',
