@@ -16,22 +16,14 @@ class SemestreFactory extends Factory
      */
     public function definition(): array
     {
-        static $combinations = [];
-
-        do {
-            $anho = $this->faker->year;
-            $periodo = $this->faker->randomElement(['0', '1', '2']);
-            $uniqueKey = "$anho-$periodo";
-        } while (in_array($uniqueKey, $combinations));
-
-        $combinations[] = $uniqueKey;
+        $semestre = Semestre::orderBy('anho', 'desc')->first();
 
         return [
-            'anho' => $anho,
-            'periodo' => $periodo,
+            'anho' => $semestre ? $semestre->anho + 1 : $this->faker->year(),
+            'periodo' => $this->faker->numberBetween(0, 2),
             'fecha_inicio' => $this->faker->date(),
             'fecha_fin' => $this->faker->date(),
-            'estado' => $this->faker->randomElement(['activo', 'inactivo']),
+            'estado' => 'inactivo',
         ];
     }
 }

@@ -18,8 +18,6 @@ class AreaFactory extends Factory
      */
     public function definition(): array
     {
-        $random_especialidad = Especialidad::inRandomOrder()->first() ?? Especialidad::factory()->create();
-
         $grupo_1 = ['Gestión', 'Desarrollo', 'Investigación', 'Estudios', 'Administración', 'Producción'];
         $grupo_2 = ['Ambiental', 'Social', 'Tecnológica', 'Científica', 'Educativa', 'Salud'];
         $grupo_3 = ['Avanzada', 'Aplicada', 'Sostenible', 'Experimental', 'Interdisciplinaria', 'Teórica'];
@@ -41,7 +39,7 @@ class AreaFactory extends Factory
         return [
             'nombre' => $nombre_area,
             'descripcion' => $descripcion,
-            'especialidad_id' => $random_especialidad->id,
+            'especialidad_id' => Especialidad::factory(),
         ];
     }
 }

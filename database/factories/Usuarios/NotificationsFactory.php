@@ -29,7 +29,7 @@ class NotificationsFactory extends Factory
             'title' => $this->faker->sentence,
             'message' => $this->faker->paragraph,
             'message_type' => $this->faker->randomElement(['info', 'warning', 'error', 'success']),
-            'usuario_id' => Usuario::inRandomOrder()->first() ?? Usuario::factory(),
+            'usuario_id' => Usuario::factory(),
             'status' => false,
         ];
     }

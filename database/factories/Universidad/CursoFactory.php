@@ -42,22 +42,4 @@ class CursoFactory extends Factory
             'me' => $this->faker->randomElement([0, 1, 2, 3, 4, 5]),
         ];
     }
-
-    /**
-     * Define un estado personalizado para asociar cursos a una facultad específica.
-     *
-     * @param int $facultadId
-     * @return Factory
-     */
-    public function paraFacultad(int $facultadId)
-    {
-        return $this->state(function (array $attributes) use ($facultadId) {
-            $especialidad = Especialidad::where('facultad_id', $facultadId)->inRandomOrder()->first()
-                ?? Especialidad::factory()->create(['facultad_id' => $facultadId]);
-
-            return [
-                'especialidad_id' => $especialidad->id,
-            ];
-        });
-    }
 }

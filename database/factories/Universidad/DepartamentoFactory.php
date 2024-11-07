@@ -13,8 +13,6 @@ class DepartamentoFactory extends Factory
 {
     public function definition(): array
     {
-        $random_facultad = Facultad::inRandomOrder()->first() ?? Facultad::factory()->create();
-
         $grupo_1 = ['Ciencias', 'Humanidades', 'Tecnología', 'Estudios', 'Educación', 'Administración'];
         $grupo_2 = ['Aplicadas', 'Básicas', 'Avanzadas', 'Sociales', 'Interdisciplinarios'];
         $grupo_3 = ['y Humanísticas', 'y Ambientales', 'y de la Salud', 'y Administrativas', 'y Computacionales'];
@@ -39,7 +37,7 @@ class DepartamentoFactory extends Factory
         return [
             'nombre' => $nombre_departamento,
             'descripcion' => $descripcion,
-            'facultad_id' => $random_facultad->id,
+            'facultad_id' => Facultad::factory(),
         ];
     }
 }

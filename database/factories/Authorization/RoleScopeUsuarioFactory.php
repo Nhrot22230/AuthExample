@@ -15,7 +15,7 @@ use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Authorization\RoleScopeUsuario>
+ * @extends Factory<RoleScopeUsuario>
  */
 class RoleScopeUsuarioFactory extends Factory
 {
@@ -35,13 +35,12 @@ class RoleScopeUsuarioFactory extends Factory
             Seccion::class,
         ]);
 
-        $entity = $entityType::factory()->create();
         return [
             'role_id' => Role::factory(),
             'scope_id' => Scope::factory(),
             'usuario_id' => Usuario::factory(),
             'entity_type' => $entityType,
-            'entity_id' => $entity->id,
+            'entity_id' => $entityType::factory()
         ];
     }
 }

@@ -18,9 +18,6 @@ class EspecialidadFactory extends Factory
      */
     public function definition(): array
     {
-        $random_facultad = Facultad::inRandomOrder()->first() ?? Facultad::factory()->create();
-
-        // Grupos de palabras para generar nombres de especialidades
         $grupo_1 = ['Ingeniería', 'Licenciatura', 'Tecnología', 'Ciencia', 'Estudios'];
         $grupo_2 = ['Ambiental', 'Computacional', 'Médica', 'Educativa', 'Administrativa', 'Social'];
         $grupo_3 = ['Aplicada', 'Experimental', 'Avanzada', 'Interdisciplinaria', 'Integral'];
@@ -29,7 +26,6 @@ class EspecialidadFactory extends Factory
                                $this->faker->randomElement($grupo_2) . ' ' .
                                $this->faker->randomElement($grupo_3);
 
-        // Plantillas de descripciones
         $descripciones = [
             "Especialidad enfocada en la {$this->faker->randomElement($grupo_1)} para el desarrollo de competencias en {$this->faker->randomElement($grupo_2)}.",
             "Área de estudio dedicada a la formación en {$this->faker->randomElement($grupo_1)} y {$this->faker->randomElement($grupo_2)} aplicada.",
@@ -38,11 +34,10 @@ class EspecialidadFactory extends Factory
         ];
 
         $descripcion = $this->faker->randomElement($descripciones);
-
         return [
             'nombre' => $nombre_especialidad,
             'descripcion' => $descripcion,
-            'facultad_id' => $random_facultad->id,
+            'facultad_id' => Facultad::factory(),
         ];
     }
 }

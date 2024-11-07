@@ -20,10 +20,10 @@ class UniversidadSeeder extends Seeder
     public function run(): void
     {
         Institucion::factory(5)->create();
-        Facultad::factory(20)->create();
-        Departamento::factory(30)->create();
-        Especialidad::factory(100)->create();
-        Seccion::factory(50)->create();
+        Facultad::factory(10)->create();
+        Departamento::factory(20)->create();
+        Especialidad::factory(30)->create();
+        Seccion::factory(10)->create();
         Area::factory(10)->create();
 
         $int_year_now = date('Y');

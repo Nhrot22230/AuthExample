@@ -18,14 +18,12 @@ class SeccionFactory extends Factory
      */
     public function definition(): array
     {
-        $random_departamento = Departamento::inRandomOrder()->first() ?? Departamento::factory()->create();
-
         $nombre_seccion = $this->faker->randomElement(['Sección', 'Grupo', 'Clase']) . ' ' .
-                          $this->faker->randomElement(['A', 'B', 'C', 'D', '1', '2', '3', '4']);
+            $this->faker->randomElement(['A', 'B', 'C', 'D', '1', '2', '3', '4']);
 
         return [
             'nombre' => $nombre_seccion,
-            'departamento_id' => $random_departamento->id,
+            'departamento_id' => Departamento::factory(),
         ];
     }
 }

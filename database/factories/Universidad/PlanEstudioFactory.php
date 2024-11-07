@@ -20,7 +20,7 @@ class PlanEstudioFactory extends Factory
     {
         return [
             'cantidad_semestres' => 10,
-            'especialidad_id' => Especialidad::inRandomOrder()->first() ?? Especialidad::factory()->create(),
+            'especialidad_id' => Especialidad::factory(),
             'estado' => 'inactivo',
         ];
     }

@@ -51,7 +51,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'solicitudes',                       'access_path' => AccessPath::TRAMITES_ACADEMICOS],
             ['name' => 'solicitudes de encuestas',          'access_path' => AccessPath::SOLICITUDES_ENCUENTAS],
             ['name' => 'solicitudes de encuestas admin',    'access_path' => AccessPath::SOLICITUDES_ENCUESTAS_ADMIN],
-            ['name' => 'temas de tesis',                     'access_path' => AccessPath::JURADOS_TESIS_SECRETARIO_ACADEMICO],
+            ['name' => 'temas de tesis',                    'access_path' => AccessPath::JURADOS_TESIS_SECRETARIO_ACADEMICO],
             ['name' => 'usuarios',                          'access_path' => AccessPath::PERSONAS],
         ];
 

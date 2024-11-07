@@ -16,28 +16,14 @@ class MatriculaAdicionalFactory extends Factory
 
     public function definition()
     {
-
-
+        $est = Estudiante::factory()->create();
+        $horario = Horario::factory()->create();
+        
         return [
-            // Selecciona un estudiante aleatorio
-            'estudiante_id' => function () {
-                $estudiante = Estudiante::inRandomOrder()->first();
-                return $estudiante->id;
-             },
-
-            // Usa la especialidad del estudiante seleccionado
-            'especialidad_id' => function (array $attributes) {
-                return Estudiante::find($attributes['estudiante_id'])->especialidad_id;
-            },
-            'horario_id' => function (array $attributes) {
-                $horario = Horario::inRandomOrder()->first();
-                return $horario->id;
-            },
-            'curso_id' => function (array $attributes) {
-                return Horario::find($attributes['horario_id'])->curso_id;
-            },
-
-
+            'estudiante_id' => $est->id,
+            'especialidad_id' => $est->especialidad_id,
+            'horario_id' => $horario,
+            'curso_id' => $horario->curso,
             'motivo' => $this->faker->sentence(),
             'justificacion' => $this->faker->paragraph(),
             'estado' => $this->faker->randomElement( ['Pendiente DC', 'Pendiente SA', 'Rechazado','Aprobado'] ),

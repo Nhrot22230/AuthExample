@@ -27,8 +27,8 @@ class HorarioEstudianteFactory extends Factory
     public function definition(): array
     {
         return [
-            'estudiante_id' => Estudiante::inRandomOrder()->first() ?? Estudiante::factory(),
-            'horario_id' => Horario::inRandomOrder()->first() ?? Horario::factory(),
+            'estudiante_id' => Estudiante::factory(),
+            'horario_id' => Horario::factory(),
             'encuestaDocente' => $this->faker->boolean(),
         ];
     }

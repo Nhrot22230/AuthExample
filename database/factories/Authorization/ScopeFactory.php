@@ -2,10 +2,11 @@
 
 namespace Database\Factories\Authorization;
 
+use App\Models\Authorization\Scope;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Authorization\Scope>
+ * @extends Factory<Scope>
  */
 class ScopeFactory extends Factory
 {
@@ -14,8 +15,8 @@ class ScopeFactory extends Factory
      *
      * @var string
      */
-    protected $model = \App\Models\Authorization\Scope::class;
-    
+    protected $model = Scope::class;
+
     /**
      * Define the model's default state.
      *

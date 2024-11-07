@@ -7,7 +7,7 @@ use App\Models\Authorization\PermissionCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Authorization\PermissionCategory>
+ * @extends Factory<PermissionCategory>
  */
 class PermissionCategoryFactory extends Factory
 {

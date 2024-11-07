@@ -9,8 +9,6 @@ class TemaDeTesisSeeder extends Seeder
 {
     public function run(): void
     {
-
-        $cantidad = 400;
-        TemaDeTesis::factory($cantidad)->create();
+        TemaDeTesis::factory(10)->create();
     }
 }

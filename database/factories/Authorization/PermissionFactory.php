@@ -2,11 +2,12 @@
 
 namespace Database\Factories\Authorization;
 
+use App\Models\Authorization\Permission;
 use App\Models\Authorization\PermissionCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Authorization\Permission>
+ * @extends Factory<Permission>
  */
 class PermissionFactory extends Factory
 {
@@ -15,7 +16,7 @@ class PermissionFactory extends Factory
      *
      * @var string
      */
-    protected $model = \App\Models\Authorization\Permission::class;
+    protected $model = Permission::class;
 
     /**
      * Define the model's default state.
