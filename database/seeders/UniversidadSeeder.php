@@ -27,41 +27,26 @@ class UniversidadSeeder extends Seeder
         Area::factory(10)->create();
 
         $int_year_now = date('Y');
-        $anhos = range(
-            $int_year_now - 10,
-            $int_year_now
-        );
-        foreach ($anhos as $anho) {
-            $fechaInicio = $anho . '-01-15';
-            $fechaFin = $anho . '-02-25';
-            Semestre::factory()->create([
-                'anho' => $anho,
-                'periodo' => '0',
-                'fecha_inicio' => $fechaInicio,
-                'fecha_fin' => $fechaFin,
-                'estado' => 'inactivo',
-            ]);
-            $fechaInicio = $anho . '-03-15';
-            $fechaFin = $anho . '-06-01';
-            Semestre::factory()->create([
-                'anho' => $anho,
-                'periodo' => '1',
-                'fecha_inicio' => $fechaInicio,
-                'fecha_fin' => $fechaFin,
-                'estado' => 'inactivo',
-            ]);
-            $fechaInicio = $anho . '-06-15';
-            $fechaFin = $anho . '-12-20';
-            Semestre::factory()->create([
-                'anho' => $anho,
-                'periodo' => '2',
-                'fecha_inicio' => $fechaInicio,
-                'fecha_fin' => $fechaFin,
-                'estado' => 'inactivo',
-            ]);
-        }
-        Semestre::latest('id')->first()->update(['estado' => 'activo']);
+        $anhos = range($int_year_now - 10, $int_year_now);
+        $periodos = [
+            ['periodo' => '0', 'fecha_inicio' => '-01-15', 'fecha_fin' => '-02-25'],
+            ['periodo' => '1', 'fecha_inicio' => '-03-15', 'fecha_fin' => '-06-01'],
+            ['periodo' => '2', 'fecha_inicio' => '-06-15', 'fecha_fin' => '-12-20'],
+        ];
 
-        Curso::factory(100)->create();
+        foreach ($anhos as $anho) {
+            foreach ($periodos as $periodo) {
+                Semestre::factory()->create([
+                    'anho' => $anho,
+                    'periodo' => $periodo['periodo'],
+                    'fecha_inicio' => $anho . $periodo['fecha_inicio'],
+                    'fecha_fin' => $anho . $periodo['fecha_fin'],
+                    'estado' => 'inactivo',
+                ]);
+            }
+        }
+
+        Semestre::latest('id')->first()->update(['estado' => 'activo']);
+        Curso::factory(50)->create();
     }
 }

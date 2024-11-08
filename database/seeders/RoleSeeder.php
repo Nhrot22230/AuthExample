@@ -29,31 +29,28 @@ class RoleSeeder extends Seeder
         ];
 
         $roles = [
-            'Administrador',
-            'Secretario Académico',
-            'Coordinador',
-            'Asistente',
-            'Director de Carrera',
-            'Docente',
-            'Jefe de Práctica',
-            'Estudiante',
+            'administrador',
+            'secretario-academico',
+            'asistente',
+            'director',
+            'docente',
+            'jefe-practica',
+            'estudiante',
         ];
 
         foreach ($scopes as $scope) Scope::firstOrCreate($scope);
         foreach ($roles as $role) Role::firstOrCreate(['name' => $role]);
 
-        Role::findByName('Asistente')->scopes()->attach(Scope::all());
-        Role::findByName('Secretario Académico')->scopes()->attach(Scope::where('name', 'Facultad')->first());
-        Role::findByName('Coordinador')->scopes()->attach(Scope::where('name', 'Departamento')->first());
-        Role::findByName('Director de Carrera')->scopes()->attach(Scope::where('name', 'Especialidad')->first());
-        Role::findByName('Docente')->scopes()->attach(
+        Role::findByName('asistente')->scopes([])->attach(Scope::all());
+        Role::findByName('secretario-academico')->scopes([])->attach(Scope::where('name', 'Facultad')->first());
+        Role::findByName('director')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
+        Role::findByName('docente')->scopes([])->attach(
             Scope::orWhere('name', 'Curso')
             ->orWhere('name', 'Seccion')
             ->orWhere('name', 'Area')
             ->get()
         );
-
-        Role::findByName('Jefe de Práctica')->scopes()->attach(Scope::where('name', 'Curso')->first());
-        Role::findByName('Estudiante')->scopes()->attach(Scope::where('name', 'Curso')->first());
+        Role::findByName('jefe-practica')->scopes([])->attach(Scope::where('name', 'Curso')->first());
+        Role::findByName('estudiante')->scopes([])->attach(Scope::where('name', 'Curso')->first());
     }
 }

@@ -3,14 +3,12 @@
 namespace App\Models\Matricula;
 
 use App\Models\Usuarios\Estudiante;
-use Database\Factories\Matricula\HorarioEstudianteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HorarioEstudiante extends Model
 {
-    /** @use HasFactory<HorarioEstudianteFactory> */
     use HasFactory;
 
     protected $table = 'estudiante_horario';

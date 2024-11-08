@@ -17,13 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call(UniversidadSeeder::class);
         $this->call(UsuariosSeeder::class);
         $this->call(AssignRoles::class);
-        $this->call(TemaDeTesisSeeder::class);
-        $this->call(PlanEstudioSeeder::class);
-        $this->call(EstudianteRiesgoSeeder::class);
-        $this->call(HorarioSeeder::class);
-        $this->call(MatriculaAdicionalSeeder::class);
-        $this->call(EncuestaSeeder::class);
-        $this->call(PreguntaSeeder::class);
-        $this->call(EncuestaPreguntaSeeder::class);
+
+        // Flujo para Sofia
+        $this->call(FlujoEncuestasSeeder::class);
     }
 }

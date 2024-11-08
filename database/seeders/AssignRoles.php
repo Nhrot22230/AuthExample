@@ -11,9 +11,8 @@ class AssignRoles extends Seeder
 {
     public function run(): void
     {
-        $admin_role = Role::findByName('Administrador');
+        $admin_role = Role::findByName('administrador');
         $admin_role->syncPermissions(Permission::all());
-
-        Usuario::find(1)->assignRole('Administrador');
+        Usuario::find(1)->assignRole('administrador');
     }
 }
