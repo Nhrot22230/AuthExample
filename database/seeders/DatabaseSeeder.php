@@ -16,9 +16,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
         $this->call(UniversidadSeeder::class);
         $this->call(UsuariosSeeder::class);
-        $this->call(AssignRoles::class);
-
         // Flujo para Sofia
         $this->call(FlujoEncuestasSeeder::class);
+        $this->call(AssignRoles::class);
     }
 }

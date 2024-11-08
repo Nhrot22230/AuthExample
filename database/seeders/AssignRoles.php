@@ -14,5 +14,15 @@ class AssignRoles extends Seeder
         $admin_role = Role::findByName('administrador');
         $admin_role->syncPermissions(Permission::all());
         Usuario::find(1)->assignRole('administrador');
+
+
+        $director_role = Role::findByName('director');
+        $permisos_director = Permission::where('name', 'like', '%especialidades%')
+            ->orWhere('name', 'like', '%solicitudes%')
+            ->orWhere('name', 'like', '%encuestas%')
+            ->orWhere('name', 'like', '%temas%')
+            ->orWhere('name', 'like', '%unidades%')
+            ->get();
+        $director_role->syncPermissions($permisos_director);
     }
 }
