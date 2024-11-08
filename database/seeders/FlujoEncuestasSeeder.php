@@ -57,7 +57,7 @@ class FlujoEncuestasSeeder extends Seeder
             'apellido_paterno' => 'Escajadillo',
             'apellido_materno' => 'Bazán',
             'email' => 'sofia.escajadillo@gianluca.zzz',
-            'picture' => 'https://random-d.uk/api/randomimg?t=1731044347141',
+            'picture' => 'https://random-d.uk/api/2.jpg',
             'estado' => 'activo',
             'password' => Hash::make('12345678'),
         ]);
