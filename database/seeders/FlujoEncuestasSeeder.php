@@ -93,5 +93,8 @@ class FlujoEncuestasSeeder extends Seeder
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad->id,
         ]);
+
+        $role_estudiante = Role::findByName('estudiante');
+        $estudiantes->each(fn($estudiante) => $estudiante->usuario->assignRole($role_estudiante));
     }
 }
