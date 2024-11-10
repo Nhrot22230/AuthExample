@@ -14,6 +14,9 @@ use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Semestre;
 use App\Models\Usuarios\JefePractica;
+use App\Models\Encuestas\TextoRespuestaDocente;
+use App\Models\Encuestas\TextoRespuestaJP;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -316,7 +319,7 @@ class EncuestaController extends Controller
         }
     }
 
-    public function obtenerDetalleEncuesta($encuestaId, $horarioId, $jpId = null)
+    public function obtenerDetalleEncuesta($encuestaId, $horarioId, $jpId=null)
     {
         $horario = Horario::with(['curso'])->findOrFail($horarioId);
 
@@ -329,12 +332,11 @@ class EncuestaController extends Controller
             $encuesta->load(['horario.docentes.usuario']);
 
             $horario = $horarioId ? $encuesta->horario->firstWhere('id', $horarioId) : null;
-
             if ($horario) {
                 $docente = $horario->docentes->first();
                 if ($docente && $docente->usuario) {
                     $nombreResponsable = $docente->usuario->nombre . " " .
-                        $docente->usuario->apellido_paterno . " " . $docente->usuario->apellido_materno;
+                    $docente->usuario->apellido_paterno . " " .$docente->usuario->apellido_materno;
                 }
             } else {
                 return response()->json(['message' => 'Horario no encontrado'], 404);
@@ -348,14 +350,16 @@ class EncuestaController extends Controller
                 $jefePractica = $horario->jefePracticas->firstWhere('id', (int) $jpId);
 
                 if ($jefePractica) {
-                    $nombreResponsable = $jefePractica->usuario->nombre . " " .
-                        $jefePractica->usuario->apellido_paterno . " " . $jefePractica->usuario->apellido_materno;
-                } elseif ($jpId === null) {
-                } else {
-                    return response()->json(['error' => 'JP no encontrado'], 404);
+                    $nombreResponsable = $jefePractica->usuario->nombre." ".
+                    $jefePractica->usuario->apellido_paterno." ".$jefePractica->usuario->apellido_materno;
+                } elseif ($jpId===null){
+
                 }
-            } else {
-                return response()->json(['error' => 'Horario no encontrado'], 404);
+                else{
+                    return response()->json(['message' => 'JP no encontrado'], 404);
+                }
+            }else {
+                return response()->json(['message' => 'Horario no encontrado'], 404);
             }
         }
 
@@ -372,9 +376,7 @@ class EncuestaController extends Controller
             'tipo_encuesta' => $tipoEncuesta === 'docente' ? 'Encuesta Docente' : 'Encuesta Jefe de Práctica',
             'disponible' => $encuesta->disponible,
             'nombre_responsable' => $nombreResponsable,
-            'preguntas' => $encuesta->pregunta->filter(function ($pregunta) {
-                return in_array($pregunta->tipo_respuesta, ['porcentaje', 'likert']);
-            })->map(function ($pregunta) {
+            'preguntas' => $encuesta->pregunta->map(function ($pregunta) {
                 return [
                     'id' => $pregunta->id,
                     'tipo_respuesta' => $pregunta->tipo_respuesta,
@@ -382,6 +384,7 @@ class EncuestaController extends Controller
                     'tipo_pregunta' => $pregunta->tipo_pregunta,
                 ];
             })->values(),
+
         ];
 
         return response()->json($detalleEncuesta);
@@ -400,7 +403,7 @@ class EncuestaController extends Controller
                 'estudiante_id' => 'required|exists:estudiantes,id',
                 'respuestas' => 'required|array',
                 'respuestas.*.pregunta_id' => 'required|exists:preguntas,id',
-                'respuestas.*.respuesta' => 'required|integer|min:1|max:5',
+                'respuestas.*.respuesta' => 'required',
                 'jp_horario_id' => 'nullable|exists:jp_horario,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -421,12 +424,20 @@ class EncuestaController extends Controller
                 HorarioEstudiante::where('horario_id', $horarioId)
                     ->where('estudiante_id', $data['estudiante_id'])
                     ->update(['encuestaDocente' => true]);
+
                 return response()->json(['message' => 'Respuestas de docente registradas exitosamente'], 200);
             } elseif ($encuesta->tipo_encuesta === 'jefe_practica') {
                 if (empty($data['jp_horario_id'])) {
                     return response()->json(['message' => 'jp_horario_id es requerido para la encuesta de jefe de práctica'], 400);
                 }
+                $jpHorarioRelacionado = DB::table('jp_horario')
+                    ->where('id', $data['jp_horario_id'])
+                    ->where('horario_id', $horarioId) // Asegura que el jp_horario_id corresponde al horario_id
+                    ->exists();
 
+                if (!$jpHorarioRelacionado) {
+                    return response()->json(['message' => 'El jp_horario_id no está asociado con el horario especificado'], 400);
+                }
                 $this->registrarRespuestasJefePractica($data, $encuesta, $data['jp_horario_id']);
 
                 DB::table('estudiante_horario_jp')
@@ -455,28 +466,36 @@ class EncuestaController extends Controller
             if (!$encuestaPregunta) {
                 throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }
-            $respuestaDocente = RespuestasPreguntaDocente::firstOrCreate(
-                [
-                    'horario_id' => (int) $horarioId,
-                    'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
-                ],
-                ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
-            );
 
-            if (!$respuestaDocente) {
-                throw new \Exception('No se pudo crear o encontrar el registro en RespuestasPreguntaDocente');
+            // Verificar si la respuesta es cuantitativa (numérica de 1 a 5)
+            if (is_numeric($valorRespuesta) && $valorRespuesta >= 1 && $valorRespuesta <= 5) {
+                $respuestaDocente = RespuestasPreguntaDocente::firstOrCreate(
+                    [
+                        'horario_id' => (int) $horarioId,
+                        'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
+                    ],
+                    ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
+                );
+
+                if ($valorRespuesta === 1) {
+                    $respuestaDocente->increment('cant1');
+                } elseif ($valorRespuesta === 2) {
+                    $respuestaDocente->increment('cant2');
+                } elseif ($valorRespuesta === 3) {
+                    $respuestaDocente->increment('cant3');
+                } elseif ($valorRespuesta === 4) {
+                    $respuestaDocente->increment('cant4');
+                } elseif ($valorRespuesta === 5) {
+                    $respuestaDocente->increment('cant5');
+                }
             }
-
-            if ($valorRespuesta === 1) {
-                $respuestaDocente->increment('cant1');
-            } elseif ($valorRespuesta === 2) {
-                $respuestaDocente->increment('cant2');
-            } elseif ($valorRespuesta === 3) {
-                $respuestaDocente->increment('cant3');
-            } elseif ($valorRespuesta === 4) {
-                $respuestaDocente->increment('cant4');
-            } elseif ($valorRespuesta === 5) {
-                $respuestaDocente->increment('cant5');
+            // Si no es cuantitativa, se asume que es una respuesta de texto
+            elseif (is_string($valorRespuesta)) {
+                TextoRespuestaDocente::create([
+                    'horario_id' => $horarioId,
+                    'encuesta_pregunta_id' => $encuestaPreguntaId,
+                    'respuesta' => $valorRespuesta,
+                ]);
             }
         }
     }
@@ -491,34 +510,40 @@ class EncuestaController extends Controller
                 ->where('pregunta_id', $encuestaPreguntaId)
                 ->where('encuesta_id', $encuesta->id)
                 ->first();
+
             if (!$encuestaPregunta) {
                 throw new \Exception('Pregunta_id no está asociado a la encuesta especificada');
             }
 
-            // Buscar o crear la respuesta específica para el JP
-            $respuestaJefePractica = RespuestasPreguntaJP::firstOrCreate(
-                [
-                    'jp_horario_id' => (int) $jpHorarioId,
-                    'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
-                ],
-                ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
-            );
+            // Verificar si la respuesta es cuantitativa (numérica de 1 a 5)
+            if (is_numeric($valorRespuesta) && $valorRespuesta >= 1 && $valorRespuesta <= 5) {
+                $respuestaJefePractica = RespuestasPreguntaJP::firstOrCreate(
+                    [
+                        'jp_horario_id' => (int) $jpHorarioId,
+                        'encuesta_pregunta_id' => (int) $encuestaPregunta->id,
+                    ],
+                    ['cant1' => 0, 'cant2' => 0, 'cant3' => 0, 'cant4' => 0, 'cant5' => 0]
+                );
 
-            if (!$respuestaJefePractica) {
-                throw new \Exception('No se pudo crear o encontrar el registro en RespuestasPreguntaJefePractica');
+                if ($valorRespuesta === 1) {
+                    $respuestaJefePractica->increment('cant1');
+                } elseif ($valorRespuesta === 2) {
+                    $respuestaJefePractica->increment('cant2');
+                } elseif ($valorRespuesta === 3) {
+                    $respuestaJefePractica->increment('cant3');
+                } elseif ($valorRespuesta === 4) {
+                    $respuestaJefePractica->increment('cant4');
+                } elseif ($valorRespuesta === 5) {
+                    $respuestaJefePractica->increment('cant5');
+                }
             }
-
-            // Incrementar el contador correspondiente según el valor de la respuesta
-            if ($valorRespuesta === 1) {
-                $respuestaJefePractica->increment('cant1');
-            } elseif ($valorRespuesta === 2) {
-                $respuestaJefePractica->increment('cant2');
-            } elseif ($valorRespuesta === 3) {
-                $respuestaJefePractica->increment('cant3');
-            } elseif ($valorRespuesta === 4) {
-                $respuestaJefePractica->increment('cant4');
-            } elseif ($valorRespuesta === 5) {
-                $respuestaJefePractica->increment('cant5');
+            // Si no es cuantitativa, se asume que es una respuesta de texto
+            elseif (is_string($valorRespuesta)) {
+                TextoRespuestaJP::create([
+                    'jp_horario_id' => $jpHorarioId,
+                    'encuesta_pregunta_id' => $encuestaPreguntaId,
+                    'respuesta' => $valorRespuesta,
+                ]);
             }
         }
     }
@@ -552,10 +577,10 @@ class EncuestaController extends Controller
         }
         $usuario = $docente->usuario;
 
-        // Obtener preguntas y respuestas usando consultas directas, filtrando por horario
+        // Obtener preguntas y respuestas cuantitativas usando consultas directas, filtrando por horario
         $preguntasConRespuestas = DB::table('encuesta_pregunta')
             ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
-            ->leftJoin('respuesta_pregunta_docente', function ($join) use ($horarioId) {
+            ->leftJoin('respuesta_pregunta_docente', function($join) use ($horarioId) {
                 $join->on('encuesta_pregunta.id', '=', 'respuesta_pregunta_docente.encuesta_pregunta_id')
                     ->where('respuesta_pregunta_docente.horario_id', '=', $horarioId);
             })
@@ -572,12 +597,21 @@ class EncuestaController extends Controller
             ->where('encuesta_pregunta.encuesta_id', $encuestaId)
             ->get();
 
+        // Obtener respuestas de texto asociadas a las preguntas de tipo "texto" para este horario
+        $respuestasTexto = DB::table('texto_respuesta_docente')
+            ->join('preguntas', 'texto_respuesta_docente.encuesta_pregunta_id', '=', 'preguntas.id')
+            ->where('texto_respuesta_docente.horario_id', $horarioId)
+            ->whereIn('preguntas.tipo_respuesta', ['texto'])
+            ->select('texto_respuesta_docente.encuesta_pregunta_id', 'texto_respuesta_docente.respuesta')
+            ->get()
+            ->groupBy('encuesta_pregunta_id');
+
         // Estructurar las preguntas y sus respuestas en el formato deseado
-        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) {
-            return [
+        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
+            $detalles = [
                 'pregunta_id' => $pregunta->id,
                 'texto_pregunta' => $pregunta->texto_pregunta,
-                'tipo_respuesta' =>$pregunta->tipo_respuesta,
+                'tipo_respuesta' => $pregunta->tipo_respuesta,
                 'respuestas' => [
                     'cant5' => $pregunta->cant5 ?? 0,
                     'cant4' => $pregunta->cant4 ?? 0,
@@ -586,18 +620,23 @@ class EncuestaController extends Controller
                     'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
+
+            if ($pregunta->tipo_respuesta === 'texto') {
+                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
+                    return ['respuesta' => $respuesta->respuesta];
+                })->toArray();
+            }
+            return $detalles;
         });
 
-        // Estructurar la respuesta final
-        $resultadoEncuesta = [
+        // Formatear la respuesta final
+        return response()->json([
             'docente' => [
-                'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+                'nombre_completo' => $usuario->nombre_completo,
                 'codigo' => $usuario->codigo,
             ],
             'detalles_preguntas' => $detallesPreguntas,
-        ];
-
-        return response()->json($resultadoEncuesta);
+        ]);
     }
 
     public function obtenerResultadosDetalleJp($encuestaId, $jpHorarioId)
@@ -607,10 +646,10 @@ class EncuestaController extends Controller
         $usuario = $jefePractica->usuario;
         $horario = $jefePractica->horario;
 
-        // Obtener preguntas y respuestas usando consultas directas, filtrando por jp_horario_id
+        // Obtener preguntas y respuestas cuantitativas usando consultas directas, filtrando por jp_horario_id
         $preguntasConRespuestas = DB::table('encuesta_pregunta')
             ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
-            ->leftJoin('respuesta_pregunta_jp', function ($join) use ($jpHorarioId) {
+            ->leftJoin('respuesta_pregunta_jp', function($join) use ($jpHorarioId) {
                 $join->on('encuesta_pregunta.id', '=', 'respuesta_pregunta_jp.encuesta_pregunta_id')
                     ->where('respuesta_pregunta_jp.jp_horario_id', '=', $jpHorarioId);
             })
@@ -627,9 +666,18 @@ class EncuestaController extends Controller
             ->where('encuesta_pregunta.encuesta_id', $encuestaId)
             ->get();
 
+        // Obtener respuestas de texto asociadas a las preguntas de tipo "texto" para este jp_horario_id
+        $respuestasTexto = DB::table('texto_respuesta_jp')
+            ->join('preguntas', 'texto_respuesta_jp.encuesta_pregunta_id', '=', 'preguntas.id')
+            ->where('texto_respuesta_jp.jp_horario_id', $jpHorarioId)
+            ->whereIn('preguntas.tipo_respuesta', ['texto'])
+            ->select('texto_respuesta_jp.encuesta_pregunta_id', 'texto_respuesta_jp.respuesta')
+            ->get()
+            ->groupBy('encuesta_pregunta_id');
+
         // Estructurar las preguntas y sus respuestas en el formato deseado
-        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) {
-            return [
+        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
+            $detalles = [
                 'pregunta_id' => $pregunta->id,
                 'texto_pregunta' => $pregunta->texto_pregunta,
                 'tipo_respuesta' => $pregunta->tipo_respuesta,
@@ -641,6 +689,15 @@ class EncuestaController extends Controller
                     'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
+
+            // Si la pregunta es de tipo "texto", agregar las respuestas de texto en arrays separados
+            if ($pregunta->tipo_respuesta === 'texto') {
+                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
+                    return ['respuesta' => $respuesta->respuesta];
+                })->toArray();
+            }
+
+            return $detalles;
         });
 
         // Estructurar la respuesta final
