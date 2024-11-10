@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Authorization\Permission;
+use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -27,7 +28,12 @@ class AssignRoles extends Seeder
 
         $estudiante_role = Role::findByName('estudiante');
         $permisos_estudiante = Permission::where('name', 'like', '%encuestas%')
+            ->orWhere('name', 'like', 'mis unidades')
             ->get();
         $estudiante_role->syncPermissions($permisos_estudiante);
+
+        Estudiante::all()->each(function ($estudiante) {
+            $estudiante->usuario->assignRole('estudiante');
+        });
     }
 }
