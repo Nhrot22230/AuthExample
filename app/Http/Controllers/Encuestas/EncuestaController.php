@@ -95,15 +95,12 @@ class EncuestaController extends Controller
 
     public function registrarNuevaEncuesta(Request $request, int $especialidad_id, string $tipo_encuesta): ?JsonResponse
     {
-        // Validación inicial de tipo de encuesta y especialidad
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
         if (!Especialidad::where('id', $especialidad_id)->exists()) {
             return response()->json(['message' => 'Especialidad no encontrada.'], 404);
         }
-
-        // Validación de los datos del request
         $validated = $request->validate([
             'nombre_encuesta' => 'required|string|max:255',
             'tipo_encuesta' => 'required|in:docente,jefe_practica',
@@ -115,16 +112,12 @@ class EncuestaController extends Controller
             'preguntas_nuevas' => 'nullable|array',
             'preguntas_eliminadas' => 'nullable|array'
         ]);
-
         DB::beginTransaction();
         try {
-            // Obtenemos la última encuesta de la misma especialidad y tipo
             $ultimaEncuesta = Encuesta::where('tipo_encuesta', $validated['tipo_encuesta'])
                 ->where('especialidad_id', $especialidad_id)
                 ->latest()
                 ->first();
-
-            // Creamos la nueva encuesta
             $encuesta = Encuesta::create([
                 'nombre_encuesta' => $validated['nombre_encuesta'],
                 'tipo_encuesta' => $validated['tipo_encuesta'],
@@ -133,70 +126,42 @@ class EncuestaController extends Controller
                 'fecha_fin' => $validated['fecha_fin'],
                 'disponible' => $validated['disponible']
             ]);
-
-            // Asociamos los cursos con la encuesta
             $semestre_id = Semestre::where('estado', 'activo')->first()->id;
             foreach ($validated['cursos'] as $curso_id) {
-                $horarios = Horario::where('curso_id', $curso_id)
-                    ->where('semestre_id', $semestre_id)
-                    ->get();
+                $horarios = Horario::where('curso_id', $curso_id)->where('semestre_id', $semestre_id)->get();
                 foreach ($horarios as $horario) {
                     $encuesta->horario()->attach($horario->id);
                 }
             }
-
-            // Asociar preguntas modificadas
-            if (!empty($validated['preguntas_modificadas'])) {
-                foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
-                    // Creamos la nueva pregunta y asociamos con la encuesta, marcándola como modificación
-                    $nuevaPregunta = Pregunta::create([
-                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                        'tipo_pregunta' => $pregunta_data['tipo_pregunta']
-                    ]);
-
-                    // Asociamos la nueva pregunta con la encuesta con la marca de "modificación"
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $nuevaPregunta->id,
-                        'es_modificacion' => true
-                    ]);
-                }
-            }
-
-            // Asociar preguntas nuevas
             if (!empty($validated['preguntas_nuevas'])) {
                 foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
-                    // Creamos la nueva pregunta y la asociamos con la encuesta
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
                         'tipo_pregunta' => $pregunta_data['tipo_pregunta']
                     ]);
 
-                    // Asociamos la nueva pregunta con la encuesta sin marcarla como "modificación"
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $nuevaPregunta->id,
-                        'es_modificacion' => false
-                    ]);
+                    $encuesta->pregunta()->attach($nuevaPregunta->id);
                 }
             }
-
-            // Asociar preguntas que no fueron modificadas ni eliminadas
             if ($ultimaEncuesta) {
-                // Filtramos las preguntas que no han sido modificadas ni eliminadas
+                if (!empty($validated['preguntas_modificadas'])) {
+                    foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
+                        $nuevaPregunta = Pregunta::create([
+                            'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                            'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                            'tipo_pregunta' => $pregunta_data['tipo_pregunta']
+                        ]);
+
+                        $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                    }
+                }
                 $preguntasNoModificadas = $ultimaEncuesta->pregunta
                     ->whereNotIn('id', array_column($validated['preguntas_modificadas'] ?? [], 'id'))
                     ->whereNotIn('id', $validated['preguntas_eliminadas'] ?? []);
 
-                // Asociamos estas preguntas con la nueva encuesta
                 foreach ($preguntasNoModificadas as $pregunta) {
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $pregunta->id,
-                        'es_modificacion' => false
-                    ]);
+                    $encuesta->pregunta()->attach($pregunta->id);
                 }
             }
             DB::commit();
@@ -204,9 +169,7 @@ class EncuestaController extends Controller
                 'message' => 'Encuesta creada exitosamente.',
                 'encuesta_id' => $encuesta->id,
             ], 201);
-
         } catch (\Exception $e) {
-            // Deshacemos la transacción en caso de error
             DB::rollBack();
             return response()->json(['message' => 'Error al realizar el registro.'], 500);
         }
