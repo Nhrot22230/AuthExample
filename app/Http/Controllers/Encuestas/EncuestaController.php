@@ -421,7 +421,7 @@ class EncuestaController extends Controller
                 'jp_horario_id' => 'nullable|exists:jp_horario,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['message' => $e->errors()], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
 
         $estudianteMatriculado = HorarioEstudiante::where('horario_id', $horarioId)
@@ -462,7 +462,7 @@ class EncuestaController extends Controller
                 return response()->json(['message' => 'Respuestas de jefe de práctica registradas exitosamente'], 200);
             }
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
