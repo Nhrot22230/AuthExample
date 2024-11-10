@@ -61,7 +61,7 @@ class FlujoEncuestasSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('12345678'),
         ]);
-        Docente::factory()->create(['usuario_id' => $usuario->id]);
+        Docente::factory()->create(['usuario_id' => $usuario->id, 'especialidad_id' => $especialidad->id]);
         $role = Role::findByName('director');
         $usuario->assignRole($role);
         RoleScopeUsuario::create([

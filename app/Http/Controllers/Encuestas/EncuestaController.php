@@ -31,6 +31,8 @@ class EncuestaController extends Controller
             ->where('especialidad_id', $especialidad_id)
             ->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')
             ->get();
+        if ($encuestas->isEmpty())
+            return response()->json([]);
         return response()->json($encuestas);
     }
 
@@ -75,7 +77,7 @@ class EncuestaController extends Controller
             ->first();
 
         if (!$ultimaEncuesta) {
-            return response()->json(['message' => 'No hay encuestas de este tipo para la especialidad especificada.'], 404);
+            return response()->json(['cantidad_preguntas' => 0], 200);
         }
 
         $cantidadPreguntas = $ultimaEncuesta->pregunta()->count();
@@ -99,7 +101,7 @@ class EncuestaController extends Controller
             ->first();
 
         if (!$ultimaEncuesta) {
-            return response()->json(['message' => 'No hay encuestas disponibles.'], 404);
+            return response()->json([]);
         }
 
         $preguntas = $ultimaEncuesta->pregunta;
@@ -132,9 +134,6 @@ class EncuestaController extends Controller
                 ->where('especialidad_id', $especialidad_id)
                 ->latest()
                 ->first();
-            if (!$ultimaEncuesta) {
-                return response()->json(['message' => 'No hay encuestas disponibles.'], 404);
-            }
             $encuesta = Encuesta::create([
                 'nombre_encuesta' => $validated['nombre_encuesta'],
                 'tipo_encuesta' => $validated['tipo_encuesta'],
@@ -150,17 +149,6 @@ class EncuestaController extends Controller
                     $encuesta->horario()->attach($horario->id);
                 }
             }
-            if (!empty($validated['preguntas_modificadas'])) {
-                foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
-                    $nuevaPregunta = Pregunta::create([
-                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                        'tipo_pregunta' => $pregunta_data['tipo_pregunta']
-                    ]);
-
-                    $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
-                }
-            }
             if (!empty($validated['preguntas_nuevas'])) {
                 foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
                     $nuevaPregunta = Pregunta::create([
@@ -173,6 +161,17 @@ class EncuestaController extends Controller
                 }
             }
             if ($ultimaEncuesta) {
+                if (!empty($validated['preguntas_modificadas'])) {
+                    foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
+                        $nuevaPregunta = Pregunta::create([
+                            'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                            'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                            'tipo_pregunta' => $pregunta_data['tipo_pregunta']
+                        ]);
+    
+                        $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                    }
+                }
                 $preguntasNoModificadas = $ultimaEncuesta->pregunta
                     ->whereNotIn('id', array_column($validated['preguntas_modificadas'] ?? [], 'id'))
                     ->whereNotIn('id', $validated['preguntas_eliminadas'] ?? []);
