@@ -35,6 +35,8 @@ class EncuestaController extends Controller
             ->where('especialidad_id', $especialidad_id)
             ->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')
             ->get();
+        if ($encuestas->isEmpty())
+            return response()->json([]);
         return response()->json($encuestas);
     }
 
@@ -148,58 +150,35 @@ class EncuestaController extends Controller
                 }
             }
 
-            // Asociar preguntas modificadas
-            if (!empty($validated['preguntas_modificadas'])) {
-                foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
-                    // Creamos la nueva pregunta y asociamos con la encuesta, marcándola como modificación
-                    $nuevaPregunta = Pregunta::create([
-                        'texto_pregunta' => $pregunta_data['texto_pregunta'],
-                        'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
-                        'tipo_pregunta' => $pregunta_data['tipo_pregunta']
-                    ]);
-
-                    // Asociamos la nueva pregunta con la encuesta con la marca de "modificación"
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $nuevaPregunta->id,
-                        'es_modificacion' => true
-                    ]);
-                }
-            }
-
-            // Asociar preguntas nuevas
             if (!empty($validated['preguntas_nuevas'])) {
                 foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
-                    // Creamos la nueva pregunta y la asociamos con la encuesta
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
                         'tipo_pregunta' => $pregunta_data['tipo_pregunta']
                     ]);
 
-                    // Asociamos la nueva pregunta con la encuesta sin marcarla como "modificación"
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $nuevaPregunta->id,
-                        'es_modificacion' => false
-                    ]);
+                    $encuesta->pregunta()->attach($nuevaPregunta->id);
                 }
             }
-
-            // Asociar preguntas que no fueron modificadas ni eliminadas
             if ($ultimaEncuesta) {
-                // Filtramos las preguntas que no han sido modificadas ni eliminadas
+                if (!empty($validated['preguntas_modificadas'])) {
+                    foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
+                        $nuevaPregunta = Pregunta::create([
+                            'texto_pregunta' => $pregunta_data['texto_pregunta'],
+                            'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
+                            'tipo_pregunta' => $pregunta_data['tipo_pregunta']
+                        ]);
+    
+                        $encuesta->pregunta()->attach($nuevaPregunta->id, ['es_modificacion' => true]);
+                    }
+                }
                 $preguntasNoModificadas = $ultimaEncuesta->pregunta
                     ->whereNotIn('id', array_column($validated['preguntas_modificadas'] ?? [], 'id'))
                     ->whereNotIn('id', $validated['preguntas_eliminadas'] ?? []);
 
-                // Asociamos estas preguntas con la nueva encuesta
                 foreach ($preguntasNoModificadas as $pregunta) {
-                    EncuestaPregunta::create([
-                        'encuesta_id' => $encuesta->id,
-                        'pregunta_id' => $pregunta->id,
-                        'es_modificacion' => false
-                    ]);
+                    $encuesta->pregunta()->attach($pregunta->id);
                 }
             }
             DB::commit();
@@ -207,9 +186,7 @@ class EncuestaController extends Controller
                 'message' => 'Encuesta creada exitosamente.',
                 'encuesta_id' => $encuesta->id,
             ], 201);
-
         } catch (\Exception $e) {
-            // Deshacemos la transacción en caso de error
             DB::rollBack();
             return response()->json(['message' => 'Error al realizar el registro.'], 500);
         }
@@ -728,10 +705,12 @@ class EncuestaController extends Controller
             ];
 
             // Si la pregunta es de tipo "texto", agregar las respuestas de texto en arrays separados
-            if ($pregunta->tipo_respuesta === 'texto') {
+            if ($pregunta->tipo_respuesta === 'texto' && isset($respuestasTexto[$pregunta->id])) {
                 $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
                     return ['respuesta' => $respuesta->respuesta];
                 })->toArray();
+            } else {
+                $detalles['respuestas_texto'] = [];
             }
 
             return $detalles;
