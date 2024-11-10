@@ -13,6 +13,7 @@ use App\Models\Universidad\Semestre;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
+use App\Models\Matricula\HorarioEstudiante;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -43,6 +44,24 @@ class FlujoEncuestasSeeder extends Seeder
         ]))->all();
 
         $estudiantes = Estudiante::factory(50)->create(['especialidad_id' => $especialidad->id]);
+        
+        collect($horarios)->each(function ($horario) use ($estudiantes) {
+            $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
+            foreach ($estudiantesSeleccionados as $estudiante) {
+                $existeMatricula = HorarioEstudiante::where('estudiante_id', $estudiante->id)
+                    ->whereHas('horario', function($query) use ($horario) {
+                        $query->where('curso_id', $horario->curso_id);
+                    })
+                    ->exists();
+                if (!$existeMatricula) {
+                    HorarioEstudiante::create([
+                        'estudiante_id' => $estudiante->id,
+                        'horario_id' => $horario->id,
+                    ]);
+                }
+            }
+        });
+        
         $jefes = $estudiantes->random(min(2 * count($horarios), $estudiantes->count()))
             ->map(fn($predocente) => Docente::factory()->create(['usuario_id' => $predocente->usuario_id]))
             ->values();
