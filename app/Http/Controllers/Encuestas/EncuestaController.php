@@ -590,7 +590,7 @@ class EncuestaController extends Controller
             return response()->json(['message' => 'Docente no encontrado para el horario'], 404);
         }
         $usuario = $docente->usuario;
-
+        
         // Obtener preguntas y respuestas cuantitativas usando consultas directas, filtrando por horario
         $preguntasConRespuestas = DB::table('encuesta_pregunta')
             ->join('preguntas', 'encuesta_pregunta.pregunta_id', '=', 'preguntas.id')
@@ -610,7 +610,7 @@ class EncuestaController extends Controller
             )
             ->where('encuesta_pregunta.encuesta_id', $encuestaId)
             ->get();
-
+            
         // Obtener respuestas de texto asociadas a las preguntas de tipo "texto" para este horario
         $respuestasTexto = DB::table('texto_respuesta_docente')
             ->join('preguntas', 'texto_respuesta_docente.encuesta_pregunta_id', '=', 'preguntas.id')
@@ -619,9 +619,9 @@ class EncuestaController extends Controller
             ->select('texto_respuesta_docente.encuesta_pregunta_id', 'texto_respuesta_docente.respuesta')
             ->get()
             ->groupBy('encuesta_pregunta_id');
-
+            
         // Estructurar las preguntas y sus respuestas en el formato deseado
-        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
+        /*$detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
             $detalles = [
                 'pregunta_id' => $pregunta->id,
                 'texto_pregunta' => $pregunta->texto_pregunta,
@@ -641,12 +641,39 @@ class EncuestaController extends Controller
                 })->toArray();
             }
             return $detalles;
+        });*/
+        $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
+            $detalles = [
+                'pregunta_id' => $pregunta->id,
+                'texto_pregunta' => $pregunta->texto_pregunta,
+                'tipo_respuesta' => $pregunta->tipo_respuesta,
+                'respuestas' => [
+                    'cant5' => $pregunta->cant5 ?? 0,
+                    'cant4' => $pregunta->cant4 ?? 0,
+                    'cant3' => $pregunta->cant3 ?? 0,
+                    'cant2' => $pregunta->cant2 ?? 0,
+                    'cant1' => $pregunta->cant1 ?? 0,
+                ],
+            ];
+        
+            // Solo agregar respuestas_texto si el tipo de respuesta es "texto"
+            if ($pregunta->tipo_respuesta === 'texto') {
+                // Verificar si existen respuestas de texto, y si no, establecer un array vacío
+                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id] ?? collect([])->map(function ($respuesta) {
+                    return ['respuesta' => $respuesta->respuesta];
+                })->toArray();
+            } else {
+                // Si no es de tipo "texto", no agregar respuestas_texto
+                $detalles['respuestas_texto'] = [];
+            }
+            
+            return $detalles;
         });
-
+        
         // Formatear la respuesta final
         return response()->json([
             'docente' => [
-                'nombre_completo' => $usuario->nombre_completo,
+                'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
                 'codigo' => $usuario->codigo,
             ],
             'detalles_preguntas' => $detallesPreguntas,
@@ -703,6 +730,7 @@ class EncuestaController extends Controller
                     'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
+<<<<<<< Updated upstream
 
             // Si la pregunta es de tipo "texto", agregar las respuestas de texto en arrays separados
             if ($pregunta->tipo_respuesta === 'texto' && isset($respuestasTexto[$pregunta->id])) {
@@ -711,10 +739,20 @@ class EncuestaController extends Controller
                 })->toArray();
             } else {
                 $detalles['respuestas_texto'] = [];
+=======
+        
+            // Si la pregunta es de tipo "texto", agregar respuestas de texto si existen
+            if ($pregunta->tipo_respuesta === 'texto') {
+                $detalles['respuestas_texto'] = isset($respuestasTexto[$pregunta->id]) 
+                    ? $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
+                        return ['respuesta' => $respuesta->respuesta];
+                    })->toArray()
+                    : []; // En caso no haya respuestas de texto, asignar un array vacío
+>>>>>>> Stashed changes
             }
-
+        
             return $detalles;
-        });
+        });        
 
         // Estructurar la respuesta final
         $resultadoEncuesta = [
