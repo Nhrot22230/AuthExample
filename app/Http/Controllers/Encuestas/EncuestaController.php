@@ -730,7 +730,6 @@ class EncuestaController extends Controller
                     'cant1' => $pregunta->cant1 ?? 0,
                 ],
             ];
-<<<<<<< Updated upstream
 
             // Si la pregunta es de tipo "texto", agregar las respuestas de texto en arrays separados
             if ($pregunta->tipo_respuesta === 'texto' && isset($respuestasTexto[$pregunta->id])) {
@@ -739,16 +738,6 @@ class EncuestaController extends Controller
                 })->toArray();
             } else {
                 $detalles['respuestas_texto'] = [];
-=======
-        
-            // Si la pregunta es de tipo "texto", agregar respuestas de texto si existen
-            if ($pregunta->tipo_respuesta === 'texto') {
-                $detalles['respuestas_texto'] = isset($respuestasTexto[$pregunta->id]) 
-                    ? $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
-                        return ['respuesta' => $respuesta->respuesta];
-                    })->toArray()
-                    : []; // En caso no haya respuestas de texto, asignar un array vacío
->>>>>>> Stashed changes
             }
         
             return $detalles;
