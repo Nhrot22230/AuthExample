@@ -14,6 +14,7 @@ use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -119,5 +120,25 @@ class FlujoEncuestasSeeder extends Seeder
                 ]);
             });
         });
+
+        collect($horarios)->each(function ($horario) {
+            $jefePractica = $horario->jefePracticas()->first();
+            if ($jefePractica) {
+                $horario->estudiantes->each(function ($estudiante) use ($jefePractica, $horario) {
+                    $horarioEstudiante = HorarioEstudiante::where('estudiante_id', $estudiante->id)
+                        ->where('horario_id', $horario->id)
+                        ->first();
+        
+                    if ($horarioEstudiante) {
+                        HorarioEstudianteJp::create([
+                            'estudiante_horario_id' => $horarioEstudiante->id,
+                            'jp_horario_id' => $jefePractica->id,
+                            'encuestaJP' => false,
+                        ]);
+                    }
+                });
+            }
+        });
+        
     }
 }

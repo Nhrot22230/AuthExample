@@ -657,15 +657,12 @@ class EncuestaController extends Controller
             ];
         
             // Solo agregar respuestas_texto si el tipo de respuesta es "texto"
-            if ($pregunta->tipo_respuesta === 'texto') {
-                // Verificar si existen respuestas de texto, y si no, establecer un array vacío
-                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id] ?? collect([])->map(function ($respuesta) {
-                    return ['respuesta' => $respuesta->respuesta];
-                })->toArray();
+
+            if ($pregunta->tipo_respuesta === 'texto' && isset($respuestasTexto[$pregunta->id])) {
+                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->pluck('respuesta')->toArray();
             } else {
-                // Si no es de tipo "texto", no agregar respuestas_texto
                 $detalles['respuestas_texto'] = [];
-            }
+            }     
             
             return $detalles;
         });
@@ -733,12 +730,10 @@ class EncuestaController extends Controller
 
             // Si la pregunta es de tipo "texto", agregar las respuestas de texto en arrays separados
             if ($pregunta->tipo_respuesta === 'texto' && isset($respuestasTexto[$pregunta->id])) {
-                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
-                    return ['respuesta' => $respuesta->respuesta];
-                })->toArray();
+                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->pluck('respuesta')->toArray();
             } else {
                 $detalles['respuestas_texto'] = [];
-            }
+            }        
         
             return $detalles;
         });        
