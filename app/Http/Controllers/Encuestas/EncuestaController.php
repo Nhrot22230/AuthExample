@@ -454,10 +454,14 @@ class EncuestaController extends Controller
                 }
                 $this->registrarRespuestasJefePractica($data, $encuesta, $data['jp_horario_id']);
 
+                $estudianteHorarioId = HorarioEstudiante::where('horario_id', $horarioId)
+                ->where('estudiante_id', $data['estudiante_id'])
+                ->value('id');
+
                 DB::table('estudiante_horario_jp')
-                    ->where('estudiante_horario_id', $horarioId)
-                    ->where('jp_horario_id', $data['jp_horario_id'])
-                    ->update(['encuestaJP' => true]);
+                ->where('estudiante_horario_id', $estudianteHorarioId)
+                ->where('jp_horario_id', $data['jp_horario_id'])
+                ->update(['encuestaJP' => true]);
 
                 return response()->json(['message' => 'Respuestas de jefe de práctica registradas exitosamente'], 200);
             }
@@ -620,28 +624,6 @@ class EncuestaController extends Controller
             ->get()
             ->groupBy('encuesta_pregunta_id');
             
-        // Estructurar las preguntas y sus respuestas en el formato deseado
-        /*$detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
-            $detalles = [
-                'pregunta_id' => $pregunta->id,
-                'texto_pregunta' => $pregunta->texto_pregunta,
-                'tipo_respuesta' => $pregunta->tipo_respuesta,
-                'respuestas' => [
-                    'cant5' => $pregunta->cant5 ?? 0,
-                    'cant4' => $pregunta->cant4 ?? 0,
-                    'cant3' => $pregunta->cant3 ?? 0,
-                    'cant2' => $pregunta->cant2 ?? 0,
-                    'cant1' => $pregunta->cant1 ?? 0,
-                ],
-            ];
-
-            if ($pregunta->tipo_respuesta === 'texto') {
-                $detalles['respuestas_texto'] = $respuestasTexto[$pregunta->id]->map(function ($respuesta) {
-                    return ['respuesta' => $respuesta->respuesta];
-                })->toArray();
-            }
-            return $detalles;
-        });*/
         $detallesPreguntas = $preguntasConRespuestas->map(function ($pregunta) use ($respuestasTexto) {
             $detalles = [
                 'pregunta_id' => $pregunta->id,
