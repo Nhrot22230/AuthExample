@@ -20,6 +20,8 @@ use App\Models\Encuestas\TextoRespuestaJP;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class EncuestaController extends Controller
 {
@@ -735,4 +737,110 @@ class EncuestaController extends Controller
 
         return response()->json($resultadoEncuesta);
     }
+
+    public function progresoEncuestaDocentePorHorariosNuevo($encuestaId)
+{
+    try {
+        $encuesta = Encuesta::with(['horario.curso', 'horario.horarioEstudiantes'])
+            ->where('id', $encuestaId)
+            ->where('tipo_encuesta', 'docente')
+            ->where('disponible', true)
+            ->first();
+
+        if (!$encuesta) {
+            return response()->json(['message' => 'Encuesta no encontrada o no disponible'], 404);
+        }
+
+        $totalEstudiantesGeneral = 0;
+        $totalCompletaronGeneral = 0;
+
+        $progresoPorHorarios = $encuesta->horario->map(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
+            $curso = $horario->curso;
+            $totalEstudiantes = $horario->horarioEstudiantes->count();
+            $totalEstudiantesGeneral += $totalEstudiantes;
+
+            $numeroEstudiantesQueCompletaron = $horario->horarioEstudiantes
+                ->where('encuestaDocente', true)
+                ->count();
+            $totalCompletaronGeneral += $numeroEstudiantesQueCompletaron;
+
+            return [
+                'horario_id' => $horario->id,
+                'curso_id' => $curso->id,
+                'curso_nombre' => $curso->nombre,
+                'total_estudiantes' => $totalEstudiantes,
+                'numero_estudiantes_que_completaron' => $numeroEstudiantesQueCompletaron,
+            ];
+        });
+
+        return response()->json([
+            'encuesta_id' => $encuestaId,
+            'progreso_por_horarios' => $progresoPorHorarios,
+            'total_estudiantes_general' => $totalEstudiantesGeneral,
+            'total_completaron_general' => $totalCompletaronGeneral,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error en obtenerProgresoEncuestaDocentePorHorarios: ' . $e->getMessage());
+        return response()->json(['message' => 'Error interno del servidor.'], 500);
+    }
+}
+
+    public function progresoEncuestaJPPorHorariosNuevo($encuestaId)
+    {
+        try {
+            // Obtener la encuesta con sus horarios y estudiantes relacionados con JPs
+            $encuesta = Encuesta::with(['horario.curso', 'horario.horarioEstudiantes.horarioEstudianteJp'])
+                ->where('id', $encuestaId)
+                ->where('tipo_encuesta', 'jp') // Cambiado a jp para jefes de práctica
+                ->where('disponible', true) // Solo si la encuesta está activa
+                ->first();
+
+            if (!$encuesta) {
+                return response()->json(['message' => 'Encuesta no encontrada o no disponible'], 404);
+            }
+
+            // Variables para almacenar los totales generales
+            $totalEstudiantesGeneral = 0;
+            $totalCompletaronGeneral = 0;
+
+            // Procesar los horarios asociados a esta encuesta para jefes de práctica
+            $progresoPorHorarios = $encuesta->horario->map(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
+                $curso = $horario->curso;
+
+                // Total de estudiantes en el horario de esta encuesta para JPs
+                $totalEstudiantes = $horario->horarioEstudiantes->count();
+                $totalEstudiantesGeneral += $totalEstudiantes;
+
+                // Estudiantes que completaron la encuesta de JP
+                $numeroEstudiantesQueCompletaron = $horario->horarioEstudiantes
+                    ->flatMap(function ($horarioEstudiante) {
+                        return $horarioEstudiante->horarioEstudianteJp->where('encuestaJP', true);
+                    })
+                    ->count();
+                $totalCompletaronGeneral += $numeroEstudiantesQueCompletaron;
+
+                return [
+                    'horario_id' => $horario->id,
+                    'curso_id' => $curso->id,
+                    'curso_nombre' => $curso->nombre,
+                    'total_estudiantes' => $totalEstudiantes,
+                    'numero_estudiantes_que_completaron' => $numeroEstudiantesQueCompletaron,
+                ];
+            });
+
+            // Respuesta con los totales generales
+            return response()->json([
+                'encuesta_id' => $encuestaId,
+                'progreso_por_horarios' => $progresoPorHorarios,
+                'total_estudiantes_general' => $totalEstudiantesGeneral,
+                'total_completaron_general' => $totalCompletaronGeneral,
+            ]);
+        } catch (\Exception $e) {
+            // Registrar el error en el log y devolver un mensaje de error
+            Log::error('Error en obtenerProgresoEncuestaJPPorHorarios: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor.'], 500);
+        }
+    }
+
+
 }

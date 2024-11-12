@@ -17,3 +17,5 @@ Route::post('encuestas-nueva/{especialidad_id}/{tipo_encuesta}', [EncuestaContro
 Route::get('encuestas-cursos/{encuesta_id}', [EncuestaController::class, 'mostrarCursos']);
 Route::get('encuestas-preguntas/{encuesta_id}', [EncuestaController::class, 'listarPreguntas']);
 Route::put('encuestas/{especialidad_id}/{encuesta_id}', [EncuestaController::class, 'gestionarEncuesta']);
+Route::get('progreso-docente/{encuestaId}', [EncuestaController::class, 'progresoEncuestaDocentePorHorariosNuevo']);
+Route::get('progreso-jp/{encuestaId}', [EncuestaController::class, 'progresoEncuestaJPPorHorariosNuevo']);
