@@ -53,6 +53,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'solicitudes de encuestas admin',    'access_path' => AccessPath::SOLICITUDES_ENCUESTAS_ADMIN],
             ['name' => 'temas de tesis',                    'access_path' => AccessPath::JURADOS_TESIS_SECRETARIO_ACADEMICO],
             ['name' => 'usuarios',                          'access_path' => AccessPath::PERSONAS],
+            ['name' => 'convocatorias',                     'access_path' => AccessPath::CONVOCATORIAS],
         ];
 
         foreach ($permission_categories as $pc) {
