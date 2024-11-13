@@ -11,6 +11,7 @@ use App\Models\Authorization\Scope;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RolePermissionsController extends Controller
 {
@@ -78,9 +79,20 @@ class RolePermissionsController extends Controller
     public function indexPermissions(): JsonResponse
     {
         $search = request('search', '');
-        $permissions = Permission::where('name', 'like', "%$search%")->get();
+        $permissions = Permission::with('permission_category')
+            ->where('name', 'like', "%$search%")
+            ->orderBy('permission_category_id')
+            ->get();
 
-        return response()->json($permissions, 200);
+        $simpleResp = $permissions->map(function ($permission) {
+            return [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'permission_category' => $permission->permission_category?->name ?? "Sin categoría",
+            ];
+        });
+
+        return response()->json($simpleResp, 200);
     }
 
     public function showRole($id): JsonResponse
@@ -104,17 +116,25 @@ class RolePermissionsController extends Controller
             'scopes.*' => 'exists:scopes,id',
         ]);
 
-        $role = Role::create($request->only('name'));
+        DB::beginTransaction();
+        try {
+            $role = Role::create($request->only('name'));
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->permissions);
+            }
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            if ($request->has('scopes')) {
+                $role->scopes([])->sync($request->scopes);
+            }
+            DB::commit();
+            return response()->json([
+                'message' => 'Rol creado correctamente',
+                'role' => $role
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => "Error al crear el rol: {$e->getMessage()}"], 500);
         }
-
-        if ($request->has('scopes')) {
-            $role->scopes->sync($request->scopes);
-        }
-
-        return response()->json($role, 201);
     }
 
     public function updateRole(Request $request, $id): JsonResponse
@@ -125,7 +145,7 @@ class RolePermissionsController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $role->id,
+            'name' => "required|string|unique:roles,name,{$role->id}",
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,name',
             'scopes' => 'nullable|array',
@@ -138,10 +158,17 @@ class RolePermissionsController extends Controller
         }
 
         if ($request->has('scopes')) {
-            $role->scopes()->sync($request->scopes);
+            $newScopes = $request->scopes;
+            $role->scopes()->sync($newScopes);
+            RoleScopeUsuario::where('role_id', $role->id)
+                ->whereNotIn('scope_id', $newScopes)
+                ->delete();
         }
 
-        return response()->json($role, 200);
+        return response()->json([
+            'message' => 'Rol actualizado correctamente',
+            'role' => $role
+        ], 200);
     }
 
     public function destroyRole($id): JsonResponse
@@ -163,7 +190,7 @@ class RolePermissionsController extends Controller
             'roles.*.role_id' => 'required|exists:roles,id',
             'roles.*.scopes' => 'nullable|array',
             'roles.*.scopes.*.scope_id' => 'required|exists:scopes,id',
-            'roles.*.scopes.*.entities' => 'required|array',
+            'roles.*.scopes.*.entities' => 'nullable|array',
             'roles.*.scopes.*.entities.*' => 'required|integer|min:1',
         ]);
 
@@ -171,29 +198,35 @@ class RolePermissionsController extends Controller
         if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
-        RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
 
-        foreach ($request->roles as $roleData) {
-            $role = Role::find($roleData['role_id']);
-            $usuario->assignRole($role);
+        DB::beginTransaction();
+        try {
 
-            foreach ($roleData['scopes'] as $scopeData) {
-                $scope = Scope::find($scopeData['scope_id']);
-                foreach ($scopeData['entities'] as $entityData) {
-                    RoleScopeUsuario::create([
-                        'role_id' => $role->id,
-                        'scope_id' => $scope->id,
-                        'usuario_id' => $usuario->id,
-                        'entity_id' => $entityData,
-                        'entity_type' => $scope->entity_type,
-                    ]);
+            RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
+            foreach ($request->roles as $roleData) {
+                $role = Role::find($roleData['role_id']);
+                $usuario->assignRole($role);
+                foreach ($roleData['scopes'] as $scopeData) {
+                    $scope = Scope::find($scopeData['scope_id']);
+                    foreach ($scopeData['entities'] as $entityData) {
+                        RoleScopeUsuario::create([
+                            'role_id' => $role->id,
+                            'scope_id' => $scope->id,
+                            'usuario_id' => $usuario->id,
+                            'entity_id' => $entityData,
+                            'entity_type' => $scope->entity_type,
+                        ]);
+                    }
                 }
             }
+            DB::commit();
+            return response()->json([
+                'message' => 'Roles correctamente asignados al usuario',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => "Error al asignar roles al usuario: {$e->getMessage()}"], 500);
         }
-
-        return response()->json([
-            'message' => 'Roles correctamente asignados al usuario',
-        ], 200);
     }
 
     public function syncPermissions(Request $request, $id): JsonResponse
