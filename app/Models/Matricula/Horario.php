@@ -25,6 +25,7 @@ class Horario extends Model
         'nombre',
         'codigo',
         'vacantes',
+        'oculto',
     ];
 
     public function curso(): BelongsTo

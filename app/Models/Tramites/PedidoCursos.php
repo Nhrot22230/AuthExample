@@ -62,6 +62,18 @@ class PedidoCursos extends Model
     // Método para obtener todos los cursos del pedido
     public function obtenerCursos()
     {
-        return $this->cursosObligatorios->merge($this->cursosElectivosSeleccionados);
+        $semestreId = $this->semestre_id;
+    
+        // Incluimos los horarios filtrados por semestre en cursos obligatorios y electivos
+        $cursosObligatorios = $this->cursosObligatorios()->with(['horarios' => function ($query) use ($semestreId) {
+            $query->where('semestre_id', $semestreId);
+        }])->get();
+    
+        $cursosElectivos = $this->cursosElectivosSeleccionados()->with(['horarios' => function ($query) use ($semestreId) {
+            $query->where('semestre_id', $semestreId);
+        }])->get();
+    
+        // Combinar los cursos obligatorios y electivos
+        return $cursosObligatorios->merge($cursosElectivos);
     }
 }

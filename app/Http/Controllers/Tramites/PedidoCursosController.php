@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PedidoCursos;
+use App\Models\Tramites\PedidoCursos;
 use App\Models\Usuarios\Docente;
 
 class PedidoCursosController extends Controller
@@ -118,7 +118,7 @@ class PedidoCursosController extends Controller
                     ->orWhere('email', 'like', '%' . $searchTerm . '%');
             })
                 ->whereHas('usuario.roles', function ($query) {
-                    $query->where('name', 'directorCarrera');
+                    $query->where('name', 'director');
                 })
                 ->pluck('especialidad_id');
 
@@ -136,7 +136,7 @@ class PedidoCursosController extends Controller
             // Obtener el director de carrera asociado a la especialidad
             $director = Docente::where('especialidad_id', $especialidad->id)
                 ->whereHas('usuario.roles', function ($query) {
-                    $query->where('name', 'directorCarrera');
+                    $query->where('name', 'director');
                 })
                 ->with('usuario')
                 ->first();

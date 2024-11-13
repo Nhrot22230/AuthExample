@@ -9,6 +9,12 @@ use App\Models\Universidad\Curso;
 use App\Models\Universidad\Semestre;
 use App\Models\Universidad\Facultad;
 use App\Models\Tramites\PedidoCursos;
+use App\Models\Usuarios\Docente;
+use App\Models\Usuarios\Usuario;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\RoleScopeUsuario;
+use App\Models\Authorization\Scope;
+use Illuminate\Support\Facades\Hash;
 
 class PedidoCursosSeeder extends Seeder
 {
@@ -61,7 +67,7 @@ class PedidoCursosSeeder extends Seeder
 
         // Asignar cursos obligatorios al plan de estudios con niveles aleatorios
         foreach ($cursosObligatorios as $cursoObligatorio) {
-            $nivelAleatorio = rand(0, $planEstudio->cantidad_semestres);
+            $nivelAleatorio = rand(1, $planEstudio->cantidad_semestres);
             $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => $nivelAleatorio, 'creditosReq' => $cursoObligatorio->creditos]]);
         }
 
@@ -88,7 +94,43 @@ class PedidoCursosSeeder extends Seeder
 
         // Asociar los cursos electivos al pedido
         foreach ($cursosElectivos as $cursoElectivo) {
-            $pedido->cursosElectivosSeleccionados()->attach($cursoElectivo->id);
+            $pedido->cursosElectivosSeleccionados()->attach($cursoElectivo->id, [
+                'nivel' => 'E',
+                'creditosReq' => $cursoElectivo->creditos
+            ]);
         }
+
+        // Crear el usuario "Daniel Rivas" como director de carrera
+        $usuario = Usuario::create([
+            'nombre' => 'Daniel',
+            'apellido_paterno' => 'Rivas',
+            'apellido_materno' => 'Pareja',
+            'email' => 'daniel.rivas@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),  // Cambia la contraseña si es necesario
+        ]);
+
+        // Crear el perfil de Docente y asociarlo a la especialidad
+        Docente::factory()->create([
+            'usuario_id' => $usuario->id,
+            'especialidad_id' => $especialidad ? $especialidad->id : null,
+        ]);
+
+        // Asignar el rol de director
+        $role = Role::findByName('director');
+        $usuario->assignRole($role);
+
+        // Crear el scope de rol para la especialidad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,
+            ])->id,
+            'usuario_id' => $usuario->id,
+            'entity_type' => Especialidad::class,
+            'entity_id' => $especialidad ? $especialidad->id : null,
+        ]);        
     }
 }

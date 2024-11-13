@@ -41,6 +41,7 @@ class FlujoEncuestasSeeder extends Seeder
         $horarios = $cursos->flatMap(fn($curso) => Horario::factory(random_int(1, 3))->create([
             'curso_id' => $curso->id,
             'semestre_id' => $semestre->id,
+            'oculto' => false,
         ]))->all();
 
         $estudiantes = Estudiante::factory(50)->create(['especialidad_id' => $especialidad->id]);

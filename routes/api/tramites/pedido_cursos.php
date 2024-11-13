@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\PedidoCursosController;
+use App\Http\Controllers\Tramites\PedidoCursosController;
 use Illuminate\Support\Facades\Route;
 
 
