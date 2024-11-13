@@ -24,7 +24,7 @@ use App\Http\Controllers\EstudianteRiesgoController;
 use App\Http\Controllers\MatriculaAdicionalController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\NotificacionController;
-
+use App\Http\Controllers\PedidoCursosController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -256,6 +256,14 @@ Route::get('/semestreActual', [SemestreController::class, 'obtenerSemestreActual
 Route::prefix('v1')->group(function () {
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::get('/images/{filename}', [ImageController::class, 'getMIME']);
+
+
+
+    Route::get('pedidos-cursos', [PedidoCursosController::class, 'index']);
+    Route::patch('/pedidos-cursos/enviar-multiples', [PedidoCursosController::class, 'enviarMultiplesPedidos']);
+    Route::get('facultades/{facultad}/pedidos-cursos', [PedidoCursosController::class, 'getByFacultad']);
+
+    Route::get('/especialidades/{especialidad}/cursos-pedido', [PedidoCursosController::class, 'getCursosPorEspecialidad']);
 });
 Route::get('/encuestas/{especialidad_id}/{tipo_encuesta}', [EncuestaController::class, 'indexEncuesta']);
 Route::get('/encuestas-nueva-cursos/{especialidad_id}', [EncuestaController::class, 'indexCursoSemestreEspecialidad']);

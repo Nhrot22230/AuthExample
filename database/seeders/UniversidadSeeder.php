@@ -21,16 +21,16 @@ class UniversidadSeeder extends Seeder
      */
     public function run(): void
     {   
-        Institucion::factory(5)->create();
+        Institucion::factory(1)->create();
         Facultad::factory(20)->create();
         Departamento::factory(30)->create();
-        Especialidad::factory(100)->create();
+        Especialidad::factory(20)->create();
         Seccion::factory(50)->create();
 
         Area::factory(10)->create();
         $int_year_now = date('Y');
         $anhos = range(
-            $int_year_now - 10,
+            $int_year_now - 5,
             $int_year_now
         );
         foreach ($anhos as $anho) {
@@ -64,6 +64,6 @@ class UniversidadSeeder extends Seeder
         }
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
 
-        Curso::factory(6000)->create();        
+        Curso::factory(300)->create();        
     }
 }

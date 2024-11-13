@@ -17,7 +17,8 @@ class CursoFactory extends Factory
      */
     public function definition(): array
     {
-        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first();
+        $random_especialidad = Especialidad::where('facultad_id', 5)->inRandomOrder()->first() 
+                             ?? Especialidad::factory()->create(['facultad_id' => 5]);
         
         $grupo1 = ['Ingeniería', 'Historia', 'Ciencias', 'Psicología', 'Economía', 'Medicina', 'Arquitectura', 'Filosofía', 'Derecho', 'Matemáticas'];
         $grupo2 = ['Aplicada', 'Industrial', 'Clínica', 'Ambiental', 'Social', 'Digital', 'Avanzada', 'Computacional', 'Educativa', 'Política'];
