@@ -15,23 +15,23 @@ class CartaPresentacion extends Model
     protected $table = 'carta_presentacion';
 
     protected $fillable = [
-        'idEstudiante',
-        'idHorario',
-        'Motivo',
-        'Observacion',
-        'ArchivoPDF',
-        'Estado'
+        'estudiante_id',
+        'horario_id',
+        'motivo',
+        'observacion',
+        'archivo_pdf',
+        'estado'
     ];
-
+    
     protected $hidden = ['created_at', 'updated_at'];
 
     public function estudiante(): BelongsTo
     {
-        return $this->belongsTo(Estudiante::class, 'idEstudiante');
+        return $this->belongsTo(Estudiante::class, 'estudiante_id');
     }
 
     public function horario(): BelongsTo
     {
-        return $this->belongsTo(Horario::class, 'idHorario');
+        return $this->belongsTo(Horario::class, 'horario_id');
     }
 }

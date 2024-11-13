@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('carta_presentacion', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('idEstudiante')->constrained('estudiantes')->onDelete('cascade');
-            $table->foreignId('idHorario')->constrained('horarios')->onDelete('cascade');
-            $table->text('Motivo');
-            $table->text('Observacion')->nullable();
-            $table->string('ArchivoPDF')->nullable();
-            $table->enum('Estado', ['Anulada', 'Pendiente', 'Atendida', 'Rechazado', 'En proceso']);
+            $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade');
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->text('motivo');
+            $table->text('observacion')->nullable();
+            $table->string('archivo_pdf')->nullable();
+            $table->enum('estado', ['Anulada', 'Pendiente', 'Atendida', 'Rechazado', 'En proceso']);
             $table->timestamps();
-        });
+        });        
     }
 
     /**

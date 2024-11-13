@@ -13,7 +13,8 @@ class CartaPresentacionController extends Controller
     public function index(Request $request, $idEstudiante)
     {
         $estado = $request->input('estado', null);
-        $query = CartaPresentacion::where('idEstudiante', $idEstudiante);
+
+        $query = CartaPresentacion::where('estudiante_id', $idEstudiante);
 
         if ($estado) {
             $query->where('Estado', $estado);
@@ -30,6 +31,30 @@ class CartaPresentacionController extends Controller
         return response()->json($cartas);
     }
 
+    public function indexDocente($idDocente, Request $request)
+    {
+        $estado = $request->input('estado', null);
+
+        $query = CartaPresentacion::whereHas('horario', function($q) use ($idDocente) {
+            $q->whereHas('docentes', function($q) use ($idDocente) {
+                $q->where('docente_id', $idDocente);
+            });
+        });
+        
+        if ($estado) {
+            $query->where('Estado', $estado);
+        }
+
+        $cartas = $query->get();
+
+        if ($cartas->isEmpty()) {
+            return response()->json([
+                'message' => 'No se encontraron cartas de presentación para este docente con el estado especificado.'
+            ], 404);
+        }
+
+        return response()->json($cartas);
+    }
 
 
 
@@ -41,12 +66,12 @@ class CartaPresentacionController extends Controller
 
         $cursos = $horarios->map(function ($horario) {
             return [
-                'horario_id' => $horario->id,       // ID del horario
-                'curso_id' => $horario->curso->id,  // ID del curso
-                'curso_nombre' => $horario->curso->nombre, // Nombre del curso
-                'curso_codigo' => $horario->curso->cod_curso  // Código del curso
+                'horario_id' => $horario->id,
+                'curso_id' => $horario->curso->id,
+                'curso_nombre' => $horario->curso->nombre,
+                'curso_codigo' => $horario->curso->cod_curso
             ];
-        })->unique('curso_id'); // Remover duplicados por curso
+        })->unique('curso_id');
 
         return response()->json([
             'estudiante' => $estudiante,
@@ -58,15 +83,15 @@ class CartaPresentacionController extends Controller
     public function store(Request $request, $idEstudiante)
     {
         $request->validate([
-            'idHorario' => 'required|exists:horarios,id',
-            'Motivo' => 'required|string',
+            'horario_id' => 'required|exists:horarios,id',
+            'motivo' => 'required|string',
         ]);
-
+        
         $carta = CartaPresentacion::create([
-            'idEstudiante' => $idEstudiante,
-            'idHorario' => $request->idHorario,
-            'Motivo' => $request->Motivo,
-            'Estado' => 'Pendiente',
+            'estudiante_id' => $idEstudiante,
+            'horario_id' => $request->horario_id,
+            'motivo' => $request->motivo,
+            'estado' => 'Pendiente',
         ]);
 
         return response()->json([
@@ -74,4 +99,6 @@ class CartaPresentacionController extends Controller
             'carta' => $carta
         ], 201);
     }
+
+
 }
