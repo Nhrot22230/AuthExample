@@ -159,7 +159,7 @@ class RolePermissionsController extends Controller
 
         if ($request->has('scopes')) {
             $newScopes = $request->scopes;
-            $role->scopes()->sync($newScopes);
+            $role->scopes([])->sync($newScopes);
             RoleScopeUsuario::where('role_id', $role->id)
                 ->whereNotIn('scope_id', $newScopes)
                 ->delete();
