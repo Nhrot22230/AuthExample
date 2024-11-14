@@ -10,6 +10,7 @@ use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
 use App\Models\Universidad\Semestre;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
@@ -43,6 +44,7 @@ class FlujoEncuestasSeeder extends Seeder
         $horarios = $cursos->flatMap(fn($curso) => Horario::factory(random_int(1, 3))->create([
             'curso_id' => $curso->id,
             'semestre_id' => $semestre->id,
+            'oculto' => false,
         ]))->all();
 
         $estudiantes = Estudiante::factory(50)->create(['especialidad_id' => $especialidad->id]);
@@ -81,6 +83,8 @@ class FlujoEncuestasSeeder extends Seeder
             $horario->docentes()->attach($docente);
             $horario->jefePracticas()->create(['usuario_id' => $docente->usuario_id]);
         });
+
+        # DIRECTOR DE CARRERA
 
         $usuario = Usuario::create([
             'nombre' => 'Sofia',
