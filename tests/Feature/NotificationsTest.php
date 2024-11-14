@@ -80,8 +80,9 @@ class NotificationsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonFragment([
-            'id' => $notification->id,
             'title' => $notification->title,
+            'message' => $notification->message,
+            'message_type' => $notification->message_type,
         ]);
     }
 
