@@ -123,9 +123,9 @@ class EstudianteController extends Controller
     }
 
 
-    public function destroy($codigo)
+    public function destroy($id)
     {
-        $estudiante = Estudiante::where('codigoEstudiante', $codigo)->first();
+        $estudiante = Estudiante::find($id);
         if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
@@ -144,7 +144,6 @@ class EstudianteController extends Controller
                 'estudiantes.*.ApellidoMaterno' => 'nullable|string',
                 'estudiantes.*.Email' => 'required|email|unique:usuarios,email',
                 'estudiantes.*.Especialidad' => 'required|string|exists:especialidades,nombre',
-                'estudiantes.*.Facultad' => 'required|string|exists:facultades,nombre',
             ]);
         } catch (\Exception $e) {
             Log::channel('errors')->error('Error al validar los datos de los estudiantes', ['error' => $e->getMessage()]);
