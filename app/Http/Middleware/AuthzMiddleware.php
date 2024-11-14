@@ -29,7 +29,7 @@ class AuthzMiddleware
             return $next($request);
         }
 
-        $entityId = $request->route('id');
+        $entityId = $request->route('entity_id');
         $hasDirectAccess = RoleScopeUsuario::where('usuario_id', $user->id)
             ->where('entity_type', $entityType)
             ->where('entity_id', $entityId)

@@ -15,55 +15,77 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permission_categories = [
-            ['name' => 'administrativos',                   'access_path' => AccessPath::PERSONAS],
-            ['name' => 'areas',                             'access_path' => AccessPath::UNIDADES],
-            ['name' => 'asesores',                          'access_path' => AccessPath::CURSOS],
-            ['name' => 'candidaturas',                      'access_path' => AccessPath::CANDIDATURAS],
-            ['name' => 'configuración personal',            'access_path' => AccessPath::CONFIGURACION_PERSONAL],
-            ['name' => 'cursos',                            'access_path' => AccessPath::CURSOS],
-            ['name' => 'departamentos',                     'access_path' => AccessPath::UNIDADES],
-            ['name' => 'docentes',                          'access_path' => AccessPath::PERSONAS],
-            ['name' => 'encuestas',                         'access_path' => AccessPath::SOLICITUDES_ENCUENTAS],
-            ['name' => 'especialidades',                    'access_path' => AccessPath::UNIDADES],
-            ['name' => 'estudiantes',                       'access_path' => AccessPath::PERSONAS],
-            ['name' => 'facultades',                        'access_path' => AccessPath::UNIDADES],
-            ['name' => 'horarios',                          'access_path' => AccessPath::CURSOS],
-            ['name' => 'instituciones',                     'access_path' => AccessPath::CONFIGURACION_SISTEMA],
-            ['name' => 'jefes de práctica',                 'access_path' => AccessPath::JEFE_PRACTICA],
-            ['name' => 'jurados',                           'access_path' => AccessPath::CURSOS],
-            ['name' => 'matriculas_adicionales',            'access_path' => AccessPath::MATRICULAS_ADICIONALES],
-            ['name' => 'mis matriculas_adicionales',        'access_path' => AccessPath::MATRICULAS_ADICIONALES],
-            ['name' => 'matriculas_especialidad',           'access_path' => AccessPath::MATRICULAS_ADICIONALES],
-            ['name' => 'mis matriculas_especialidad',       'access_path' => AccessPath::MATRICULAS_ADICIONALES],
-            ['name' => 'mis candidaturas',                  'access_path' => AccessPath::MIS_CANDIDATURAS],
-            ['name' => 'mis cursos',                        'access_path' => AccessPath::MIS_CURSOS],
-            ['name' => 'mis encuestas',                     'access_path' => AccessPath::MIS_ENCUESTAS],
-            ['name' => 'mis unidades',                      'access_path' => AccessPath::MIS_UNIDADES],
-            ['name' => 'observaciones',                     'access_path' => AccessPath::CURSOS],
-            ['name' => 'pedidos de horarios',               'access_path' => AccessPath::PEDIDOS_HORARIOS],
-            ['name' => 'permisos',                          'access_path' => AccessPath::CONFIGURACION_SISTEMA],
-            ['name' => 'planes de estudio',                 'access_path' => AccessPath::PLAN_ESTUDIOS],
-            ['name' => 'roles',                             'access_path' => AccessPath::CONFIGURACION_SISTEMA],
-            ['name' => 'secciones',                         'access_path' => AccessPath::UNIDADES],
-            ['name' => 'semestres',                         'access_path' => AccessPath::SEMESTRES],
-            ['name' => 'solicitudes',                       'access_path' => AccessPath::TRAMITES_ACADEMICOS],
-            ['name' => 'solicitudes de encuestas',          'access_path' => AccessPath::SOLICITUDES_ENCUENTAS],
-            ['name' => 'temas de tesis',                    'access_path' => AccessPath::JURADOS_TESIS_SECRETARIO_ACADEMICO],
-            ['name' => 'usuarios',                          'access_path' => AccessPath::PERSONAS],
+            [
+                'name' => 'configuracion_sistema',
+                'access_path' => AccessPath::CONFIGURACION_SISTEMA,
+                'sub_permissions' => [
+                    'usuarios',
+                    'unidades',
+                    'autorizacion',
+                    'semestres',
+                ]
+            ],
+            [
+                'name' => 'tramites_academicos',
+                'access_path' => AccessPath::TRAMITES_ACADEMICOS,
+                'sub_permissions' => [
+                    'pedido-cursos',
+                    'jurado-tesis',
+                    'matricula-adicional'
+                ]
+            ],
+            [
+                'name' => 'solicitudes_encuestas',
+                'access_path' => AccessPath::MIS_SOLICITUDES,
+                'sub_permissions' => [
+                    'mis-encuestas',
+                    'mis-matriculas-adicionales',
+                    'mis-tema-tesis',
+                ]
+            ],
+            [
+                'name' => 'mis_unidades',
+                'access_path' => AccessPath::MIS_UNIDADES,
+                'sub_permissions' => [
+                    'mis-unidades',
+                    'facultades',
+                    'departamentos',
+                    'especialidades',
+                    'secciones',
+                    'areas',
+                    'cursos',
+                ]
+            ],
+            [
+                'name' => 'convoctorias',
+                'access_path' => AccessPath::CONVOCATORIAS,
+                'sub_permissions' => [
+                    'mis-convocatorias',
+                    'convocatorias',
+                ]
+            ],
+            [
+                'name' => 'mis_cursos',
+                'access_path' => AccessPath::MIS_CURSOS,
+                'sub_permissions' => [
+                    'mis-cursos',
+                    'mis-horarios',
+                ]
+            ]
         ];
 
-        foreach ($permission_categories as $pc) {
-            $permission_category = PermissionCategory::create($pc);
-            
-            Permission::create([
-                'name' => 'ver ' . $pc['name'],
-                'permission_category_id' => $permission_category->id
+        foreach ($permission_categories as $category) {
+            $permission_category = PermissionCategory::create([
+                'name' => $category['name'],
+                'access_path' => $category['access_path'],
             ]);
 
-            Permission::create([
-                'name' => 'manage ' . $pc['name'],
-                'permission_category_id' => $permission_category->id
-            ]);
+            foreach ($category['sub_permissions'] as $permission_name) {
+                Permission::create([
+                    'name' => $permission_name,
+                    'permission_category_id' => $permission_category->id
+                ]);
+            }
         }
     }
 }
