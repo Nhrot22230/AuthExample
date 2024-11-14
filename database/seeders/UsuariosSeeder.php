@@ -2,15 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Universidad\Area;
-use App\Models\Universidad\Especialidad;
 use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UsuariosSeeder extends Seeder
 {

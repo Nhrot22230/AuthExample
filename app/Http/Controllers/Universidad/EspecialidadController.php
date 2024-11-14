@@ -21,13 +21,12 @@ class EspecialidadController extends Controller
 
     public function indexAll()
     {
-        $id_facultad = request('id_facultad', null);
+        $id_facultad = request('facultad_id', null);
 
-        if ($id_facultad) {
-            $especialidades = Especialidad::with('areas')->where('facultad_id', $id_facultad)->get();
-        } else {
-            $especialidades = Especialidad::with('areas')->get();
-        }
+        $especialidades = $id_facultad ?
+            Especialidad::with('areas')->where('facultad_id', $id_facultad)->get()
+            : Especialidad::with('areas')->get();
+
 
         return response()->json($especialidades, 200);
     }

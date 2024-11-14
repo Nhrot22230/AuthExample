@@ -20,7 +20,6 @@ enum AccessPath: string
     case PLAN_ESTUDIOS                      = 'PlanDeEstudios';
     case SEMESTRES                          = 'Semestres';
     case SOLICITUDES_ENCUENTAS              = 'SolicitudesEncuestas';
-    case SOLICITUDES_ENCUESTAS_ADMIN        = 'SolicitudesEncuestasAdmin';
     case TRAMITES_ACADEMICOS                = 'TramitesAcademicos';
     case UNIDADES                           = 'Unidades';
     case CONVOCATORIAS                      = 'Convocatorias';

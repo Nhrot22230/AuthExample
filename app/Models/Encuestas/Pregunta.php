@@ -14,6 +14,7 @@ class Pregunta extends Model
     protected $fillable = [
         'texto_pregunta',
         'tipo_respuesta',
+        'tipo_pregunta',
     ];
 
     protected $hidden = ['created_at', 'updated_at', 'pivot'];

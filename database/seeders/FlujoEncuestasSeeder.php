@@ -14,6 +14,8 @@ use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
+use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -44,6 +46,33 @@ class FlujoEncuestasSeeder extends Seeder
         ]))->all();
 
         $estudiantes = Estudiante::factory(50)->create(['especialidad_id' => $especialidad->id]);
+        $estudiantes[] = Estudiante::factory()->create([
+            'usuario_id' => Usuario::factory()->create([
+                'nombre' => 'Gianluca',
+                'apellido_paterno' => 'Gomocio',
+                'apellido_materno' => 'Barrionuevo',
+                'email' => 'gian.luca@gianluka.zzz',
+                'picture' => 'https://random-d.uk/api/27.jpg',
+            ])->id,
+            'especialidad_id' => $especialidad->id,
+        ]);
+        collect($horarios)->each(function ($horario) use ($estudiantes) {
+            $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
+            foreach ($estudiantesSeleccionados as $estudiante) {
+                $existeMatricula = HorarioEstudiante::where('estudiante_id', $estudiante->id)
+                    ->whereHas('horario', function ($query) use ($horario) {
+                        $query->where('curso_id', $horario->curso_id);
+                    })
+                    ->exists();
+                if (!$existeMatricula) {
+                    HorarioEstudiante::create([
+                        'estudiante_id' => $estudiante->id,
+                        'horario_id' => $horario->id,
+                    ]);
+                }
+            }
+        });
+
         $jefes = $estudiantes->random(min(2 * count($horarios), $estudiantes->count()))
             ->map(fn($predocente) => Docente::factory()->create(['usuario_id' => $predocente->usuario_id]))
             ->values();
@@ -111,6 +140,41 @@ class FlujoEncuestasSeeder extends Seeder
             'entity_type' => Facultad::class,
         ]);
 
+        $estudiante_role = Role::with('scopes')->where('name', 'estudiante')->first();
+        $horarios = Horario::with('curso', 'estudiantes')
+            ->where('semestre_id', Semestre::where('estado', 'activo')->first()->id)
+            ->orderBy('curso_id')
+            ->get();
+        $horarios->each(function ($horario) use ($estudiante_role) {
+            $horario->estudiantes->each(function ($estudiante) use ($horario, $estudiante_role) {
+                RoleScopeUsuario::create([
+                    'usuario_id' => $estudiante->usuario_id,
+                    'role_id' => $estudiante_role->id,
+                    'scope_id' => $estudiante_role->scopes->first()->id,
+                    'entity_id' => $horario->curso_id,
+                    'entity_type' => Curso::class,
+                ]);
+            });
+        });
+
+        collect($horarios)->each(function ($horario) {
+            $jefePractica = $horario->jefePracticas()->first();
+            if ($jefePractica) {
+                $horario->estudiantes->each(function ($estudiante) use ($jefePractica, $horario) {
+                    $horarioEstudiante = HorarioEstudiante::where('estudiante_id', $estudiante->id)
+                        ->where('horario_id', $horario->id)
+                        ->first();
+        
+                    if ($horarioEstudiante) {
+                        HorarioEstudianteJp::create([
+                            'estudiante_horario_id' => $horarioEstudiante->id,
+                            'jp_horario_id' => $jefePractica->id,
+                            'encuestaJP' => false,
+                        ]);
+                    }
+                });
+            }
+        });
         
     }
 }

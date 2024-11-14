@@ -46,7 +46,6 @@ class EstudianteController extends Controller
         return response()->json($estudiantes, 200);
     }
 
-
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -63,8 +62,8 @@ class EstudianteController extends Controller
                 ['email' => $validatedData['email']],
                 [
                     'nombre' => $validatedData['nombre'],
-                    'apellido_paterno' => $validatedData['apellido_paterno'],
-                    'apellido_materno' => $validatedData['apellido_materno'],
+                    'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
+                    'apellido_materno' => $validatedData['apellido_materno'] ?? '',
                     'password' => Hash::make($validatedData['codigoEstudiante']),
                 ]
             );
@@ -79,7 +78,6 @@ class EstudianteController extends Controller
         return response()->json(['message' => 'Estudiante creado exitosamente'], 201);
     }
 
-
     public function show($codigo)
     {
         $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])
@@ -92,9 +90,9 @@ class EstudianteController extends Controller
         return response()->json($estudiante, 200);
     }
 
-    public function update(Request $request, $codigo)
+    public function update(Request $request, $id)
     {
-        $estudiante = Estudiante::with('usuario')->where('codigoEstudiante', $codigo)->first();
+        $estudiante = Estudiante::with('usuario')->find($id);
         if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
@@ -103,16 +101,16 @@ class EstudianteController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'nullable|string|max:255',
             'apellido_materno' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:usuarios,email,' . $estudiante->usuario->id,
-            'codigoEstudiante' => 'required|string|unique:estudiantes,codigoEstudiante,' . $estudiante->id,
+            'email' => "required|email|unique:usuarios,email,{$estudiante->usuario->id}",
+            'codigoEstudiante' => "required|string|unique:estudiantes,codigoEstudiante,{$estudiante->id}",
             'especialidad_id' => 'required|exists:especialidades,id',
         ]);
 
         DB::transaction(function () use ($validatedData, $estudiante) {
             $estudiante->usuario->fill([
                 'nombre' => $validatedData['nombre'],
-                'apellido_paterno' => $validatedData['apellido_paterno'],
-                'apellido_materno' => $validatedData['apellido_materno'],
+                'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
+                'apellido_materno' => $validatedData['apellido_materno'] ?? '',
                 'email' => $validatedData['email'],
             ])->save();
             $estudiante->fill([
@@ -125,9 +123,9 @@ class EstudianteController extends Controller
     }
 
 
-    public function destroy($codigo)
+    public function destroy($id)
     {
-        $estudiante = Estudiante::where('codigoEstudiante', $codigo)->first();
+        $estudiante = Estudiante::find($id);
         if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
@@ -146,7 +144,6 @@ class EstudianteController extends Controller
                 'estudiantes.*.ApellidoMaterno' => 'nullable|string',
                 'estudiantes.*.Email' => 'required|email|unique:usuarios,email',
                 'estudiantes.*.Especialidad' => 'required|string|exists:especialidades,nombre',
-                'estudiantes.*.Facultad' => 'required|string|exists:facultades,nombre',
             ]);
         } catch (\Exception $e) {
             Log::channel('errors')->error('Error al validar los datos de los estudiantes', ['error' => $e->getMessage()]);
@@ -160,8 +157,8 @@ class EstudianteController extends Controller
                     ['email' => $estudianteData['Email']],
                     [
                         'nombre' => $estudianteData['Nombre'],
-                        'apellido_paterno' => $estudianteData['ApellidoPaterno'],
-                        'apellido_materno' => $estudianteData['ApellidoMaterno'],
+                        'apellido_paterno' => $estudianteData['ApellidoPaterno'] ?? '',
+                        'apellido_materno' => $estudianteData['ApellidoMaterno'] ?? '',
                         'password' => Hash::make($estudianteData['Codigo']),
                     ]
                 );
