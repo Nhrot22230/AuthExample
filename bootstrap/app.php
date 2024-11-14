@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('api')
                 ->group(base_path('routes/auth/authentication.php'));
 
-            Route::prefix('web')
+            Route::middleware(LogMiddleware::class)
                 ->group(base_path('routes/web.php'));
         }
     )
