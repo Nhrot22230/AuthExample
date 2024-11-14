@@ -80,37 +80,9 @@ class FlujoEncuestasSeeder extends Seeder
         ]);
 
 
-        // SECRETARIO ACADEMICO
 
-        $usuario = Usuario::create([
-            'nombre' => 'Jhairt',
-            'apellido_paterno' => 'Vega',
-            'apellido_materno' => 'Quino',
-            'email' => 'jhairt@gmail.com',
-            'picture' => 'https://random-d.uk/api/2.jpg',
-            'estado' => 'activo',
-            'password' => Hash::make('12345678'),
-        ]);  
 
-        Administrativo::factory()->create([
-            'usuario_id' => $usuario->id,
-            'codigoAdministrativo' => 201810111,
-            'lugarTrabajo' => 'Facultad de Ciencias e Ingeniería',
-            'cargo' => "Secretario Académico",
-        ]); 
 
-        $role = Role::findByName('secretario-academico');
-        $usuario->assignRole($role);
-        RoleScopeUsuario::create([
-            'role_id' => $role->id,
-            'usuario_id' => $usuario->id,
-            'scope_id' => Scope::firstOrCreate([
-                'name' => 'Facultad',
-                'entity_type' => Facultad::class,
-            ])->id,
-            'entity_id' => $facultad->id,
-            'entity_type' => Facultad::class,
-        ]);
 
         
     }
