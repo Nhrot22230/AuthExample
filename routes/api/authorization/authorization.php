@@ -15,5 +15,6 @@ Route::put('/roles/{id}', [RolePermissionsController::class, 'updateRole'])->mid
 Route::delete('/roles/{id}', [RolePermissionsController::class, 'destroyRole'])->middleware('can:manage roles');
 Route::get('/permissions', [RolePermissionsController::class, 'indexPermissions'])->middleware('can:ver permisos');
 Route::get('/permissions/my-permissions', [RolePermissionsController::class, 'authUserPermissions']);
+Route::get('/roles/my-roles', [RolePermissionsController::class, 'authUserRoles']);
 Route::post('/usuarios/{id}/sync-roles', [RolePermissionsController::class, 'syncRoles'])->middleware('can:manage roles');
 Route::post('/usuarios/{id}/sync-permissions', [RolePermissionsController::class, 'syncPermissions'])->middleware('can:manage roles');

@@ -130,7 +130,7 @@ class RolePermissionsController extends Controller
             return response()->json([
                 'message' => 'Rol creado correctamente',
                 'role' => $role
-            ], 200);
+            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => "Error al crear el rol: {$e->getMessage()}"], 500);
@@ -263,5 +263,16 @@ class RolePermissionsController extends Controller
             'permissions' => $response,
             'access_paths' => $uniqueCategories,
         ], 200);
+    }
+
+    public function authUserRoles(Request $request): JsonResponse
+    {
+        $usuario = $request->authUser;
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $roles = $usuario->roles;
+        return response()->json($roles, 200);
     }
 }
