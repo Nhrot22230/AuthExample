@@ -18,6 +18,7 @@ use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Usuarios\Administrativo;
 
 class FlujoEncuestasSeeder extends Seeder
 {
@@ -139,6 +140,38 @@ class FlujoEncuestasSeeder extends Seeder
                 });
             }
         });
+
+        $usuarioAdministrativo = Usuario::create([
+            'nombre' => 'Fernando',
+            'apellido_paterno' => 'Fernández',
+            'apellido_materno' => 'López',
+            'email' => 'fernandino@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/3.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),
+        ]);
+
+        $administrativo = Administrativo::create([
+            'usuario_id' => $usuarioAdministrativo->id,
+            'codigoAdministrativo' => 'ADM123456',
+            'lugarTrabajo' => 'Oficina administrativa',
+            'cargo' => 'Jefe Administrativo',
+            'facultad_id' => $facultad->id,  // La facultad a la que pertenece
+        ]);
         
-    }
+        $role = Role::findByName('asistente');  // Asegúrate de que existe un rol llamado 'administrativo'
+        $usuarioAdministrativo->assignRole($role);
+
+        // Crear el alcance para este administrativo, limitado solo a la especialidad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([  // Aquí creamos un alcance a la especialidad
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,  // El alcance es de tipo Especialidad
+            ])->id,
+            'usuario_id' => $usuarioAdministrativo->id,
+            'entity_type' => Especialidad::class,  // Tipo de entidad es Especialidad
+            'entity_id' => $especialidad->id,  // Asignamos el ID de la especialidad específica
+        ]);
+            }
 }
