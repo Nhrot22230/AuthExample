@@ -14,6 +14,7 @@ use App\Models\Usuarios\Usuario;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
+use App\Models\Matricula\Horario;
 use Illuminate\Support\Facades\Hash;
 
 class PedidoCursosSeeder extends Seeder
@@ -99,6 +100,16 @@ class PedidoCursosSeeder extends Seeder
                 'creditosReq' => $cursoElectivo->creditos
             ]);
         }
+
+        // Crear horarios para algunos cursos del pedido
+        $cursosParaHorarios = $cursosObligatorios->merge($cursosElectivos)->random(3); // Selecciona 3 cursos al azar
+        foreach ($cursosParaHorarios as $curso) {
+            Horario::factory(rand(1, 3))->create([
+                'curso_id' => $curso->id,
+                'semestre_id' => $semestre->id,
+                'oculto' => random_int(0,1), // Puedes cambiar este valor según tus necesidades
+            ]);
+        }        
 
         // Crear el usuario "Daniel Rivas" como director de carrera
         $usuario = Usuario::create([
