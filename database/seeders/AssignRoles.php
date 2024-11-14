@@ -33,8 +33,8 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%observaciones%')
             ->orWhere('name', 'like', '%jurados%')
             ->orWhere('name', 'like', '%especialidades%')
-            ->orWhere('name', 'like', '%docentes%')
-            ->orWhere('name', 'like', '%cursos%')
+            ->orWhere('name', 'like', '%mis unidades%')
+            ->orWhere('name', 'like', '%matricula%')
             ->get();
         $secretario_role->syncPermissions($permisos_secretario);
         $estudiante_role = Role::findByName('estudiante');
