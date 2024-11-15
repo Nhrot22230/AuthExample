@@ -20,6 +20,6 @@ Route::group([
     Route::delete('roles/{id}', [RolePermissionsController::class, 'destroyRole']);
 });
 
-Route::get('permissions/my-permissions', [RolePermissionsController::class, 'authUserPermissions']);
-Route::get('roles/auth/my-roles', [RolePermissionsController::class, 'authUserRoles']);
+Route::get('my-permissions', [RolePermissionsController::class, 'authUserPermissions']);
+Route::get('my-roles', [RolePermissionsController::class, 'authUserRoles']);
 

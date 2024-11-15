@@ -17,14 +17,14 @@ class AuthzMiddleware
 {
     public function handle(Request $request, Closure $next, $permission, $entityType)
     {
-        Log::channel('authz')->info("Checking permission: {$permission} on {$entityType}");
+        Log::channel('authz')->info("Checking permission: {$permission} on {$entityType}: {$request->route('entity_id')}");
 
         $user = $request->authUser;
         if (!$user) {
             return response()->json(['message' => 'Usuario no autenticado'], 403);
         }
 
-        if ($user->hasRole('Administrador')) {
+        if ($user->hasRole('administrador')) {
             Log::channel('authz')->info("User: {$user->email} has ADMINISTRATOR access to {$permission} on {$entityType}");
             return $next($request);
         }
