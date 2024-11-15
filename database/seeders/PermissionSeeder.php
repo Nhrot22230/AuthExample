@@ -35,7 +35,7 @@ class PermissionSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'solicitudes_encuestas',
+                'name' => 'mis_solicitudes',
                 'access_path' => AccessPath::MIS_SOLICITUDES,
                 'sub_permissions' => [
                     'mis-encuestas',

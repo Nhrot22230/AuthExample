@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Log;
 
 class PlanEstudioController extends Controller
 {
-    public function index($especialidad_id)
+    public function index($entity_id)
     {
         $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
-            ->where('especialidad_id', $especialidad_id)
+            ->where('especialidad_id', $entity_id)
             ->get()
             ->map(function ($plan) {
                 $plan->cursos = $plan->cursos->map(function ($curso) {
@@ -28,13 +28,13 @@ class PlanEstudioController extends Controller
         return response()->json($planesEstudio, 200);
     }
 
-    public function indexPaginated(Request $request, $especialidad_id)
+    public function indexPaginated(Request $request, $entity_id)
     {
         $search = $request->input('search', '');
         $perPage = $request->input('per_page', 10);
 
         $planesEstudio = PlanEstudio::with('cursos', 'semestres', 'cursos.requisitos')
-            ->where('especialidad_id', $especialidad_id)
+            ->where('especialidad_id', $entity_id)
             ->where(function ($query) use ($search) {
                 $query->where('cod_curso', 'like', "%$search%")
                     ->orWhere('nombre', 'like', "%$search%");
@@ -44,10 +44,10 @@ class PlanEstudioController extends Controller
         return response()->json($planesEstudio, 200);
     }
 
-    public function currentByEspecialidad($especialidad_id)
+    public function currentByEspecialidad($entity_id)
     {
         $planEstudio = PlanEstudio::with('cursos', 'semestres')
-            ->where('especialidad_id', $especialidad_id)
+            ->where('especialidad_id', $entity_id)
             ->where('estado', 'activo')
             ->first();
 
@@ -58,10 +58,10 @@ class PlanEstudioController extends Controller
         return response()->json($planEstudio, 200);
     }
 
-    public function show($especialidad_id, $plan_id)
+    public function show($entity_id, $plan_id)
     {
         $planEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
-            ->where('especialidad_id', $especialidad_id)
+            ->where('especialidad_id', $entity_id)
             ->find($plan_id);
 
         if (!$planEstudio) {
@@ -131,9 +131,9 @@ class PlanEstudioController extends Controller
         }
     }
 
-    public function update(Request $request, $especialidad_id, $plan_id)
+    public function update(Request $request, $entity_id, $plan_id)
     {
-        $planEstudio = PlanEstudio::where('especialidad_id', $especialidad_id)->find($plan_id);
+        $planEstudio = PlanEstudio::where('especialidad_id', $entity_id)->find($plan_id);
         if (!$planEstudio) {
             return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
         }
@@ -193,9 +193,9 @@ class PlanEstudioController extends Controller
         }
     }
 
-    public function destroy($especialidad_id, $plan_id)
+    public function destroy($entity_id, $plan_id)
     {
-        $planEstudio = PlanEstudio::where('especialidad_id', $especialidad_id)->find($plan_id);
+        $planEstudio = PlanEstudio::where('especialidad_id', $entity_id)->find($plan_id);
         if (!$planEstudio) {
             return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
         }
