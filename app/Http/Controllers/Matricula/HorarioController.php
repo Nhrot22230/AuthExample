@@ -142,7 +142,7 @@ class HorarioController extends Controller
                 'estado_encuesta' => $estadoEncuesta,
                 'encuestas' => $encuestas,
             ];
-        });
+        })->values();
 
         return response()->json([
             'cursos' => $cursos,

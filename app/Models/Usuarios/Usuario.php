@@ -99,4 +99,9 @@ class Usuario extends Authenticatable implements JWTSubject
         // ];
         return [];
     }
+
+    public function getFullNameAttribute()
+    {
+        return trim($this->nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno);
+    }
 }
