@@ -116,8 +116,14 @@ class TemaDeTesisController extends Controller
 
     public function indexTemasEstudianteId($estudiante_id): JsonResponse {
         $estudiante = Estudiante::findOrFail($estudiante_id);
-        $temasDeTesis = $estudiante->temasDeTesis;
-        return response()->json(['temasDeTesis' => $temasDeTesis], 200);
+        $temasDeTesis = $estudiante->temasDeTesis->map(function ($tema) {
+            return [
+                'id' => $tema->id,
+                'titulo' => $tema->titulo,
+                'estado' => $tema->estado,
+            ];
+        });
+        return response()->json($temasDeTesis, 200);
     }
 
     public function indexTemasPendientesUsuarioId($usuario_id): JsonResponse {
