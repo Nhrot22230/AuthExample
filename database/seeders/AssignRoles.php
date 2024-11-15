@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Authorization\Permission;
-use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -20,7 +19,7 @@ class AssignRoles extends Seeder
         $director_role = Role::findByName('director');
         $permisos_director = Permission::where('name', 'like', '%especialidades%')
             ->orWhere('name', 'like', '%solicitudes%')
-            ->orWhere('name', 'like', 'encuestas')
+            ->orWhere('name', 'like', '%encuestas%')
             ->orWhere('name', 'like', '%temas%')
             ->orWhere('name', 'like', '%unidades%')
             ->get();
@@ -37,14 +36,49 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%matricula%')
             ->get();
         $secretario_role->syncPermissions($permisos_secretario);
-        $estudiante_role = Role::findByName('estudiante');
-        $permisos_estudiante = Permission::where('name', 'like', '%encuestas%')
-            ->orWhere('name', 'like', 'mis unidades')
-            ->get();
-        $estudiante_role->syncPermissions($permisos_estudiante);
+        // Encontramos el rol de "docente"
+        $docente_role = Role::findByName('docente');
 
-        Estudiante::all()->each(function ($estudiante) {
-            $estudiante->usuario->assignRole('estudiante');
-        });
+        // Obtenemos los permisos que correspondan a los docentes
+        $permisos_docente = Permission::where('name', 'like', '%cursos%')
+            ->orWhere('name', 'like', '%encuestas%')
+            ->orWhere('name', 'like', '%mis cursos%')
+            ->orWhere('name', 'like', '%solicitudes de encuestas%')
+            ->orWhere('name', 'like', '%horarios%')
+            ->orWhere('name', 'like', '%solicitudes%')
+            ->get();
+
+        // Asignamos los permisos al rol de "docente"
+        $docente_role->syncPermissions($permisos_docente);
+        $estudiante_role = Role::findByName('estudiante');
+
+        // Obtenemos los permisos que correspondan a los estudiantes
+        $permisos_estudiante = Permission::where('name', 'like', '%mis cursos%')
+            ->orWhere('name', 'like', '%mis encuestas%')
+            ->orWhere('name', 'like', '%solicitudes%')
+            ->orWhere('name', 'like', '%matriculas%')
+            ->orWhere('name', 'like', '%mis unidades%')
+            ->orWhere('name', 'like', '%candidaturas%')
+            ->orWhere('name', 'like', '%temas de tesis%')
+            ->get();
+    
+        // Asignamos los permisos al rol de "estudiante"
+        $estudiante_role->syncPermissions($permisos_estudiante);
+        $asistente_role = Role::findByName('asistente');
+
+    // Obtenemos los permisos que correspondan a los asistentes
+    $permisos_asistente = Permission::where('name', 'like', '%mis unidades%')
+        ->orWhere('name', 'like', '%unidades%')
+        ->orWhere('name', 'like', '%cursos%')
+        ->orWhere('name', 'like', '%horarios%')
+        ->orWhere('name', 'like', '%docentes%')
+        ->orWhere('name', 'like', '%departamentos%')
+        ->orWhere('name', 'like', '%facultades%')
+        ->orWhere('name', 'like', '%especialidades%')
+        ->orWhere('name', 'like', '%solicitudes%')
+        ->get();
+
+    // Asignamos los permisos al rol de "asistente"
+    $asistente_role->syncPermissions($permisos_asistente);
     }
 }
