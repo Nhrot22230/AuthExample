@@ -90,6 +90,8 @@ class FlujoTemaTesisSeeder extends Seeder
         $temasTesis = TemaDeTesis::factory(1)->create([
             'area_id' => $areas->random()->id,
             'especialidad_id' => $especialidad->id,
+            'estado' => 'pendiente',
+            'fecha_enviado' => Now()
         ]);
 
         foreach($temasTesis as $tema){
@@ -110,6 +112,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'fecha_decision' => null,
             'comentarios' => null,
             'file_id' => null,
+            'responsable' => 'asesor'
         ]);
 
 

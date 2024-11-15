@@ -56,6 +56,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('proceso_aprobacion_id')->constrained('proceso_aprobacion_tema')->onDelete('cascade');
             $table->foreignId('usuario_id')->constrained('usuarios')->onDelete('cascade');
+            $table->enum('responsable', ['asesor', 'coordinador', 'director'])->default('asesor');
             $table->enum('estado', ['aprobado', 'pendiente', 'rechazado'])->default('pendiente');
             $table->date('fecha_decision')->nullable();
             $table->text('comentarios')->nullable();

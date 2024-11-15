@@ -181,6 +181,7 @@ class TemaDeTesisController extends Controller
                 'especialidad_id' => $especialidad_id,
                 'area_id' => $request->area_id,
                 'estado' => 'pendiente',
+                'fecha_enviado' => Now()
             ]);
 
             // Registrar los asesores
@@ -199,8 +200,9 @@ class TemaDeTesisController extends Controller
 
             EstadoAprobacionTema::create([
                 'proceso_aprobacion_id' => $procesoAprobacion->id,
-                'usuario_id' => $usuarioId, // Relacionamos con el asesor usando usuario_id
-                'estado' => 'pendiente'
+                'usuario_id' => $usuarioId,
+                'estado' => 'pendiente',
+                'responsable' => 'asesor'
             ]);
 
             // Registrar estudiante relacionado con el tema de tesis
@@ -223,8 +225,63 @@ class TemaDeTesisController extends Controller
         }
     }
 
-    public function indexTemasDirectorId($usuario_id): JsonResponse {
-        $usuario = $request->authUser;
-        return response()->json([$usuario], 201);
+    public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
+        $request->validate([
+            'usuario_id' => 'required|exists:usuarios,id',
+            'comentarios' => 'nullable|string',
+            //aqui falta el archivo
+        ]);
+
+        $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
+
+        $procesoAprobacion = $temaTesis->procesoAprobacion;
+        $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
+        $responsable = $estadoAprobacion->responsable;
+
+        if ($responsable === 'director') {
+            // Lógica específica para el director
+        } elseif ($responsable === 'coordinador') {
+            // Lógica específica para el coordinador
+        } else {
+            // Lógica para otros casos
+        }
+
+
+        return response()->json([
+           'estado_aprobacion' => $estadoAprobacion->responsable,
+        ]);
+    }
+
+    public function rechazarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
+        $request->validate([
+            'usuario_id' => 'required|exists:usuarios,id',
+            'comentarios' => 'nullable|string',
+            //aqui falta el archivo
+        ]);
+
+        $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
+
+        $procesoAprobacion = $temaTesis->procesoAprobacion;
+        $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
+
+        $estadoAprobacion->update([
+            'fecha_decision' => Now(),
+            'estado' => 'rechazado',
+            'comentarios' => $request->comentarios,
+        ]);
+
+        $procesoAprobacion->update([
+            'fecha_fin' => Now(),
+            'estado_proceso' => 'rechazado',
+        ]);
+
+        $temaTesis->update([
+            'estado' => 'desaprobado'
+        ]);
+
+        return response()->json([
+            'message' => 'Tema de tesis rechazado correctamente.',
+            'proceso_aprobacion' => $procesoAprobacion,
+        ]);
     }
 }

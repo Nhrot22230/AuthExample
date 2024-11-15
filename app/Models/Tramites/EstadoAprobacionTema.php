@@ -22,7 +22,8 @@ class EstadoAprobacionTema extends Model
         'fecha_decision',
         'comentarios',
         'pdf_url',
-        'file_id'
+        'file_id',
+        'responsable'
     ];
 
     public function procesoAprobacion() : BelongsTo
