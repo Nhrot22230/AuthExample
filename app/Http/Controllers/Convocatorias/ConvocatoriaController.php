@@ -21,10 +21,9 @@ class ConvocatoriaController extends Controller
         // Obtener las convocatorias con paginación y filtrado por nombre
         $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')  // Incluye las relaciones
             ->where('nombre', 'like', "%$search%") // Filtra por nombre (si hay búsqueda)
-            ->where('estado', 'like', "%$search%") // Filtra por estado activo
+            ->where('estado', 'like', "%$search%") // Filtra por estado
             ->where('seccion_id', 'like', "%$seccion%") // Filtra por sección
             ->paginate($perPage); // Paginación
-
         return response()->json($convocatorias, 200);
     }
 
