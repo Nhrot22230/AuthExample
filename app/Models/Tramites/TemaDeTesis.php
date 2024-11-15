@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TemaDeTesis extends Model
 {
@@ -26,10 +27,11 @@ class TemaDeTesis extends Model
         'fecha_enviado',
         'especialidad_id',
         'comentarios',
+        'area_id'
     ];
 
     // Relación con estudiantes (muchos a muchos)
-    public function estudiantes(): BelongsToMany
+    public function estudiantes() : BelongsToMany
     {
         return $this->belongsToMany(Estudiante::class, 'estudiante_tema_tesis', 'tema_tesis_id', 'estudiante_id');
     }
@@ -56,5 +58,10 @@ class TemaDeTesis extends Model
     public function observaciones(): HasMany
     {
         return $this->hasMany(Observacion::class);
+    }
+
+    public function procesoAprobacion() : hasOne
+    {
+        return $this->hasOne(ProcesoAprobacionTema::class, 'tema_tesis_id');
     }
 }

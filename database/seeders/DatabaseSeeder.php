@@ -19,5 +19,9 @@ class DatabaseSeeder extends Seeder
         // Flujo para Sofia
         $this->call(FlujoEncuestasSeeder::class);
         $this->call(AssignRoles::class);
+        $this->call(CartaPresentacionSolicitudSeeder::class);
+        // Pedido
+        $this->call(PedidoCursosSeeder::class);
+        $this->call(FlujoTemaTesisSeeder::class);
     }
 }
