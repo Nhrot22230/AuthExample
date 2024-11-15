@@ -100,7 +100,7 @@ class ConvocatoriaController extends Controller
                 'estado' => 'pendiente', // Estado inicial
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
-            
+
             if (!empty($validatedData['criteriosAntiguo'])) {
                 $convocatoria->gruposCriterios()->attach($validatedData['criteriosAntiguo']);
             }
@@ -129,26 +129,68 @@ class ConvocatoriaController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Convocatoria $convocatoria)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Convocatoria $convocatoria)
+    public function update(Request $request, $id)
     {
-        //
-    }
+        $validatedData = $request->validate([
+            'nombreConvocatoria' => 'required|string|max:255',
+            'descripcion' => 'nullable|string|max:1000',
+            'fechaInicio' => 'required|date|before_or_equal:fechaFin',
+            'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'miembros' => 'required|array|min:1',
+            'miembros.*' => 'integer|exists:docentes,id',
+            'criteriosNuevos' => 'array',
+            'criteriosNuevos.*.nombre' => 'required|string|max:255',
+            'criteriosNuevos.*.obligatorio' => 'required|boolean',
+            'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
+            'criteriosAntiguo' => 'array',
+            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'seccion_id' => 'required|integer|exists:secciones,id',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Convocatoria $convocatoria)
-    {
-        //
+        DB::beginTransaction();
+        try {
+            $convocatoria = Convocatoria::findOrFail($id);
+
+            $convocatoria->update([
+                'nombre' => $validatedData['nombreConvocatoria'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaInicio' => $validatedData['fechaInicio'],
+                'fechaFin' => $validatedData['fechaFin'],
+                'seccion_id' => $validatedData['seccion_id'],
+            ]);
+
+            $criteriosAntiguos = $validatedData['criteriosAntiguo'] ?? [];
+            $criteriosNuevosIds = [];
+
+            if (!empty($validatedData['criteriosNuevos'])) {
+                foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
+                    $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
+                    $criteriosNuevosIds[] = $nuevoCriterio->id;
+                }
+            }
+
+            $convocatoria->gruposCriterios()->sync(array_merge($criteriosAntiguos, $criteriosNuevosIds));
+
+            $idsAsociados = GrupoCriterios::whereHas('convocatorias', function ($query) use ($convocatoria) {
+                $query->where('convocatoria_id', $convocatoria->id);
+            })->pluck('id')->toArray();
+
+            GrupoCriterios::whereNotIn('id', $idsAsociados)->delete();
+            $convocatoria->comite()->sync($validatedData['miembros']);
+            DB::commit();
+            return response()->json([
+                'message' => 'Convocatoria actualizada exitosamente.',
+                'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar la convocatoria.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
