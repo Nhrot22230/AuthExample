@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TextoRespuestaJP extends Model
 {
+    protected $table = "texto_respuesta_jp";
+    protected $fillable = ['jp_horario_id', 'encuesta_pregunta_id', 'respuesta'];
     public function encuestaPregunta() : BelongsTo
     {
         return $this->belongsTo(EncuestaPregunta::class, 'encuesta_pregunta_id');

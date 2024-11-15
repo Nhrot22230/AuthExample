@@ -18,6 +18,9 @@ class HorarioController extends Controller
             ->whereHas('estudiantes', function ($query) use ($estudianteId) {
                 $query->where('estudiante_id', $estudianteId);
             })
+            ->whereHas('encuestas', function ($query) {
+                $query->where('disponible', true); // Filtrar encuestas activas basadas en el campo 'disponible'
+            })
             ->with(['curso', 'horarioEstudiantes.horarioEstudianteJps', 'docentes.usuario']) // Cargar docentes y usuario
             ->get();
 
@@ -75,6 +78,7 @@ class HorarioController extends Controller
                 'nombre' => $jp->usuario->nombre,
                 'apellido_paterno' => $jp->usuario->apellido_paterno,
                 'apellido_materno' => $jp->usuario->apellido_materno,
+                'imagen' => $jp->usuario->picture,
                 'estado' => $estadoEncuesta,
                 'encuesta_id' => $encuestaId, // Incluir el ID de la encuesta de tipo 'jefe_practica'
             ];
@@ -110,10 +114,14 @@ class HorarioController extends Controller
                         ->select('horario_id', 'estudiante_id', 'encuestaDocente');
                 },
                 'encuestas' => function ($query) {
-                    $query->where('tipo_encuesta', 'docente');
-                }
+                $query->where('tipo_encuesta', 'docente')
+                      ->where('disponible', true); // Filtrar solo encuestas disponibles
+            } 
             ])
-            ->get();
+            ->get()
+            ->filter(function ($horario) {
+                return $horario->encuestas->isNotEmpty(); // Retener solo horarios con encuestas activas
+            });
 
         $cursos = $horarios->map(function ($horario) {
             $estadoEncuesta = optional($horario->horarioEstudiantes->first())->encuestaDocente;
