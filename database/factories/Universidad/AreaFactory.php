@@ -39,7 +39,7 @@ class AreaFactory extends Factory
         return [
             'nombre' => $nombre_area,
             'descripcion' => $descripcion,
-            'especialidad_id' => Especialidad::factory(),
+            'especialidad_id' => Especialidad::factory()
         ];
     }
 }

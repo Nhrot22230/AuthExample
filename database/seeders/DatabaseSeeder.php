@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
 
         // Convocatorias
         $this->call(ProcesoConvocatoriaSeeder::class);
+        $this->call(FlujoTemaTesisSeeder::class);
     }
 }

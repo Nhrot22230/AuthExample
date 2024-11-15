@@ -5,6 +5,7 @@ namespace App\Models\Usuarios;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\Matricula\Horario;
+use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Area;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Seccion;
@@ -62,5 +63,10 @@ class Docente extends Model
     public function convocatoria(): BelongsToMany
     {
         return $this->BelongsToMany(Convocatoria::class, 'docente_convocatoria');
+    }
+
+    public function temasDeTesis() : BelongsToMany
+    {
+        return $this->belongsToMany(TemaDeTesis::class, 'asesor_tema_tesis', 'docente_id', 'tema_tesis_id');
     }
 }

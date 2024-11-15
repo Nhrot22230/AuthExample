@@ -5,12 +5,14 @@ namespace App\Models\Usuarios;
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Especialidad;
 use App\Models\Solicitudes\CartaPresentacion;
 use Database\Factories\Usuarios\EstudianteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
@@ -54,4 +56,10 @@ class Estudiante extends Model
     {
         return $this->hasMany(CartaPresentacion::class, 'idEstudiante');
     }
+
+    public function temasDeTesis() : BelongsToMany
+    {
+        return $this->belongsToMany(TemaDeTesis::class, 'estudiante_tema_tesis', 'estudiante_id', 'tema_tesis_id');
+    }
+
 }
