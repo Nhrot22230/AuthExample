@@ -4,6 +4,7 @@ namespace App\Models\Universidad;
 
 use App\Models\Encuestas\Encuesta;
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
+use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use Database\Factories\Universidad\EspecialidadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -52,5 +53,9 @@ class Especialidad extends Model
     {
         return $this->hasMany(Encuesta::class);
 
+    }
+
+    public function docentes() : HasMany {
+        return $this->hasMany(Docente::class);
     }
 }

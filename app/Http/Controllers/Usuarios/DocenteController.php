@@ -203,4 +203,62 @@ class DocenteController extends Controller
             return response()->json(['message' => 'Error al cargar docentes', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function getCursosDocente($idDocente)
+    {
+        $cursos = DB::table('horario_docente')
+            ->join('horarios', 'horario_docente.horario_id', '=', 'horarios.id')
+            ->join('cursos', 'horarios.curso_id', '=', 'cursos.id')
+            ->where('horario_docente.docente_id', $idDocente)
+            ->select('cursos.id as curso_id', 'cursos.cod_curso', 'cursos.nombre')
+            ->distinct() // Asegurar que no se repitan los cursos si el docente tiene múltiples horarios en el mismo curso
+            ->get();
+
+        if ($cursos->isEmpty()) {
+            return response()->json([
+                'message' => 'No se encontraron cursos para este docente.'
+            ], 404);
+        }
+
+        return response()->json($cursos);
+    }
+
+    public function getCursosDirector($idUsuario)
+    {
+        $esDirector = DB::table('role_scope_usuarios')
+            ->where('usuario_id', $idUsuario)
+            ->where('role_id', 4) // 4 es el ID para el rol de 'director'
+            ->where('scope_id', 3) // 3 es el ID para el scope de 'Especialidad'
+            ->exists();
+
+        if (!$esDirector) {
+            return response()->json([
+                'message' => 'El usuario no tiene el rol de director en el alcance de especialidad.'
+            ], 403);
+        }
+
+        $especialidad = DB::table('docentes')
+            ->where('usuario_id', $idUsuario)
+            ->value('especialidad_id');
+
+        if (!$especialidad) {
+            return response()->json([
+                'message' => 'El usuario no está asociado a ninguna especialidad como director.'
+            ], 403);
+        }
+
+        $cursos = DB::table('cursos')
+            ->where('especialidad_id', $especialidad)
+            ->select('id as curso_id', 'cod_curso', 'nombre')
+            ->get();
+
+        if ($cursos->isEmpty()) {
+            return response()->json([
+                'message' => 'No se encontraron cursos para la especialidad de este director.'
+            ], 404);
+        }
+
+        return response()->json($cursos);
+    }
+
 }

@@ -10,6 +10,7 @@ use App\Models\Encuestas\RespuestasPreguntaDocente;
 use App\Models\Encuestas\RespuestasPreguntaJP;
 use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Matricula\HorarioEstudianteJp;
 use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Semestre;
@@ -39,7 +40,26 @@ class EncuestaController extends Controller
             ->get();
         if ($encuestas->isEmpty())
             return response()->json([]);
-        return response()->json($encuestas);
+
+        $encuestasConTotales = $encuestas->map(function ($encuesta) use ($tipo_encuesta) {
+            if ($tipo_encuesta == 'docente') {
+                $totales = $this->progresoEncuestaDocenteTotales($encuesta->id);
+            } else {
+                $totales = $this->progresoEncuestaJPTotales($encuesta->id);
+            }
+
+            return [
+                'id' => $encuesta->id,
+                'nombre_encuesta' => $encuesta->nombre_encuesta,
+                'fecha_inicio' => $encuesta->fecha_inicio,
+                'fecha_fin' => $encuesta->fecha_fin,
+                'disponible' => $encuesta->disponible,
+                'total_estudiantes' => $totales['total_estudiantes'],
+                'total_completaron' => $totales['total_completaron']
+            ];
+        });
+
+        return response()->json($encuestasConTotales);
     }
 
     public function indexCursoSemestreEspecialidad(int $especialidad_id): JsonResponse
@@ -738,7 +758,7 @@ class EncuestaController extends Controller
         return response()->json($resultadoEncuesta);
     }
 
-    public function progresoEncuestaDocentePorHorariosNuevo($encuestaId)
+    public function progresoEncuestaDocenteTotales($encuestaId)
 {
     try {
         $encuesta = Encuesta::with(['horario.curso', 'horario.horarioEstudiantes'])
@@ -754,8 +774,7 @@ class EncuestaController extends Controller
         $totalEstudiantesGeneral = 0;
         $totalCompletaronGeneral = 0;
 
-        $progresoPorHorarios = $encuesta->horario->map(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
-            $curso = $horario->curso;
+        $encuesta->horario->each(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
             $totalEstudiantes = $horario->horarioEstudiantes->count();
             $totalEstudiantesGeneral += $totalEstudiantes;
 
@@ -763,84 +782,125 @@ class EncuestaController extends Controller
                 ->where('encuestaDocente', true)
                 ->count();
             $totalCompletaronGeneral += $numeroEstudiantesQueCompletaron;
-
-            return [
-                'horario_id' => $horario->id,
-                'curso_id' => $curso->id,
-                'curso_nombre' => $curso->nombre,
-                'total_estudiantes' => $totalEstudiantes,
-                'numero_estudiantes_que_completaron' => $numeroEstudiantesQueCompletaron,
-            ];
         });
 
-        return response()->json([
-            'encuesta_id' => $encuestaId,
-            'progreso_por_horarios' => $progresoPorHorarios,
-            'total_estudiantes_general' => $totalEstudiantesGeneral,
-            'total_completaron_general' => $totalCompletaronGeneral,
-        ]);
+        return [
+            'total_estudiantes' => $totalEstudiantesGeneral,
+            'total_completaron' => $totalCompletaronGeneral
+        ];
     } catch (\Exception $e) {
-        Log::error('Error en obtenerProgresoEncuestaDocentePorHorarios: ' . $e->getMessage());
+        Log::error('Error en progresoEncuestaDocenteTotales: ' . $e->getMessage());
         return response()->json(['message' => 'Error interno del servidor.'], 500);
     }
 }
 
-    public function progresoEncuestaJPPorHorariosNuevo($encuestaId)
+    public function progresoEncuestaJPTotales($encuestaId)
     {
         try {
-            // Obtener la encuesta con sus horarios y estudiantes relacionados con JPs
-            $encuesta = Encuesta::with(['horario.curso', 'horario.horarioEstudiantes.horarioEstudianteJp'])
+            $encuesta = Encuesta::with(['horario.horarioEstudiantes.horarioEstudianteJps'])
                 ->where('id', $encuestaId)
-                ->where('tipo_encuesta', 'jp') // Cambiado a jp para jefes de práctica
-                ->where('disponible', true) // Solo si la encuesta está activa
+                ->where('tipo_encuesta', 'jefe_practica')
+                ->where('disponible', true)
                 ->first();
 
             if (!$encuesta) {
                 return response()->json(['message' => 'Encuesta no encontrada o no disponible'], 404);
             }
 
-            // Variables para almacenar los totales generales
             $totalEstudiantesGeneral = 0;
             $totalCompletaronGeneral = 0;
 
-            // Procesar los horarios asociados a esta encuesta para jefes de práctica
-            $progresoPorHorarios = $encuesta->horario->map(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
-                $curso = $horario->curso;
+            $encuesta->horario->each(function ($horario) use (&$totalEstudiantesGeneral, &$totalCompletaronGeneral) {
 
-                // Total de estudiantes en el horario de esta encuesta para JPs
                 $totalEstudiantes = $horario->horarioEstudiantes->count();
                 $totalEstudiantesGeneral += $totalEstudiantes;
-
-                // Estudiantes que completaron la encuesta de JP
                 $numeroEstudiantesQueCompletaron = $horario->horarioEstudiantes
                     ->flatMap(function ($horarioEstudiante) {
-                        return $horarioEstudiante->horarioEstudianteJp->where('encuestaJP', true);
+                        return $horarioEstudiante->horarioEstudianteJps->where('encuestaJP', true);
                     })
                     ->count();
-                $totalCompletaronGeneral += $numeroEstudiantesQueCompletaron;
 
-                return [
-                    'horario_id' => $horario->id,
-                    'curso_id' => $curso->id,
-                    'curso_nombre' => $curso->nombre,
-                    'total_estudiantes' => $totalEstudiantes,
-                    'numero_estudiantes_que_completaron' => $numeroEstudiantesQueCompletaron,
-                ];
+                $totalCompletaronGeneral += $numeroEstudiantesQueCompletaron;
             });
 
-            // Respuesta con los totales generales
-            return response()->json([
-                'encuesta_id' => $encuestaId,
-                'progreso_por_horarios' => $progresoPorHorarios,
-                'total_estudiantes_general' => $totalEstudiantesGeneral,
-                'total_completaron_general' => $totalCompletaronGeneral,
-            ]);
+            return [
+                'total_estudiantes' => $totalEstudiantesGeneral,
+                'total_completaron' => $totalCompletaronGeneral,
+            ];
+
         } catch (\Exception $e) {
-            // Registrar el error en el log y devolver un mensaje de error
-            Log::error('Error en obtenerProgresoEncuestaJPPorHorarios: ' . $e->getMessage());
+            Log::error('Error en progresoEncuestaJPTotales: ' . $e->getMessage());
             return response()->json(['message' => 'Error interno del servidor.'], 500);
         }
     }
 
 
+    public function progresoEncuestaDocentePorHorario($horarioId)
+    {
+        try {
+            $horario = Horario::with(['horarioEstudiantes.estudiante', 'horarioEstudiantes', 'docentes.usuario'])
+            ->find($horarioId);
+
+            if (!$horario) {
+                return response()->json(['message' => 'Horario no encontrado'], 404);
+            }
+
+            $totalEstudiantes = $horario->horarioEstudiantes->count();
+            $totalCompletaron = $horario->horarioEstudiantes
+                                ->where('encuestaDocente', true)
+                                ->count();
+
+            $docentes = $horario->docentes;
+
+            if ($docentes->isEmpty()) {
+                return response()->json(['message' => 'No hay docentes asociados a este horario'], 404);
+            }
+
+            $nombreDocente = $docentes->first()->usuario->nombre . ' ' . $docentes->first()->usuario->apellido_paterno;
+
+            return response()->json([
+                'horario' => $horario->nombre,
+                'responsable' => $nombreDocente,
+                'total_estudiantes' => $totalEstudiantes,
+                'total_completaron' => $totalCompletaron,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error en obtenerProgresoEncuestaDocentePorHorario: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor.'], 500);
+        }
+    }
+
+    public function progresoEncuestaJPPorHorario($jpId)
+    {
+        try {
+            $jp = JefePractica::with([
+                'usuario', 
+                'horarioEstudianteJps.horarioEstudiante',
+                'horarioEstudianteJps.horarioEstudiante.horario',
+                'horarioEstudianteJps.horarioEstudiante.horario.curso'
+            ])->findOrFail($jpId);
+
+            $nombreResponsable = $jp->usuario->nombre . ' ' . $jp->usuario->apellido_paterno;
+
+            $horario = $jp->horarioEstudianteJps->first()->horarioEstudiante->horario;
+
+            $totalEstudiantes = $horario->horarioEstudiantes->count();
+
+            $totalCompletaron = $jp->horarioEstudianteJps->filter(function ($horarioEstudianteJp) {
+                return $horarioEstudianteJp->encuestaJP == 1;
+            })->count();
+
+            $resumenHorario = [
+                'horario' => $horario->nombre,
+                'responsable' => $nombreResponsable,
+                'total_estudiantes' => $totalEstudiantes,
+                'total_completaron' => $totalCompletaron
+            ];
+
+            return response()->json($resumenHorario);
+        } catch (\Exception $e) {
+            Log::error('Error en obtenerProgresoEncuestaJPPorHorario: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor.'], 500);
+        }
+    }
 }

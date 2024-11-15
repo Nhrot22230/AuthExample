@@ -118,6 +118,11 @@ if ($gianlucaUsuario) {
             'entity_id' => $especialidad->id,
         ]);
 
+
+
+
+
+
         $estudiante_role = Role::with('scopes')->where('name', 'estudiante')->first();
         $horarios = Horario::with('curso', 'estudiantes')
             ->where('semestre_id', Semestre::where('estado', 'activo')->first()->id)
