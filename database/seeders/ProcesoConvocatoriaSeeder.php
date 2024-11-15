@@ -43,7 +43,6 @@ class ProcesoConvocatoriaSeeder extends Seeder
         ]);
 
         $role_asistente = Role::findByName('asistente');
-        $role_asistente->syncPermissions(Permission::all());
         $scope = Scope::where('name', 'Seccion')->first();
         $asistente->usuario->assignRole('asistente');
         RoleScopeUsuario::create([
