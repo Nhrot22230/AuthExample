@@ -9,6 +9,7 @@ use App\Models\Tramites\ProcesoAprobacionTema;
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
+use App\Models\Usuarios\Usuario;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -205,7 +206,6 @@ class TemaDeTesisController extends Controller
                 'responsable' => 'asesor'
             ]);
 
-            // Registrar estudiante relacionado con el tema de tesis
             $estudiante->temasDeTesis()->attach($temaTesis->id);
 
             DB::commit();
@@ -239,49 +239,129 @@ class TemaDeTesisController extends Controller
         $responsable = $estadoAprobacion->responsable;
 
         if ($responsable === 'director') {
-            // Lógica específica para el director
+            DB::beginTransaction();
+            try {
+                if ($estadoAprobacion) {
+                    $estadoAprobacion->update([
+                        'fecha_decision' => now(),
+                        'estado' => 'aprobado',
+                        'comentarios' => $request->comentarios,
+                    ]);
+                }
+                if ($procesoAprobacion) {
+                    $procesoAprobacion->update([
+                        'fecha_fin' => now(),
+                        'estado_proceso' => 'aprobado',
+                    ]);
+                }
+                $temaTesis->update([
+                    'estado' => 'aprobado',
+                ]);
+                DB::commit();
+                return response()->json([
+                    'message' => 'Tema de tesis aprobado correctamente.',
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Hubo un error al aprobar el tema de tesis.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
         } elseif ($responsable === 'coordinador') {
-            // Lógica específica para el coordinador
+            DB::beginTransaction();
+            try {
+                if ($estadoAprobacion) {
+                    $estadoAprobacion->update([
+                        'fecha_decision' => now(),
+                        'estado' => 'aprobado',
+                        'comentarios' => $request->comentarios,
+                    ]);
+                    $director = Usuario::find(109); // Falta tener una forma de saber quien es el director de carrera
+                    $usuarioId = $director->id;
+                    EstadoAprobacionTema::create([
+                        'proceso_aprobacion_id' => $procesoAprobacion->id,
+                        'usuario_id' => $usuarioId,
+                        'estado' => 'pendiente',
+                        'responsable' => 'director'
+                    ]);
+                }
+                DB::commit();
+                return response()->json([
+                    'message' => 'Proceso de aprobación actualizado correctamente.',
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Error al actualizar el proceso de aprobación.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
         } else {
-            // Lógica para otros casos
+            DB::beginTransaction();
+            try {
+                $estadoAprobacion->update([
+                    'fecha_decision' => now(),
+                    'estado' => 'aprobado',
+                    'comentarios' => $request->comentarios,
+                ]);
+                $coordinador = Usuario::find(108); // Falta tener una forma de saber quien es el coordinador de un area
+                $usuarioId = $coordinador->id;
+                EstadoAprobacionTema::create([
+                    'proceso_aprobacion_id' => $procesoAprobacion->id,
+                    'usuario_id' => $usuarioId,
+                    'estado' => 'pendiente',
+                    'responsable' => 'coordinador',
+                ]);
+                DB::commit();
+                return response()->json([
+                    'message' => 'Tema de tesis aprobado correctamente.',
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Error al actualizar el proceso de aprobación.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
         }
-
-
-        return response()->json([
-           'estado_aprobacion' => $estadoAprobacion->responsable,
-        ]);
     }
 
     public function rechazarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
-            //aqui falta el archivo
+            // Aquí falta la validación del archivo si es necesario
         ]);
+        DB::transaction(function () use ($tema_tesis_id, $request) {
+            // Obtener el tema de tesis con sus relaciones
+            $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->findOrFail($tema_tesis_id);
 
-        $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
+            $procesoAprobacion = $temaTesis->procesoAprobacion;
+            $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
 
-        $procesoAprobacion = $temaTesis->procesoAprobacion;
-        $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
+            if ($estadoAprobacion) {
+                $estadoAprobacion->update([
+                    'fecha_decision' => now(),
+                    'estado' => 'rechazado',
+                    'comentarios' => $request->comentarios,
+                ]);
+            }
 
-        $estadoAprobacion->update([
-            'fecha_decision' => Now(),
-            'estado' => 'rechazado',
-            'comentarios' => $request->comentarios,
-        ]);
+            if ($procesoAprobacion) {
+                $procesoAprobacion->update([
+                    'fecha_fin' => now(),
+                    'estado_proceso' => 'rechazado',
+                ]);
+            }
 
-        $procesoAprobacion->update([
-            'fecha_fin' => Now(),
-            'estado_proceso' => 'rechazado',
-        ]);
-
-        $temaTesis->update([
-            'estado' => 'desaprobado'
-        ]);
+            $temaTesis->update([
+                'estado' => 'desaprobado',
+            ]);
+        });
 
         return response()->json([
             'message' => 'Tema de tesis rechazado correctamente.',
-            'proceso_aprobacion' => $procesoAprobacion,
         ]);
     }
 }

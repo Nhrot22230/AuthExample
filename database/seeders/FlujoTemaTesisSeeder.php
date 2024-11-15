@@ -87,6 +87,60 @@ class FlujoTemaTesisSeeder extends Seeder
             'entity_id' => $especialidad->id,
         ]);
 
+        $usuarioCoordinador = Usuario::create([
+            'nombre' => 'Docente Coordinador',
+            'apellido_paterno' => 'Creado',
+            'apellido_materno' => 'Recien',
+            'email' => 'docenteCoordinador@gmail.com',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('password'),
+        ]);
+        $docenteCoordinador = Docente::factory()->create([
+            'usuario_id' => $usuarioCoordinador->id,
+            'especialidad_id' => $especialidad->id,
+            'area_id' => $areas->first()->id
+        ]);
+        $role = Role::findByName('docente');
+        $usuarioCoordinador->assignRole($role);
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Curso',
+                'entity_type' => Curso::class,
+            ])->id,
+            'usuario_id' => $usuarioCoordinador->id,
+            'entity_type' => Curso::class,
+            'entity_id' => $especialidad->id,
+        ]);
+
+        $usuarioDirector = Usuario::create([
+            'nombre' => 'Director',
+            'apellido_paterno' => 'Creado',
+            'apellido_materno' => 'Recien',
+            'email' => 'director@gmail.com',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('password'),
+        ]);
+        $docenteDirector= Docente::factory()->create([
+            'usuario_id' => $usuarioDirector->id,
+            'especialidad_id' => $especialidad->id,
+            //'area_id' => $areas->first()->id
+        ]);
+        $role = Role::findByName('docente');
+        $usuarioDirector->assignRole($role);
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,
+            ])->id,
+            'usuario_id' => $usuarioDirector->id,
+            'entity_type' => Especialidad::class,
+            'entity_id' => $especialidad->id,
+        ]);
+
         $temasTesis = TemaDeTesis::factory(1)->create([
             'area_id' => $areas->random()->id,
             'especialidad_id' => $especialidad->id,
