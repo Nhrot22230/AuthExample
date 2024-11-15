@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Models\Usuarios\Docente;
-
+use Illuminate\Support\Facades\DB;
 class EstudianteRiesgoController extends Controller
 {
     /**
@@ -746,6 +746,193 @@ class EstudianteRiesgoController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+    public function obtenerEstadisticas(Request $request)
+    {
+        $request->validate([
+            'id_especialidad' => 'required|integer',
+            'semana' => 'required|integer',
+        ]);
+
+        $idEspecialidad = $request->input('id_especialidad');
+        $semana = $request->input('semana');
+
+        // Consultar los informes de la semana y especialidad
+        $informes = DB::table('informes_riesgo')
+            ->join('estudiante_riesgo', 'informes_riesgo.codigo_alumno_riesgo', '=', 'estudiante_riesgo.id')
+            ->where('estudiante_riesgo.codigo_especialidad', $idEspecialidad)
+            ->where('informes_riesgo.semana', $semana)
+            ->select('informes_riesgo.desempenho', 'informes_riesgo.estado')
+            ->get();
+
+        // Contar categorías de desempeño
+        $mal = $informes->filter(fn($i) => in_array($i->desempenho, ['Mal', 'Muy mal']))->count();
+        $regular = $informes->filter(fn($i) => $i->desempenho === 'Regular')->count();
+        $bien = $informes->filter(fn($i) => in_array($i->desempenho, ['Bien', 'Muy bien']))->count();
+        $total = $informes->count();
+
+        // Calcular completitud
+        $completos = $informes->filter(fn($i) => $i->estado === 'Respondida')->count();
+        $completitud = $total > 0 ? round(($completos / $total) * 100, 2) : 0;
+
+        // Devolver los resultados
+        return response()->json([
+            'mal' => $mal,
+            'regular' => $regular,
+            'bien' => $bien,
+            'total' => $total,
+            'completitud' => $completitud,
+        ]);
+    }
+
+
+
+    public function obtenerCursos(Request $request){
+        // Validación del campo `id_especialidad`
+        $request->validate([
+            'id_especialidad' => 'required|integer',
+        ]);
+
+        $id_especialidad = $request->input('id_especialidad');
+
+        try {
+            // Consulta solo con los estudiantes en riesgo
+            $cursos = Curso::where('especialidad_id', $id_especialidad)
+                ->withCount('estudiantesRiesgo') // Contamos estudiantes en riesgo
+                ->get()
+                ->map(function ($curso) {
+                    return [
+                        'nombre' => $curso->nombre,
+                        'inscritos_en_riesgo' => $curso->estudiantes_riesgo_count, // Campo automático de withCount
+                    ];
+                });
+
+            // Respuesta exitosa
+            return response()->json($cursos, 200);
+
+        } catch (\Exception $e) {
+            // Manejo de errores
+            return response()->json([
+                'error' => 'Error al obtener cursos',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function compararCursos(Request $request)
+{
+    // Validar los datos recibidos
+    $request->validate([
+        'cursos' => 'required|array',
+        'semana' => 'required|integer',
+        'id_especialidad' => 'required|integer',
+    ]);
+
+    $cursos = $request->input('cursos');
+    $semana = $request->input('semana');
+    $id_especialidad = $request->input('id_especialidad');
+
+    // Resultado inicial vacío
+    $resultados = [];
+
+    try {
+        foreach ($cursos as $nombreCurso) {
+            // Buscar el curso con el nombre y especialidad proporcionados
+            $curso = Curso::where('nombre', $nombreCurso)
+                ->where('especialidad_id', $id_especialidad)
+                ->first();
+
+            // Si no se encuentra el curso, agregar un resultado vacío para este curso
+            if (!$curso) {
+                $resultados[] = [
+                    'curso' => $nombreCurso,
+                    'mal' => 0,
+                    'regular' => 0,
+                    'bien' => 0,
+                    'error' => 'Curso no encontrado o no pertenece a la especialidad',
+                ];
+                continue;
+            }
+
+            // Obtener los informes para la semana seleccionada y el curso
+            $informes = InformeRiesgo::where('codigo_curso', $curso->id)
+                ->where('semana', $semana)
+                ->where('estado', 'Respondido') // Solo informes "Respondido"
+                ->get();
+
+            // Calcular las estadísticas para el curso
+            $resultados[] = [
+                'curso' => $nombreCurso,
+                'mal' => $informes->whereIn('desempenho', ['Mal', 'Muy mal'])->count(),
+                'regular' => $informes->where('desempenho', 'Regular')->count(),
+                'bien' => $informes->whereIn('desempenho', ['Bien', 'Muy bien'])->count(),
+            ];
+        }
+
+        // Si no hay resultados procesados, devolver un arreglo vacío
+        if (empty($resultados)) {
+            return response()->json([[
+                'curso' => 'Sin datos',
+                'mal' => 0,
+                'regular' => 0,
+                'bien' => 0,
+            ]]);
+        }
+    } catch (\Exception $e) {
+        // Registrar errores en los logs y devolver respuesta de error
+        Log::error('Error al comparar cursos:', ['exception' => $e]);
+        return response()->json(['error' => 'Error interno', 'details' => $e->getMessage()], 500);
+    }
+
+    // Devolver los resultados procesados
+    return response()->json($resultados);
+}
+
+    public function obtenerUltimosInformes(Request $request){
+        try {
+            // Validar la entrada
+            $request->validate([
+                'id_especialidad' => 'required|integer',
+            ]);
+
+            $idEspecialidad = $request->input('id_especialidad');
+
+            // Obtener los últimos 3 informes de riesgo para la especialidad
+            $informes = InformeRiesgo::whereHas('alumno_riesgo', function ($query) use ($idEspecialidad) {
+                $query->where('codigo_especialidad', $idEspecialidad);
+            })
+            ->with([
+                'alumno_riesgo.estudiante.usuario',
+                'alumno_riesgo.curso',
+                'alumno_riesgo.docente'
+            ])
+            ->orderBy('created_at', 'desc') // Ordenar por la fecha de creación
+            ->limit(3) // Limitar a los últimos 3 informes
+            ->get();
+
+            // Formatear los datos para la respuesta
+            $resultados = $informes->map(function ($informe) {
+                return [
+                    'docente' => $informe->alumno_riesgo->docente->nombre ?? 'Docente no registrado',
+                    'estudiante' => $informe->alumno_riesgo->estudiante->usuario->nombre ?? 'Estudiante no registrado',
+                    'codigo_estudiante' => $informe->alumno_riesgo->codigo_estudiante ?? 'N/A',
+                    'curso' => $informe->alumno_riesgo->curso->nombre ?? 'Curso no registrado',
+                    'horario' => $informe->alumno_riesgo->horario ?? 'N/A',
+                    'fecha' => $informe->fecha,
+                    'desempenho' => $informe->desempenho,
+                ];
+            });
+
+            return response()->json($resultados);
+        } catch (\Exception $e) {
+            // Capturar cualquier error y devolver un mensaje
+            Log::error('Error al obtener últimos informes', ['exception' => $e]);
+            return response()->json(['error' => 'Error al obtener últimos informes', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+
+
     /**
      * Show the form for creating a new resource.
      */

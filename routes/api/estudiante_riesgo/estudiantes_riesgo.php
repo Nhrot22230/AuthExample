@@ -17,3 +17,8 @@ Route::get('estudiantesRiesgo/listar_semanas_existentes/{id}', [EstudianteRiesgo
 Route::delete('estudiantesRiesgo/eliminar_semana', [EstudianteRiesgoController::class, 'eliminar_semana']);
 Route::post('estudiantesRiesgo/crear-por-especialidad', [EstudianteRiesgoController::class, 'crearInformePorEspecialidad']);
 Route::post('estudiantesRiesgo/semanas-por-especialidad', [EstudianteRiesgoController::class, 'obtenerSemanasPorEspecialidad']);
+Route::get('estudiantesRiesgo/estadisticas', [EstudianteRiesgoController::class, 'obtenerEstadisticas']);
+Route::get('estudiantesRiesgo/cursos', [EstudianteRiesgoController::class, 'obtenerCursos']);
+Route::post('estudiantesRiesgo/comparacion-cursos', [EstudianteRiesgoController::class, 'compararCursos']);
+Route::get('estudiantesRiesgo/ultimos-informes', [EstudianteRiesgoController::class, 'obtenerUltimosInformes']);
+
