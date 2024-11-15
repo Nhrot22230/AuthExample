@@ -7,6 +7,7 @@ use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Especialidad;
+use App\Models\Solicitudes\CartaPresentacion;
 use Database\Factories\Usuarios\EstudianteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,11 @@ class Estudiante extends Model
     public function estudiantesRiesgo(): HasMany
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_estudiante', 'codigoEstudiante');
+    }
+
+    public function cartasPresentacion(): HasMany
+    {
+        return $this->hasMany(CartaPresentacion::class, 'idEstudiante');
     }
 
     public function temasDeTesis() : BelongsToMany

@@ -10,6 +10,7 @@ use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
 use App\Models\Universidad\Semestre;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
@@ -42,6 +43,7 @@ class FlujoEncuestasSeeder extends Seeder
         $horarios = $cursos->flatMap(fn($curso) => Horario::factory(random_int(1, 3))->create([
             'curso_id' => $curso->id,
             'semestre_id' => $semestre->id,
+            'oculto' => false,
         ]))->all();
 
         $estudiantes = Estudiante::factory(50)->create(['especialidad_id' => $especialidad->id]);
@@ -55,6 +57,16 @@ class FlujoEncuestasSeeder extends Seeder
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
+        $gianlucaUsuario = Usuario::where('email', 'gian.luca@gianluka.zzz')->first();
+
+// Verificar que se obtuvo el usuario de Gianluca
+if ($gianlucaUsuario) {
+    // Obtener el rol de "estudiante"
+    $estudianteRole = Role::findByName('estudiante'); // Asegúrate de que el rol de "estudiante" existe
+
+    // Asignar el rol de "estudiante" al usuario de Gianluca
+    $gianlucaUsuario->assignRole($estudianteRole);
+}
         collect($horarios)->each(function ($horario) use ($estudiantes) {
             $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
             foreach ($estudiantesSeleccionados as $estudiante) {
@@ -81,6 +93,8 @@ class FlujoEncuestasSeeder extends Seeder
             $horario->jefePracticas()->create(['usuario_id' => $docente->usuario_id]);
         });
 
+        # DIRECTOR DE CARRERA
+
         $usuario = Usuario::create([
             'nombre' => 'Sofia',
             'apellido_paterno' => 'Escajadillo',
@@ -103,6 +117,11 @@ class FlujoEncuestasSeeder extends Seeder
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad->id,
         ]);
+
+
+
+
+
 
         $estudiante_role = Role::with('scopes')->where('name', 'estudiante')->first();
         $horarios = Horario::with('curso', 'estudiantes')
@@ -139,6 +158,98 @@ class FlujoEncuestasSeeder extends Seeder
                 });
             }
         });
+
+        $usuarioAdministrativo = Usuario::create([
+            'nombre' => 'Fernando',
+            'apellido_paterno' => 'Fernández',
+            'apellido_materno' => 'López',
+            'email' => 'fernandino@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/3.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),
+        ]);
+
+        $administrativo = Administrativo::create([
+            'usuario_id' => $usuarioAdministrativo->id,
+            'codigoAdministrativo' => 'ADM123456',
+            'lugarTrabajo' => 'Oficina administrativa',
+            'cargo' => 'Jefe Administrativo',
+            'facultad_id' => $facultad->id,  // La facultad a la que pertenece
+        ]);
         
+        $role = Role::findByName('asistente');  // Asegúrate de que existe un rol llamado 'administrativo'
+        $usuarioAdministrativo->assignRole($role);
+
+        // Crear el alcance para este administrativo, limitado solo a la especialidad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([  // Aquí creamos un alcance a la especialidad
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,  // El alcance es de tipo Especialidad
+            ])->id,
+            'usuario_id' => $usuarioAdministrativo->id,
+            'entity_type' => Especialidad::class,  // Tipo de entidad es Especialidad
+            'entity_id' => $especialidad->id,  // Asignamos el ID de la especialidad específica
+        ]);
+        
+        $usuarioDocente = Usuario::create([
+            'nombre' => 'David',
+            'apellido_paterno' => 'Allasi',
+            'apellido_materno' => '',
+            'email' => 'david.allasi@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/4.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),
+        ]);
+
+        // Crear el docente
+        $docente = Docente::factory()->create(['usuario_id' => $usuarioDocente->id, 'especialidad_id' => $especialidad->id]);
+
+        // Asignar el rol de "docente" al usuario
+        $role = Role::findByName('docente');  // Asegúrate de que el rol 'docente' existe
+        $usuarioDocente->assignRole($role);
+
+        // Crear el alcance (scope) para este docente, limitado solo a la especialidad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,
+            ])->id,
+            'usuario_id' => $usuarioDocente->id,
+            'entity_type' => Especialidad::class,
+            'entity_id' => $especialidad->id,
+        ]);
+        $gianluca = Estudiante::where('usuario_id', Usuario::where('email', 'gian.luca@gianluka.zzz')->first()->id)->first();
+
+// Obtener los horarios en los que está matriculado Gianluca
+$horariosDeGianluca = $gianluca->horarios;  // Aquí obtenemos todos los horarios
+$horario = $horariosDeGianluca->first();
+
+if ($horariosDeGianluca->isNotEmpty()) {
+    // Seleccionamos el primer horario en el que Gianluca está matriculado (puedes ajustar esto si es necesario)
+    $horario = $horariosDeGianluca->first();
+
+    // Ahora, aseguramos que solo David Allasi sea el docente asignado a este horario
+    // Sincronizamos los docentes (esto eliminará cualquier otro docente asignado)
+    $horario->docentes()->sync([$docente->id]);
+
+    // Asegurarnos de que Gianluca está matriculado en este horario en la tabla estudiante_horario
+    $existeMatricula = HorarioEstudiante::where('estudiante_id', $gianluca->id)
+        ->where('horario_id', $horario->id)
+        ->exists();
+
+    // Si no está matriculado, lo matriculamos
+    if (!$existeMatricula) {
+        HorarioEstudiante::create([
+            'estudiante_id' => $gianluca->id,
+            'horario_id' => $horario->id,
+        ]);
     }
+}
+
+    }
+
+
+        
 }

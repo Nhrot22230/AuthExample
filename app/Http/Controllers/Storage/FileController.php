@@ -20,11 +20,11 @@ class FileController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'file_type' => ['required', Rule::in(['image', 'video', 'audio', 'document'])],
-                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx|max:2048', // tamaño máximo en KB
+                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048', // tamaño máximo en KB
             ]);
 
             $file = $request->file('file');
-            $path = 'files/' . $request->file_type . '/' . $request->name . '/' . uniqid() . '_' . $file->getClientOriginalName();
+            $path = 'files/' . $request->file_type . '/' . $file->getClientOriginalName() . '.'. $file->getClientOriginalExtension();
 
             Storage::disk('s3')->put($path, file_get_contents($file));
             // $url = 'https://' . env('AWS_BUCKET') . '.s3.' . env('AWS_DEFAULT_REGION') . '.amazonaws.com/' . $path;
@@ -61,19 +61,16 @@ class FileController extends Controller
         return response()->json(['error' => 'File not found'], 404);
     }
 
-    /**
-     * List all files or filter by file_type.
-     */
-    public function listFiles(Request $request)
+    public function downloadById($id)
     {
-        $query = File::query();
+        $fileRecord = File::where('id', $id)->first();
 
-        if ($request->has('file_type')) {
-            $query->where('file_type', $request->file_type);
+        if ($fileRecord && Storage::disk('s3')->exists($fileRecord->path)) {
+            $file = Storage::disk('s3')->get($fileRecord->path);
+            return response($file, 200)->header('Content-Type', $fileRecord->mime_type);
         }
 
-        $files = $query->get();
-        return response()->json($files, 200);
+        return response()->json(['error' => 'File not found'], 404);
     }
 
     /**
@@ -96,6 +93,27 @@ class FileController extends Controller
             return response()->json(['message' => 'Error deleting file: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Update a file by its name.
+     */
+    public function updateFile(Request $request, $id)
+    {
+        $fileRecord = File::where('id', $id)->first();
+        if (!$fileRecord) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        try {
+            Storage::disk('s3')->delete($fileRecord->path);
+            $fileRecord->delete();
+            return $this->uploadFile($request);
+        } catch (\Exception $e) {
+            Log::error('File Update Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Error updating file: ' . $e->getMessage()], 500);
+        }
+    }
+
 
     /**
      * Retrieve file metadata by its name.
