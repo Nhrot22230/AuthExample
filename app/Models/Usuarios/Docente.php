@@ -4,6 +4,7 @@ namespace App\Models\Usuarios;
 
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\Matricula\Horario;
+use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Area;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Seccion;
@@ -56,5 +57,10 @@ class Docente extends Model
     public function estudiantesRiesgo(): HasMany
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_docente', 'codigoDocente');
+    }
+
+    public function temasDeTesis() : BelongsToMany
+    {
+        return $this->belongsToMany(TemaDeTesis::class, 'asesor_tema_tesis', 'docente_id', 'tema_tesis_id');
     }
 }

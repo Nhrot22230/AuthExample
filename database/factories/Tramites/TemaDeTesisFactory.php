@@ -3,6 +3,7 @@
 namespace Database\Factories\Tramites;
 
 use App\Models\Tramites\TemaDeTesis;
+use App\Models\Universidad\Area;
 use App\Models\Universidad\Especialidad;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
@@ -19,7 +20,6 @@ class TemaDeTesisFactory extends Factory
             $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']) :
             $estadoJurado = 'no enviado';
 
-
         $comentarios = $estadoJurado == 'desaprobado' ? $this->faker->paragraph() : null;
 
         return [
@@ -31,6 +31,7 @@ class TemaDeTesisFactory extends Factory
             'fecha_enviado' => $this->faker->date(),
             'especialidad_id' => Especialidad::factory(),
             'comentarios' => $comentarios,
+            'area_id' => Area::factory()
         ];
     }
 }
