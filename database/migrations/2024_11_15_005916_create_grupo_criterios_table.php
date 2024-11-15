@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('grupos_criterios', function (Blueprint $table) {
+        Schema::create('grupo_criterios', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
             $table->boolean('obligatorio');
@@ -21,7 +21,7 @@ return new class extends Migration
 
         Schema::create('grupo_criterios_convocatoria', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('grupo_criterios_id')->constrained('grupos_criterios')->onDelete('cascade');
+            $table->foreignId('grupo_criterios_id')->constrained('grupo_criterios')->onDelete('cascade');
             $table->foreignId('convocatoria_id')->constrained('convocatoria')->onDelete('cascade');
             $table->timestamps();
         });
