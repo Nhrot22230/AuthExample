@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ConvocatoriaController extends Controller
 {
@@ -56,15 +57,12 @@ class ConvocatoriaController extends Controller
     public function listar_convocatorias_todas()
     {
         try {
-            // Obtener todas las convocatorias, con sus relaciones
             $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')->get();
 
-            // Si no se encuentran convocatorias, retornar mensaje adecuado
             if ($convocatorias->isEmpty()) {
                 return response()->json(['message' => 'No se encontraron convocatorias'], 404);
             }
 
-            // Devolver las convocatorias en formato JSON
             return response()->json($convocatorias, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Ocurrió un error', 'details' => $e->getMessage()], 500);
@@ -76,7 +74,58 @@ class ConvocatoriaController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'nombreConvocatoria' => 'required|string|max:255',
+            'descripcion' => 'nullable|string|max:1000',
+            'fechaInicio' => 'required|date|before_or_equal:fechaFin',
+            'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'miembros' => 'required|array|min:1',
+            'miembros.*' => 'integer|exists:docentes,id',
+            'criteriosNuevos' => 'array',
+            'criteriosNuevos.*.nombre' => 'required|string|max:255',
+            'criteriosNuevos.*.obligatorio' => 'required|boolean',
+            'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
+            'criteriosAntiguo' => 'array',
+            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'seccion_id' => 'required|integer|exists:secciones,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $convocatoria = Convocatoria::create([
+                'nombre' => $validatedData['nombreConvocatoria'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaInicio' => $validatedData['fechaInicio'],
+                'fechaFin' => $validatedData['fechaFin'],
+                'estado' => 'pendiente', // Estado inicial
+                'seccion_id' => $validatedData['seccion_id'],
+            ]);
+            
+            if (!empty($validatedData['criteriosAntiguo'])) {
+                $convocatoria->gruposCriterios()->attach($validatedData['criteriosAntiguo']);
+            }
+
+            if (!empty($validatedData['criteriosNuevos'])) {
+                foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
+                    $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
+                    $convocatoria->gruposCriterios()->attach($nuevoCriterio->id);
+                }
+            }
+
+            $convocatoria->comite()->attach($validatedData['miembros']);
+            DB::commit();
+            return response()->json([
+                'message' => 'Convocatoria creada exitosamente.',
+                'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al crear la convocatoria.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
