@@ -15,7 +15,7 @@ class UsuarioTest extends TestCase
     use RefreshDatabase;
 
     #[Test]
-    public function usuario_tiene_una_relacion_con_docente()
+    public function test_usuario_tiene_una_relacion_con_docente()
     {
         $usuario = Usuario::factory()->create();
         $docente = Docente::factory()->create(['usuario_id' => $usuario->id]);
@@ -24,7 +24,7 @@ class UsuarioTest extends TestCase
     }
 
     #[Test]
-    public function usuario_tiene_una_relacion_con_estudiante()
+    public function test_usuario_tiene_una_relacion_con_estudiante()
     {
         $usuario = Usuario::factory()->create();
         $estudiante = Estudiante::factory()->create(['usuario_id' => $usuario->id]);
@@ -33,7 +33,7 @@ class UsuarioTest extends TestCase
     }
 
     #[Test]
-    public function usuario_tiene_una_relacion_con_administrativo()
+    public function test_usuario_tiene_una_relacion_con_administrativo()
     {
         $usuario = Usuario::factory()->create();
         $administrativo = Administrativo::factory()->create(['usuario_id' => $usuario->id]);
