@@ -33,8 +33,8 @@ use App\Http\Middleware\JWTMiddleware;
 use Illuminate\Support\Facades\Route;
 
 
-Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
-    Route::prefix('v1')->group(function () {
+//Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
+Route::prefix('v1')->group(function () {
         //Route::get('/instituciones', [InstitucionController::class, 'listConfiguraciones'])->middleware('can:ver instituciones');
         //Route::get('/instituciones/last', [InstitucionController::class, 'getLastConfiguracion'])->middleware('can:ver instituciones');
         //Route::post('/instituciones', [InstitucionController::class, 'setConfiguracion'])->middleware('can:manage instituciones');
@@ -187,8 +187,8 @@ Route::middleware([JWTMiddleware::class, 'api'])->group(function () {
         //Route::get('/notifications/my-notifications', [NotificationsController::class, 'notifications']);
         //Route::put('/notifications/{id}', [NotificationsController::class, 'update']);
         //Route::delete('/notifications/{id}', [NotificationsController::class, 'destroy']);
-    });
 });
+//});
 
 /*Route::prefix('v1')->group(function () {
     //Route::get('/estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoController::class, 'obtener_estadisticas_informes']);
