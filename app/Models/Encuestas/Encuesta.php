@@ -29,7 +29,7 @@ class Encuesta extends Model
     }
 
     public function pregunta(): BelongsToMany {
-        return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta') -> withPivot('es_modificacion');
+        return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta')->withPivot('es_modificacion')->withTimestamps();;
     }
 
     public function especialidad(): BelongsTo

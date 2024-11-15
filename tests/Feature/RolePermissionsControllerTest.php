@@ -87,7 +87,7 @@ class RolePermissionsControllerTest extends TestCase
         $response = $this->postJson('/api/v1/roles', $data);
 
         $response->assertStatus(201);
-        $response->assertJson(['name' => 'Test Role']);
+        $response->assertJson(['message' => 'Rol creado correctamente', 'role' => ['name' => 'Test Role']]);
         $this->assertDatabaseHas('roles', ['name' => 'Test Role']);
     }
 
@@ -117,7 +117,7 @@ class RolePermissionsControllerTest extends TestCase
         $response = $this->putJson("/api/v1/roles/{$role->id}", $data);
 
         $response->assertStatus(200);
-        $response->assertJson(['name' => 'Updated Role']);
+        $response->assertJson(['message' => 'Rol actualizado correctamente', 'role' => ['name' => 'Updated Role']]);
         $this->assertDatabaseHas('roles', ['name' => 'Updated Role']);
         $this->assertTrue($role->hasPermissionTo($newPermission));
     }

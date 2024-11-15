@@ -14,6 +14,7 @@ class EncuestaPregunta extends Model
     protected $fillable = [
         'encuesta_id',
         'pregunta_id',
+        'es_modificacion'
     ];
 
     public function encuesta(): BelongsTo

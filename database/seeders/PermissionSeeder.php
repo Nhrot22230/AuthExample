@@ -5,8 +5,7 @@ namespace Database\Seeders;
 use App\AccessPath;
 use App\Models\Authorization\PermissionCategory;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Authorization\Permission;
 
 class PermissionSeeder extends Seeder
 {
@@ -25,7 +24,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'departamentos',                     'access_path' => AccessPath::UNIDADES],
             ['name' => 'docentes',                          'access_path' => AccessPath::PERSONAS],
             ['name' => 'encuestas',                         'access_path' => AccessPath::SOLICITUDES_ENCUENTAS],
-            ['name' => 'encuestas admin',                   'access_path' => AccessPath::SOLICITUDES_ENCUESTAS_ADMIN],
             ['name' => 'especialidades',                    'access_path' => AccessPath::UNIDADES],
             ['name' => 'estudiantes',                       'access_path' => AccessPath::PERSONAS],
             ['name' => 'facultades',                        'access_path' => AccessPath::UNIDADES],
@@ -50,7 +48,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'semestres',                         'access_path' => AccessPath::SEMESTRES],
             ['name' => 'solicitudes',                       'access_path' => AccessPath::TRAMITES_ACADEMICOS],
             ['name' => 'solicitudes de encuestas',          'access_path' => AccessPath::SOLICITUDES_ENCUENTAS],
-            ['name' => 'solicitudes de encuestas admin',    'access_path' => AccessPath::SOLICITUDES_ENCUESTAS_ADMIN],
             ['name' => 'temas de tesis',                    'access_path' => AccessPath::JURADOS_TESIS_SECRETARIO_ACADEMICO],
             ['name' => 'usuarios',                          'access_path' => AccessPath::PERSONAS],
         ];

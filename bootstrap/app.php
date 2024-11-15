@@ -5,17 +5,18 @@ use App\Http\Middleware\LogMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__.'/../routes/console.php',
+        commands: __DIR__ . '/../routes/console.php',
         using: function () {
             $dir = new RecursiveDirectoryIterator(base_path('routes/api'));
             $iterator = new RecursiveIteratorIterator($dir);
             $files = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
 
             foreach ($files as $file) {
-                Route::middleware([JWTMiddleware::class, 'api'])
+                Route::middleware(JWTMiddleware::class)
                     ->prefix('api/v1')
                     ->group($file[0]);
             }
@@ -23,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('api')
                 ->group(base_path('routes/auth/authentication.php'));
 
-            Route::middleware('web')
+            Route::middleware(LogMiddleware::class)
                 ->group(base_path('routes/web.php'));
         }
     )
