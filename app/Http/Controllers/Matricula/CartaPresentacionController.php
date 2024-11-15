@@ -470,4 +470,29 @@ public function solicitarActividades($id, Request $request)
         'carta' => $carta
     ], 200);
 }
+
+public function aprobarPorHorario($horario_id)
+{
+    // Buscar todas las solicitudes de carta de presentación con el estado "Pendiente Actividades" y el horario_id proporcionado
+    $cartas = CartaPresentacionSolicitud::where('horario_id', $horario_id)
+                                        ->where('estado', 'Pendiente de Actividades')
+                                        ->get();
+
+    // Verificar si se encontraron cartas
+    if ($cartas->isEmpty()) {
+        return response()->json(['message' => 'No se encontraron cartas de presentación con ese horario y estado.'], 404);
+    }
+
+    // Cambiar el estado de cada carta a "Pendiente Firma DC"
+    foreach ($cartas as $carta) {
+        $carta->estado = 'Pendiente Firma DC';
+        $carta->save();  // Guardar cada carta con el nuevo estado
+    }
+
+    // Respuesta exitosa
+    return response()->json([
+        'message' => 'Las cartas de presentación se han actualizado correctamente.',
+        'cartas' => $cartas
+    ], 200);
+}
 }

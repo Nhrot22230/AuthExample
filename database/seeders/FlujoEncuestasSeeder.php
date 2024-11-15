@@ -57,6 +57,16 @@ class FlujoEncuestasSeeder extends Seeder
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
+        $gianlucaUsuario = Usuario::where('email', 'gian.luca@gianluka.zzz')->first();
+
+// Verificar que se obtuvo el usuario de Gianluca
+if ($gianlucaUsuario) {
+    // Obtener el rol de "estudiante"
+    $estudianteRole = Role::findByName('estudiante'); // Asegúrate de que el rol de "estudiante" existe
+
+    // Asignar el rol de "estudiante" al usuario de Gianluca
+    $gianlucaUsuario->assignRole($estudianteRole);
+}
         collect($horarios)->each(function ($horario) use ($estudiantes) {
             $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
             foreach ($estudiantesSeleccionados as $estudiante) {
