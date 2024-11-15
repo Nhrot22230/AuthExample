@@ -9,10 +9,13 @@ use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\JefePractica;
 use App\Models\Usuarios\Usuario;
+use App\Models\Matricula\HorarioActividad;
+use App\Models\Solicitudes\CartaPresentacion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Horario extends Model
@@ -47,12 +50,13 @@ class Horario extends Model
     {
         return $this->belongsToMany(Docente::class, 'docente_horario');
     }
+    
 
     public function usuarios(): HasManyThrough
     {
         return $this->hasManyThrough(Usuario::class, JefePractica::class, 'horario_id', 'id', 'id', 'usuario_id');
     }
-
+    
     public function horarioEstudiantes()
     {
         return $this->hasMany(HorarioEstudiante::class);
@@ -68,4 +72,12 @@ class Horario extends Model
         return $this->belongsToMany(Encuesta::class, 'encuesta_horario');
     }
 
+    public function actividades()
+    {
+        return $this->hasMany(HorarioActividad::class, 'horario_id'); // Relación correcta
+    }
+    public function cartasPresentacion(): HasMany
+    {
+        return $this->hasMany(CartaPresentacion::class, 'idHorario');
+    }
 }
