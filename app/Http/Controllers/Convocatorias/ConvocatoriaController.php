@@ -13,19 +13,22 @@ class ConvocatoriaController extends Controller
      */
     public function index()
     {
-        // Obtener el número de elementos por página y la búsqueda desde la solicitud
         $perPage = request('per_page', 10);
         $search = request('search', '');
         $seccion = request('seccion', null);
-
-        // Obtener las convocatorias con paginación y filtrado por nombre
-        $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')  // Incluye las relaciones
-            ->where('nombre', 'like', "%$search%") // Filtra por nombre (si hay búsqueda)
-            ->where('estado', 'like', "%$search%") // Filtra por estado
-            ->where('seccion_id', 'like', "%$seccion%") // Filtra por sección
-            ->paginate($perPage); // Paginación
+        $filters = request('filters', []);  // This will be an array of states
+    
+        $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')
+            ->where('nombre', 'like', "%$search%")
+            ->when($filters, function ($query, $filters) {
+                return $query->whereIn('estado', $filters);
+            })
+            ->where('seccion_id', 'like', "%$seccion%")
+            ->paginate($perPage);
+    
         return response()->json($convocatorias, 200);
     }
+    
 
     public function listar_convocatorias_todas()
     {
