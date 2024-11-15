@@ -24,7 +24,7 @@ class CartaPresentacionSolicitudFactory extends Factory
             'estudiante_id' => $estudiante->id,  // Asignamos el id del estudiante
             'horario_id' => Horario::factory(),  // Creamos un horario aleatorio
             'especialidad_id' => $estudiante->especialidad_id,  // Asignamos la especialidad del estudiante
-            'estado' => $this->faker->randomElement([ 'Pendiente Secretaria', 'Pendiente Firma DC', 'Aprobado', 'Rechazado']),
+            'estado' => $this->faker->randomElement([ 'Pendiente Secretaria', 'Pendiente de Actividades','Pendiente Firma DC', 'Aprobado', 'Rechazado']),
             'motivo' => $this->faker->sentence(),
             'motivo_rechazo' => $this->faker->optional()->sentence(),  // Se hace opcional solo si el estado es "Rechazado"
             'pdf_solicitud' => null,

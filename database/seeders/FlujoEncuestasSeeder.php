@@ -19,7 +19,6 @@ use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Usuarios\Administrativo;
 
 class FlujoEncuestasSeeder extends Seeder
 {
@@ -177,5 +176,65 @@ class FlujoEncuestasSeeder extends Seeder
             'entity_type' => Especialidad::class,  // Tipo de entidad es Especialidad
             'entity_id' => $especialidad->id,  // Asignamos el ID de la especialidad específica
         ]);
-            }
+        
+        $usuarioDocente = Usuario::create([
+            'nombre' => 'David',
+            'apellido_paterno' => 'Allasi',
+            'apellido_materno' => '',
+            'email' => 'david.allasi@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/4.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),
+        ]);
+
+        // Crear el docente
+        $docente = Docente::factory()->create(['usuario_id' => $usuarioDocente->id, 'especialidad_id' => $especialidad->id]);
+
+        // Asignar el rol de "docente" al usuario
+        $role = Role::findByName('docente');  // Asegúrate de que el rol 'docente' existe
+        $usuarioDocente->assignRole($role);
+
+        // Crear el alcance (scope) para este docente, limitado solo a la especialidad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,
+            ])->id,
+            'usuario_id' => $usuarioDocente->id,
+            'entity_type' => Especialidad::class,
+            'entity_id' => $especialidad->id,
+        ]);
+        $gianluca = Estudiante::where('usuario_id', Usuario::where('email', 'gian.luca@gianluka.zzz')->first()->id)->first();
+
+// Obtener los horarios en los que está matriculado Gianluca
+$horariosDeGianluca = $gianluca->horarios;  // Aquí obtenemos todos los horarios
+$horario = $horariosDeGianluca->first();
+
+if ($horariosDeGianluca->isNotEmpty()) {
+    // Seleccionamos el primer horario en el que Gianluca está matriculado (puedes ajustar esto si es necesario)
+    $horario = $horariosDeGianluca->first();
+
+    // Ahora, aseguramos que solo David Allasi sea el docente asignado a este horario
+    // Sincronizamos los docentes (esto eliminará cualquier otro docente asignado)
+    $horario->docentes()->sync([$docente->id]);
+
+    // Asegurarnos de que Gianluca está matriculado en este horario en la tabla estudiante_horario
+    $existeMatricula = HorarioEstudiante::where('estudiante_id', $gianluca->id)
+        ->where('horario_id', $horario->id)
+        ->exists();
+
+    // Si no está matriculado, lo matriculamos
+    if (!$existeMatricula) {
+        HorarioEstudiante::create([
+            'estudiante_id' => $gianluca->id,
+            'horario_id' => $horario->id,
+        ]);
+    }
+}
+
+    }
+
+
+        
 }

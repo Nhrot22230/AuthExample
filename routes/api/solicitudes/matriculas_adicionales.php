@@ -21,4 +21,5 @@ Route::get('solicitudes/{id}', [CartaPresentacionController::class, 'getSolicitu
 Route::get('estudiantes/{estudianteId}/cursos', [CartaPresentacionController::class, 'getCursosPorEstudiante']);
 Route::post('/carta-presentacion', [CartaPresentacionController::class, 'store']);
 Route::get('solicitudes/por-especialidad/{especialidadId}', [CartaPresentacionController::class, 'getByEspecialidad']);
-
+Route::patch('carta-presentacion/{id}/rechazar', [CartaPresentacionController::class, 'rechazarCarta']);
+Route::patch('carta-presentacion/{id}/aprobar-secretaria', [CartaPresentacionController::class, 'aprobarCartaSecretaria']);

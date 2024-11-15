@@ -144,12 +144,13 @@ public function getSolicitudDetalle($id)
         'motivo_rechazo' => $solicitud->estado === 'Rechazado' ? $solicitud->motivo_rechazo : null, // Incluir motivo de rechazo si está rechazado
         'pdf_solicitud' => $solicitud->pdf_solicitud,
         'pdf_firmado' => $solicitud->pdf_firmado,
+        'id_especialidad' =>$solicitud->especialidad_id,
         'ultima_modificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'),
         'estudiante' => [
             'nombre_completo' => $solicitud->estudiante->usuario->nombre . ' ' . 
                                  $solicitud->estudiante->usuario->apellido_paterno . ' ' .
                                  $solicitud->estudiante->usuario->apellido_materno, // Nombre completo
-            'codigo_estudiante' => $solicitud->estudiante->codigo, // Código del estudiante
+            'codigo_estudiante' => $solicitud->estudiante->codigoEstudiante, // Código del estudiante
             'correo' => $solicitud->estudiante->usuario->email, // Correo electrónico
         ],
         'curso' => [
@@ -319,4 +320,57 @@ public function getByEspecialidad(Request $request, $especialidadId)
         ],
     ]);
 }
+
+public function rechazarCarta($id, Request $request)
+    {
+        // Validación del motivo de rechazo
+        $validated = $request->validate([
+            'motivo_rechazo' => 'required|string|min:10',  // El motivo debe ser obligatorio y mínimo 10 caracteres
+        ]);
+
+        // Buscar la carta de presentación por ID
+        $carta = CartaPresentacionSolicitud::find($id);
+
+        if (!$carta) {
+            return response()->json(['message' => 'Carta de presentación no encontrada.'], 404);
+        }
+
+        // Actualizar el estado de la carta a "Rechazada" y guardar el motivo de rechazo
+        $carta->estado = 'Rechazado';
+        $carta->motivo_rechazo = $validated['motivo_rechazo'];
+        $carta->save();
+
+        // Respuesta exitosa
+        return response()->json([
+            'message' => 'Carta de presentación rechazada correctamente.',
+            'carta' => $carta
+        ], 200);
+    }
+
+    public function aprobarCartaSecretaria($id, Request $request)
+    {
+        // Buscar la carta de presentación por ID
+        $carta = CartaPresentacionSolicitud::find($id);
+
+        if (!$carta) {
+            return response()->json(['message' => 'Carta de presentación no encontrada.'], 404);
+        }
+
+        // Verificar si el estado es "Pendiente Secretario"
+        if ($carta->estado !== 'Pendiente Secretaria') {
+            return response()->json([
+                'message' => 'La carta no puede ser aprobada porque no está en el estado "Pendiente Secretario".'
+            ], 400);
+        }
+
+        // Cambiar el estado a "Pendiente Firma DC"
+        $carta->estado = 'Pendiente Firma DC';
+        $carta->save();
+
+        // Respuesta exitosa
+        return response()->json([
+            'message' => 'Carta de presentación aprobada correctamente.',
+            'carta' => $carta
+        ], 200);
+    }
 }
