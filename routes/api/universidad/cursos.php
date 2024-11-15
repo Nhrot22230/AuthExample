@@ -9,7 +9,7 @@ Route::get('cursos', [CursoController::class, 'index']);
 Route::get('cursos/paginated', [CursoController::class, 'indexPaginated'])->middleware('can:ver cursos');
 Route::get('cursos/codigo/{codigo}', [CursoController::class, 'getByCodigo']);
 Route::post('cursos', [CursoController::class, 'store'])->middleware('can:manage cursos');
-Route::get('cursos/{id}', [CursoController::class, 'show']);
+Route::get('cursos/{id}', [CursoController::class, 'show'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
 Route::put('cursos/{id}', [CursoController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
 Route::delete('cursos/{id}', [CursoController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
 
