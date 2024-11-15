@@ -2,10 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\Authorization\Permission;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\RoleScopeUsuario;
+use App\Models\Authorization\Scope;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
@@ -22,6 +27,41 @@ class ProcesoConvocatoriaSeeder extends Seeder
 
         // Crear 15 convocatorias
         $convocatorias = Convocatoria::factory(15)->create();
+
+        $secciones = $convocatorias->pluck('seccion')->unique();
+        $seccionesAleatorias = $secciones->random(2);
+        $seccionFirst = $seccionesAleatorias->first();
+        $seccionSecond = $seccionesAleatorias->last();
+
+        $asistente = Administrativo::factory()->create([
+            'usuario_id' => Usuario::factory()->create([
+                'nombre' => 'Fernando',
+                'apellido_paterno' => 'Candia',
+                'apellido_materno' => 'Aroni',
+                'email' => 'fernando.candia@gianluka.zzz',
+            ])
+        ]);
+
+        $role_asistente = Role::findByName('asistente');
+        $role_asistente->syncPermissions(Permission::all());
+        $scope = Scope::where('name', 'Seccion')->first();
+        $asistente->usuario->assignRole('asistente');
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_asistente->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionFirst->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_asistente->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionSecond->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
 
         // Asignar entre 1 y 3 grupos de criterios a cada convocatoria
         foreach ($convocatorias as $convocatoria) {
@@ -41,10 +81,10 @@ class ProcesoConvocatoriaSeeder extends Seeder
         foreach ($convocatorias as $convocatoria) {
             $usuarios = Usuario::factory(rand(5, 10))->create(); // Crear entre 5 y 10 candidatos
 
-            foreach ($usuarios as $usuario) {
+            foreach ($usuarios as $asistente) {
                 CandidatoConvocatoria::create([
                     'convocatoria_id' => $convocatoria->id,
-                    'candidato_id' => $usuario->id,
+                    'candidato_id' => $asistente->id,
                     'estadoFinal' => 'pendiente cv',
                     'urlCV' => 'http://example.com/cv.pdf',
                 ]);
