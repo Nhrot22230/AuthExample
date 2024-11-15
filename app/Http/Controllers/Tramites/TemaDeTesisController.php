@@ -151,7 +151,13 @@ class TemaDeTesisController extends Controller
             ], 404);
         }
 
-        $areas = $estudiante->especialidad->areas;
+        $areas = $estudiante->especialidad->areas->map(function ($area) {
+            return [
+                'id' => $area->id,
+                'nombre' => $area->nombre,
+            ];
+        });
+
         return response()->json([
             'areas' => $areas
         ], 200);
@@ -160,20 +166,19 @@ class TemaDeTesisController extends Controller
     public function listarDocentesEspecialidad($estudiante_id): JsonResponse
     {
         $estudiante = Estudiante::with('especialidad.docentes')->find($estudiante_id);
+        if (!$estudiante) {
+            return response()->json([
+                'message' => 'Estudiante no encontrado.'
+            ], 404);
+        }
         $docentes = $estudiante->especialidad->docentes;
         $docentesConNombre = $docentes->map(function ($docente) {
             return [
                 'id' => $docente->id,
-                'usuario_id' => $docente->usuario_id,
-                'codigoDocente' => $docente->codigoDocente,
-                'nombre_completo' => $docente->usuario->full_name,
-                'tipo' => $docente->tipo,
-                'especialidad_id' => $docente->especialidad_id,
+                'nombre' => $docente->usuario->full_name,
             ];
         });
-        return response()->json([
-            'docentes' => $docentesConNombre
-        ], 200);
+        return response()->json($docentesConNombre, 200);
     }
 
 
