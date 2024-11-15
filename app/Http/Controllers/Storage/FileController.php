@@ -20,11 +20,11 @@ class FileController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'file_type' => ['required', Rule::in(['image', 'video', 'audio', 'document'])],
-                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx|max:2048', // tamaño máximo en KB
+                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048', // tamaño máximo en KB
             ]);
 
             $file = $request->file('file');
-            $path = 'files/' . $request->file_type . '/' . $request->name . '/' . uniqid() . '_' . $file->getClientOriginalName();
+            $path = 'files/' . $request->file_type . '/' . $file->getClientOriginalName() . '.'. $file->getClientOriginalExtension();
 
             Storage::disk('s3')->put($path, file_get_contents($file));
             // $url = 'https://' . env('AWS_BUCKET') . '.s3.' . env('AWS_DEFAULT_REGION') . '.amazonaws.com/' . $path;

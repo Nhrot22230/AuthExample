@@ -26,6 +26,17 @@ class AssignRoles extends Seeder
             ->get();
         $director_role->syncPermissions($permisos_director);
 
+
+        $secretario_role = Role::findByName('secretario-academico');
+        $permisos_secretario = Permission::where('name', 'like', '%solicitudes%')
+            ->orWhere('name', 'like', '%temas de tesis%')
+            ->orWhere('name', 'like', '%observaciones%')
+            ->orWhere('name', 'like', '%jurados%')
+            ->orWhere('name', 'like', '%especialidades%')
+            ->orWhere('name', 'like', '%mis unidades%')
+            ->orWhere('name', 'like', '%matricula%')
+            ->get();
+        $secretario_role->syncPermissions($permisos_secretario);
         $estudiante_role = Role::findByName('estudiante');
         $permisos_estudiante = Permission::where('name', 'like', '%encuestas%')
             ->orWhere('name', 'like', 'mis unidades')
