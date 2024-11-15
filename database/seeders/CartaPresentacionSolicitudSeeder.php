@@ -38,7 +38,7 @@ class CartaPresentacionSolicitudSeeder extends Seeder
             $horarioId = $horarios->random()->horario_id;
 
             // Decidir aleatoriamente si la solicitud será "Rechazada" o "Pendiente"
-            $estado = $faker->randomElement([ 'Pendiente Secretaria', 'Pendiente Firma DC', 'Aprobado', 'Rechazado']);
+            $estado = $faker->randomElement([ 'Pendiente Secretaria', 'Pendiente de Actividades','Pendiente Firma DC', 'Aprobado', 'Rechazado']);
             $motivoRechazo = null;
 
             // Si el estado es "Rechazado", asignamos un motivo de rechazo

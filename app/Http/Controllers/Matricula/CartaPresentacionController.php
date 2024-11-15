@@ -160,6 +160,7 @@ public function getSolicitudDetalle($id)
         'horario' => [
             'nombre' => $solicitud->horario->nombre,   // Nombre del horario
             'codigo' => $solicitud->horario->codigo,   // Código del horario
+            'id'=>$solicitud->horario->id,
         ]
     ];
 
@@ -373,4 +374,100 @@ public function rechazarCarta($id, Request $request)
             'carta' => $carta
         ], 200);
     }
+
+    public function getByProfesor(Request $request, $profesorId)
+{
+    // Recoger los filtros de búsqueda y estado
+    $search = $request->input('search', ''); // Campo de búsqueda
+    $estado = $request->input('estado', null); // Estado para filtrar
+    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+
+    // Comenzar la consulta
+    $query = CartaPresentacionSolicitud::with([
+        'estudiante.usuario', // Cargar el usuario del estudiante
+        'horario', // Cargar los horarios
+        'horario.docentes.usuario:id,nombre,apellido_paterno', // Cargar los docentes del horario
+        'horario.curso', // Cargar el curso asociado al horario
+    ])
+    // Filtrar por los horarios asociados a este profesor
+    ->whereHas('horario.docentes', function($q) use ($profesorId) {
+        $q->where('docente_id', $profesorId);
+    });
+
+    // Aplicar el filtro de búsqueda si el campo no está vacío
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('horario', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('horario.curso', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%');
+            })
+            ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%')
+                  ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+            });
+        });
+    }
+
+    // Aplicar el filtro de estado si se ha seleccionado
+    if ($estado) {
+        $query->whereIn('estado', (array)$estado); // Asegura que el estado sea un array
+    }
+
+    // Paginación
+    $solicitudes = $query->paginate($perPage);
+
+    // Formatear los resultados
+    $result = $solicitudes->map(function ($solicitud) {
+        return [
+            'id' => $solicitud->id, // Primer campo es id
+            'profesor' => isset($solicitud->horario->docentes->first()->usuario)
+                ? $solicitud->horario->docentes->first()->usuario->nombre . ' ' . $solicitud->horario->docentes->first()->usuario->apellido_paterno
+                : 'Sin Profesor', // Profesor
+            'curso' => $solicitud->horario->curso->nombre, // Curso
+            'horario' => $solicitud->horario->codigo, // Código del horario
+            'ultimaModificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'), // Última modificación
+            'estado' => $solicitud->estado, // Estado
+        ];
+    });
+
+    // Retornar la respuesta con la paginación
+    return response()->json([
+        'data' => $result,
+        'pagination' => [
+            'total' => $solicitudes->total(), // Total de filas
+            'current_page' => $solicitudes->currentPage(),
+            'last_page' => $solicitudes->lastPage(),
+            'per_page' => $solicitudes->perPage(),
+        ],
+    ]);
+}
+
+public function solicitarActividades($id, Request $request)
+{
+    // Buscar la carta de presentación por ID
+    $carta = CartaPresentacionSolicitud::find($id);
+
+    if (!$carta) {
+        return response()->json(['message' => 'Carta de presentación no encontrada.'], 404);
+    }
+
+    // Verificar si el estado es "Pendiente Secretaria"
+    if ($carta->estado !== 'Pendiente Secretaria') {
+        return response()->json([
+            'message' => 'La carta no puede ser actualizada porque no está en el estado "Pendiente Secretaria".'
+        ], 400);
+    }
+
+    // Cambiar el estado a "Pendiente de Actividades"
+    $carta->estado = 'Pendiente de Actividades';
+    $carta->save();
+
+    // Respuesta exitosa
+    return response()->json([
+        'message' => 'Solicitud de actividades enviada correctamente.',
+        'carta' => $carta
+    ], 200);
+}
 }
