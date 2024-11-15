@@ -26,6 +26,11 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasMany(RoleScopeUsuario::class, 'usuario_id')->with('entity');
     }
 
+    public function scopes()
+    {
+        return $this->roles()->with('scopes')->get()->flatMap->scopes->unique();
+    }
+
     public function notifications(): HasMany
     {
         return $this->hasMany(Notifications::class);

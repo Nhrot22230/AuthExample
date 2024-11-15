@@ -54,41 +54,51 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_solo_director_puede_acceder_a_especialidad_scope()
+    public function solo_director_puede_acceder_a_especialidad_scope()
     {
         $director = Usuario::factory()->create();
         $director->assignRole('director');
-        $scope = Scope::where('name', 'Especialidad')->first();
 
-        $this->assertTrue($director->scopes->contains($scope), 'Director no tiene acceso al scope Especialidad');
-        
-        $otherUser = Usuario::factory()->create();
-        $otherUser->assignRole('docente');
+        $this->assertTrue(
+            $director->scopes()->contains('name', 'Especialidad'),
+            'Director no tiene acceso al scope Especialidad'
+        );
 
-        $this->assertFalse($otherUser->scopes->contains($scope), 'Docente tiene acceso indebido al scope Especialidad');
+        $docente = Usuario::factory()->create();
+        $docente->assignRole('docente');
+
+        $this->assertFalse(
+            $docente->scopes()->contains('name', 'Especialidad'),
+            'Docente tiene acceso indebido al scope Especialidad'
+        );
     }
 
     #[Test]
-    public function test_secretario_academico_puede_acceder_a_facultad_scope()
+    public function secretario_academico_puede_acceder_a_facultad_scope()
     {
         $secretario = Usuario::factory()->create();
         $secretario->assignRole('secretario-academico');
-        $scope = Scope::where('name', 'Facultad')->first();
 
-        $this->assertTrue($secretario->scopes->contains($scope), 'Secretario académico no tiene acceso al scope Facultad');
+        $this->assertTrue(
+            $secretario->scopes()->contains('name', 'Facultad'),
+            'Secretario académico no tiene acceso al scope Facultad'
+        );
     }
 
     #[Test]
-    public function test_asistente_tiene_acceso_a_todos_los_scopes()
+    public function asistente_tiene_acceso_a_todos_los_scopes()
     {
         $asistente = Usuario::factory()->create();
         $asistente->assignRole('asistente');
+        
+        $scopes = Scope::all()->pluck('name')->toArray();
+        $asistente_scopes = $asistente->scopes()->pluck('name')->toArray();
 
-        $this->assertCount(Scope::count(), $asistente->scopes, 'Asistente no tiene acceso a todos los scopes');
+        $this->assertEquals($scopes, $asistente_scopes, 'Asistente no tiene acceso a todos los scopes' );
     }
 
     #[Test]
-    public function test_permiso_especifico_para_acceder_a_mis_unidades()
+    public function permiso_especifico_para_acceder_a_mis_unidades()
     {
         $user = Usuario::factory()->create();
         $user->givePermissionTo('mis-unidades');
@@ -97,7 +107,7 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_usuario_sin_permiso_no_puede_acceder_a_mis_encuestas()
+    public function usuario_sin_permiso_no_puede_acceder_a_mis_encuestas()
     {
         $user = Usuario::factory()->create();
 
@@ -105,20 +115,17 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_docente_tiene_acceso_a_cursos_y_areas()
+    public function docente_tiene_acceso_a_cursos_y_areas()
     {
         $docente = Usuario::factory()->create();
         $docente->assignRole('docente');
-        
-        $scopeCurso = Scope::where('name', 'Curso')->first();
-        $scopeArea = Scope::where('name', 'Area')->first();
 
-        $this->assertTrue($docente->scopes->contains($scopeCurso), 'Docente no tiene acceso al scope Curso');
-        $this->assertTrue($docente->scopes->contains($scopeArea), 'Docente no tiene acceso al scope Area');
+        $this->assertTrue($docente->scopes()->contains('name', 'Curso'), 'Docente no tiene acceso al scope Curso');
+        $this->assertTrue($docente->scopes()->contains('name', 'Area'), 'Docente no tiene acceso al scope Area');
     }
 
     #[Test]
-    public function test_estudiante_no_tiene_acceso_a_matricula_adicional()
+    public function estudiante_no_tiene_acceso_a_matricula_adicional()
     {
         $estudiante = Usuario::factory()->create();
         $estudiante->assignRole('estudiante');
@@ -127,20 +134,17 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_jefe_practica_solo_acceso_a_cursos_scope()
+    public function jefe_practica_solo_acceso_a_cursos_scope()
     {
         $jefePractica = Usuario::factory()->create();
         $jefePractica->assignRole('jefe-practica');
-        
-        $scopeCurso = Scope::where('name', 'Curso')->first();
-        $scopeArea = Scope::where('name', 'Area')->first();
 
-        $this->assertTrue($jefePractica->scopes->contains($scopeCurso), 'Jefe de práctica no tiene acceso al scope Curso');
-        $this->assertFalse($jefePractica->scopes->contains($scopeArea), 'Jefe de práctica tiene acceso indebido al scope Area');
+        $this->assertTrue($jefePractica->scopes()->contains('name', 'Curso'), 'Jefe de práctica no tiene acceso al scope Curso');
+        $this->assertFalse($jefePractica->scopes()->contains('name', 'Area'), 'Jefe de práctica tiene acceso indebido al scope Area');
     }
 
     #[Test]
-    public function test_usuario_no_autorizado_no_puede_realizar_acciones_de_autorizacion()
+    public function usuario_no_autorizado_no_puede_realizar_acciones_de_autorizacion()
     {
         $user = Usuario::factory()->create();
 
@@ -148,7 +152,7 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_usuario_puede_acceder_a_permisos_asignados_en_su_categoria()
+    public function usuario_puede_acceder_a_permisos_asignados_en_su_categoria()
     {
         $user = Usuario::factory()->create();
         $user->givePermissionTo('jurado-tesis');
@@ -157,11 +161,10 @@ class AuthorizationTest extends TestCase
     }
 
     #[Test]
-    public function test_usuario_sin_permisos_no_puede_acceder_a_scopes_o_permisos()
+    public function usuario_sin_permisos_no_puede_acceder_a_scopes_o_permisos()
     {
         $user = Usuario::factory()->create();
-
         $this->assertFalse($user->hasAnyPermission(Permission::all()), 'Usuario sin permisos puede acceder a permisos');
-        $this->assertEmpty($user->scopes, 'Usuario sin permisos tiene acceso a scopes');
+        $this->assertEmpty($user->scopes(), 'Usuario sin permisos tiene acceso a scopes');
     }
 }
