@@ -15,7 +15,7 @@ class TemaDeTesisFactory extends Factory
 
     public function definition(): array
     {
-        $estado = $this->faker->randomElement(['aprobado', 'pendiente', 'desaprobado']);
+        $estado = $this->faker->randomElement(['aprobado', 'pendiente', 'rechazado']);
         $estadoJurado = $estado == 'aprobado' ?
             $this->faker->randomElement(['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido']) :
             $estadoJurado = 'no enviado';
