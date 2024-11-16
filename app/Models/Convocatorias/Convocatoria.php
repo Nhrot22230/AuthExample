@@ -45,4 +45,10 @@ class Convocatoria extends Model
     {
         return $this->belongsToMany(Usuario::class, 'candidato_convocatoria', 'convocatoria_id', 'candidato_id');
     }
+
+    public function comiteCandidatos(): BelongsToMany
+    {
+        return $this->belongsToMany(Usuario::class, 'comite_candidato_convocatoria', 'convocatoria_id', 'candidato_id')
+                    ->withPivot('docente_id', 'estadoFinal');
+    }
 }

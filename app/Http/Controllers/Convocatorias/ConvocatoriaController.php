@@ -86,7 +86,7 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'criteriosAntiguo' => 'array',
-            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'criteriosAntiguo.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
 
@@ -145,7 +145,7 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'criteriosAntiguo' => 'array',
-            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'criteriosAntiguo.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
 
@@ -153,6 +153,7 @@ class ConvocatoriaController extends Controller
         try {
             $convocatoria = Convocatoria::findOrFail($id);
 
+            // Actualizar la convocatoria
             $convocatoria->update([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
@@ -161,9 +162,11 @@ class ConvocatoriaController extends Controller
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
+            // Manejo de criterios antiguos y nuevos
             $criteriosAntiguos = $validatedData['criteriosAntiguo'] ?? [];
             $criteriosNuevosIds = [];
 
+            // Crear nuevos criterios
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
                     $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
@@ -171,14 +174,39 @@ class ConvocatoriaController extends Controller
                 }
             }
 
+            // Sincronizar los criterios de la convocatoria
             $convocatoria->gruposCriterios()->sync(array_merge($criteriosAntiguos, $criteriosNuevosIds));
 
-            $idsAsociados = GrupoCriterios::whereHas('convocatorias', function ($query) use ($convocatoria) {
-                $query->where('convocatoria_id', $convocatoria->id);
-            })->pluck('id')->toArray();
-
-            GrupoCriterios::whereNotIn('id', $idsAsociados)->delete();
+            // Sincronizar miembros del comité (relación convocatoria-docente)
             $convocatoria->comite()->sync($validatedData['miembros']);
+
+            // Obtener los candidatos asociados con esta convocatoria
+            $candidatos = DB::table('candidato_convocatoria')
+                ->where('convocatoria_id', $id)
+                ->pluck('candidato_id')
+                ->toArray();
+
+            // Obtener los miembros actuales de la convocatoria
+            $miembros = $validatedData['miembros'];
+
+            // Insertar las relaciones entre docentes y candidatos
+            $dataToInsert = [];
+
+            foreach ($miembros as $docente_id) {
+                foreach ($candidatos as $candidato_id) {
+                    // Solo insertamos si la relación no existe
+                    $dataToInsert[] = [
+                        'docente_id' => $docente_id,
+                        'candidato_id' => $candidato_id,
+                        'convocatoria_id' => $id,
+                        'estadoFinal' => 'pendiente cv',
+                    ];
+                }
+            }
+
+            // Realizamos la inserción masiva sin duplicados
+            DB::table('comite_candidato_convocatoria')->upsert($dataToInsert, ['docente_id', 'candidato_id', 'convocatoria_id'], ['estadoFinal']);
+
             DB::commit();
             return response()->json([
                 'message' => 'Convocatoria actualizada exitosamente.',
@@ -220,6 +248,39 @@ class ConvocatoriaController extends Controller
 
             return response()->json([
                 'message' => 'Error al crear el grupo de criterios.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateGrupoCriterios(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'obligatorio' => 'required|boolean',
+            'descripcion' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $grupoCriterios = GrupoCriterios::findOrFail($id);
+
+            $grupoCriterios->update([
+                'nombre' => $validatedData['nombre'],
+                'obligatorio' => $validatedData['obligatorio'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Grupo de criterios actualizado exitosamente.',
+                'grupos_criterios' => $grupoCriterios,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar el grupo de criterios.',
                 'error' => $e->getMessage(),
             ], 500);
         }
