@@ -77,6 +77,7 @@ class ConvocatoriaController extends Controller
         $validatedData = $request->validate([
             'nombreConvocatoria' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:1000',
+            'fechaEntrevista' => 'required|date|after_or_equal:fechaInicio',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'miembros' => 'required|array|min:1',
@@ -95,9 +96,10 @@ class ConvocatoriaController extends Controller
             $convocatoria = Convocatoria::create([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaEntrevista' => $validatedData['fechaEntrevista'],
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
-                'estado' => 'pendiente', // Estado inicial
+                'estado' => 'abierta', // Estado inicial
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
@@ -136,6 +138,7 @@ class ConvocatoriaController extends Controller
         $validatedData = $request->validate([
             'nombreConvocatoria' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:1000',
+            'fechaEntrevista' => 'required|date|after_or_equal:fechaInicio',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'miembros' => 'required|array|min:1',
@@ -157,6 +160,7 @@ class ConvocatoriaController extends Controller
             $convocatoria->update([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaEntrevista' => $validatedData['fechaEntrevista'],
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
                 'seccion_id' => $validatedData['seccion_id'],
