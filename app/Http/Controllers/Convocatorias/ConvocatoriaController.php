@@ -7,6 +7,7 @@ use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ConvocatoriaController extends Controller
 {
@@ -40,17 +41,21 @@ class ConvocatoriaController extends Controller
         $perPage = request()->input('per_page', 10);
         $search = request()->input('search', '');
 
-        $grupoCriterios = GrupoCriterios::with('convocatorias')
-            ->whereHas('convocatorias', function ($query) use ($entity_id) {
-                $query->where('seccion_id', $entity_id);
-            })
-            ->when($search, function ($query, $search) {
-                $query->where('nombre', 'like', "%{$search}%");
-            })
-            ->paginate($perPage)
-            ->appends(request()->only(['search', 'per_page']));
+        try {
+            $grupoCriterios = GrupoCriterios::with('convocatorias')
+                ->whereHas('convocatorias', function ($query) use ($entity_id) {
+                    $query->where('seccion_id', $entity_id);
+                })
+                ->when($search, function ($query, $search) {
+                    $query->where('nombre', 'like', "%{$search}%");
+                })
+                ->paginate($perPage)
+                ->appends(request()->only(['search', 'per_page']));
 
-        return response()->json($grupoCriterios, 200);
+            return response()->json($grupoCriterios, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error retrieving criteria', 'details' => $e->getMessage()], 500);
+        }
     }
 
 
@@ -79,6 +84,7 @@ class ConvocatoriaController extends Controller
             'descripcion' => 'nullable|string|max:1000',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'fechaEntrevista' => 'nullable|date',
             'miembros' => 'required|array|min:1',
             'miembros.*' => 'integer|exists:docentes,id',
             'criteriosNuevos' => 'array',
@@ -89,6 +95,7 @@ class ConvocatoriaController extends Controller
             'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
+        Log::info('Datos validados recibidos:', $validatedData);
 
         DB::beginTransaction();
         try {
@@ -97,13 +104,15 @@ class ConvocatoriaController extends Controller
                 'descripcion' => $validatedData['descripcion'] ?? null,
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
-                'estado' => 'pendiente', // Estado inicial
+                'fechaEntrevista' => $validatedData['fechaEntrevista'] ?? null,
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
+
 
             if (!empty($validatedData['criteriosAntiguo'])) {
                 $convocatoria->gruposCriterios()->attach($validatedData['criteriosAntiguo']);
             }
+
 
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
@@ -112,6 +121,7 @@ class ConvocatoriaController extends Controller
                 }
             }
 
+
             $convocatoria->comite()->attach($validatedData['miembros']);
             DB::commit();
             return response()->json([
@@ -119,6 +129,11 @@ class ConvocatoriaController extends Controller
                 'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Error al crear la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             DB::rollBack();
 
             return response()->json([
