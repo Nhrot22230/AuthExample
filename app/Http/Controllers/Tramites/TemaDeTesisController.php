@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
 use App\Models\Tramites\EstadoAprobacionTema;
 use App\Models\Tramites\ProcesoAprobacionTema;
@@ -190,10 +191,26 @@ class TemaDeTesisController extends Controller
             'resumen' => 'required|string',
             'area_id' => 'required|exists:areas,id',
             'docente_id' => 'required|exists:docentes,id',
+            'documento' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048',
         ]);
 
         DB::beginTransaction();
         try {
+            $file = $request->file('documento');
+            if (!$file || !$file->isValid()) {
+                return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
+            }
+
+            $uploadRequest = new Request([
+                'name' => $request->titulo, 
+                'file_type' => 'document', 
+                'file' => $file
+            ]);
+            $uploadRequest->files->set('file', $file);
+            $fileController = new FileController();
+            $fileResponse = $fileController->uploadFile($uploadRequest);
+            $fileUrl = $fileResponse->getData()->url;
+
             // Buscar al estudiante y obtener la especialidad
             $estudiante = Estudiante::findOrFail($request->estudiante_id);
             $especialidad_id = $estudiante->especialidad_id;
@@ -205,7 +222,8 @@ class TemaDeTesisController extends Controller
                 'especialidad_id' => $especialidad_id,
                 'area_id' => $request->area_id,
                 'estado' => 'pendiente',
-                'fecha_enviado' => Now()
+                'fecha_enviado' => Now(),
+                'documento' => $fileUrl,
             ]);
 
             // Registrar los asesores
@@ -388,5 +406,31 @@ class TemaDeTesisController extends Controller
         return response()->json([
             'message' => 'Tema de tesis rechazado correctamente.',
         ]);
+    }
+
+    public function showById($temaId): JsonResponse
+    {
+        try {
+            $temaTesis = TemaDeTesis::select('titulo', 'resumen', 'documento', 'estado', 'area_id')
+                ->with(['asesores.usuario' => function($query) {
+                    $query->select('id', 'nombre', 'apellido_paterno', 'apellido_materno');
+                }])
+                ->findOrFail($temaId);
+            if (!$temaTesis) {
+                return response()->json([
+                    'message' => 'Tema de tesis no encontrado.',
+                ], 404);
+            }
+
+            if ($temaTesis->asesores->isNotEmpty()) {
+                $asesor = $temaTesis->asesores->first();
+                $temaTesis->asesor = $asesor->usuario->full_name;
+            }
+            return response()->json($temaTesis, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+            'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
