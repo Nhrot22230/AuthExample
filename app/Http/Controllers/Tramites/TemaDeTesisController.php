@@ -498,6 +498,7 @@ class TemaDeTesisController extends Controller
                     'fecha' => $estado->fecha_decision ? $estado->fecha_decision : null,
                     'estado' => $estadoDetalle,
                     'revisor' => $estado->usuario ? $estado->usuario->nombre : null,
+                    'comentarios' => $estado->comentarios ?? null,
                 ];
             }
         }
