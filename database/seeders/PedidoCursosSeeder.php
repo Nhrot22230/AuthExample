@@ -15,6 +15,7 @@ use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
 use App\Models\Matricula\Horario;
+use App\Models\Usuarios\Administrativo;
 use Illuminate\Support\Facades\Hash;
 
 class PedidoCursosSeeder extends Seeder
@@ -142,6 +143,36 @@ class PedidoCursosSeeder extends Seeder
             'usuario_id' => $usuario->id,
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad ? $especialidad->id : null,
+        ]);       
+        
+        //Usuario secretario academico
+        $usuario = Usuario::create([
+            'nombre' => 'Daniel Secretario',
+            'apellido_paterno' => 'Rivas',
+            'apellido_materno' => 'Pareja',
+            'email' => 'daniel.rivas.secretario@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),  // Cambia la contraseña si es necesario
         ]);        
+
+        Administrativo::factory()->create([
+            'usuario_id' => $usuario->id,
+            'facultad_id' => $facultad ? $facultad->id : null,
+        ]);
+
+        $role = Role::findByName('secretario-academico');
+        $usuario->assignRole($role);
+
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Facultad',
+                'entity_type' => Facultad::class,
+            ])->id,
+            'usuario_id' => $usuario->id,
+            'entity_type' => Facultad::class,
+            'entity_id' => $facultad ? $facultad->id : null,
+        ]);
     }
 }
