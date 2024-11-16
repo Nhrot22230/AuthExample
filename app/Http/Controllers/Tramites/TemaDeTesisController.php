@@ -136,12 +136,20 @@ class TemaDeTesisController extends Controller
                 $query->where('usuario_id', $usuario_id)
                     ->where('estado', 'pendiente');
             });
-        })->get();
+        })
+        ->with(['estudiantes:usuario_id'])
+        ->select('id', 'titulo', 'estado')
+        ->get();
 
-        return response()->json([
-            'temasPendientes' => $temasPendientes
-        ], 200);
+        $temasPendientes = $temasPendientes->map(function ($tema) {
+            $tema->estudiante = $tema->estudiantes->first()->usuario->full_name;
+            unset($tema->estudiantes);
+            return $tema;
+        });
+
+        return response()->json($temasPendientes, 200);
     }
+
 
     public function listarAreasEspecialidad($estudiante_id): JsonResponse
     {
