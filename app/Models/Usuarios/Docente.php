@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Universidad\Curso;
 
 class Docente extends Model
 {
@@ -68,5 +69,9 @@ class Docente extends Model
     public function temasDeTesis() : BelongsToMany
     {
         return $this->belongsToMany(TemaDeTesis::class, 'asesor_tema_tesis', 'docente_id', 'tema_tesis_id');
+    }
+    public function cursos(): BelongsToMany
+    {
+    return $this->belongsToMany(Curso::class,'docente_curso','docente_id','curso_id');
     }
 }

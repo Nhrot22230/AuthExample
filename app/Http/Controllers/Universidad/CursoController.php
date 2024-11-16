@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Universidad;
 use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
+use App\Models\Usuarios\Docente;
 use Illuminate\Http\Request;
 
 class CursoController extends Controller
@@ -159,6 +160,35 @@ class CursoController extends Controller
         });
 
         return response()->json($horariosData);
+    }
+    public function obtenerCursosPorDocente($docenteId)
+    {
+        // Obtener los cursos asociados al docente a través de la relación docente_curso
+        $cursos = Docente::where('id', $docenteId)
+            ->with(['cursos' => function ($query) {
+                $query->select('cursos.id', 'cursos.nombre', 'cursos.cod_curso', 'cursos.creditos', 'cursos.estado', 'cursos.created_at', 'cursos.updated_at');
+            }])
+            ->first();
+
+        // Verificar si el docente tiene cursos asignados
+        if (!$cursos || $cursos->cursos->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron cursos asignados para este docente.'], 404);
+        }
+
+        // Formatear la respuesta
+        $cursosAsignados = $cursos->cursos->map(function ($curso) {
+            return [
+                'curso_id' => $curso->id,
+                'curso_nombre' => $curso->nombre,
+                'codigo_curso' => $curso->cod_curso,
+                'creditos' => $curso->creditos,
+                'estado' => $curso->estado,
+                'fecha_creacion' => $curso->created_at,
+                'ultima_actualizacion' => $curso->updated_at,
+            ];
+        });
+
+        return response()->json($cursosAsignados);
     }
 
 }
