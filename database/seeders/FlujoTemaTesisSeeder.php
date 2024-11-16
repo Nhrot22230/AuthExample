@@ -101,7 +101,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
         ]);
-        $role = Role::findByName('docente');
+        $role = Role::findByName('coordinador');
         $usuarioCoordinador->assignRole($role);
         RoleScopeUsuario::create([
             'role_id' => $role->id,
@@ -128,7 +128,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'especialidad_id' => $especialidad->id,
             //'area_id' => $areas->first()->id
         ]);
-        $role = Role::findByName('docente');
+        $role = Role::findByName('director');
         $usuarioDirector->assignRole($role);
         RoleScopeUsuario::create([
             'role_id' => $role->id,
