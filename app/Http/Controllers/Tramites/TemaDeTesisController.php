@@ -381,7 +381,6 @@ class TemaDeTesisController extends Controller
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
-            // Aquí falta la validación del archivo si es necesario
         ]);
         DB::transaction(function () use ($tema_tesis_id, $request) {
             // Obtener el tema de tesis con sus relaciones
