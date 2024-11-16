@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
         $this->call(CartaPresentacionSolicitudSeeder::class);
         // Pedido
         $this->call(PedidoCursosSeeder::class);
+
+        // Convocatorias
+        $this->call(ProcesoConvocatoriaSeeder::class);
         $this->call(FlujoTemaTesisSeeder::class);
     }
 }
