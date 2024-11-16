@@ -14,9 +14,7 @@ use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+
     public function run(): void
     {
         $scopes = [
@@ -33,9 +31,11 @@ class RoleSeeder extends Seeder
             'secretario-academico',
             'asistente',
             'director',
+            'coordinador',
             'docente',
             'jefe-practica',
             'estudiante',
+            'coordinador',
         ];
 
         foreach ($scopes as $scope) Scope::firstOrCreate($scope);
@@ -44,12 +44,14 @@ class RoleSeeder extends Seeder
         Role::findByName('asistente')->scopes([])->attach(Scope::all());
         Role::findByName('secretario-academico')->scopes([])->attach(Scope::where('name', 'Facultad')->first());
         Role::findByName('director')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
+        Role::findByName('coordinador')->scopes([])->attach(Scope::where('name', 'Area')->first());
         Role::findByName('docente')->scopes([])->attach(
             Scope::orWhere('name', 'Curso')
             ->orWhere('name', 'Seccion')
             ->orWhere('name', 'Area')
             ->get()
         );
+        Role::findByName('coordinador')->scopes([])->attach(Scope::where('name', 'Area')->first());
         Role::findByName('jefe-practica')->scopes([])->attach(Scope::where('name', 'Curso')->first());
         Role::findByName('estudiante')->scopes([])->attach(Scope::where('name', 'Curso')->first());
     }

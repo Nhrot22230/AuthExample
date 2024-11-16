@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
 use App\Models\Tramites\EstadoAprobacionTema;
 use App\Models\Tramites\ProcesoAprobacionTema;
@@ -14,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Log;
 
 class TemaDeTesisController extends Controller
 {
@@ -75,7 +77,6 @@ class TemaDeTesisController extends Controller
     }
 
 
-    // Método para mostrar un tema de tesis específico
     public function show($id)
     {
         $temaDeTesis = TemaDeTesis::with([
@@ -114,13 +115,21 @@ class TemaDeTesisController extends Controller
         return response()->json(['message' => 'Tema de Tesis actualizado exitosamente', 'tema' => $temaDeTesis], 200);
     }
 
-    public function indexTemasEstudianteId($estudiante_id): JsonResponse {
+    public function indexTemasEstudianteId($estudiante_id): JsonResponse
+    {
         $estudiante = Estudiante::findOrFail($estudiante_id);
-        $temasDeTesis = $estudiante->temasDeTesis;
-        return response()->json(['temasDeTesis' => $temasDeTesis], 200);
+        $temasDeTesis = $estudiante->temasDeTesis->map(function ($tema) {
+            return [
+                'id' => $tema->id,
+                'titulo' => $tema->titulo,
+                'estado' => $tema->estado,
+            ];
+        });
+        return response()->json($temasDeTesis, 200);
     }
 
-    public function indexTemasPendientesUsuarioId($usuario_id): JsonResponse {
+    public function indexTemasPendientesUsuarioId($usuario_id): JsonResponse
+    {
         $temasPendientes = TemaDeTesis::whereHas('procesoAprobacion', function ($query) use ($usuario_id) {
             $query->whereHas('estadoAprobacion', function ($query) use ($usuario_id) {
                 $query->where('usuario_id', $usuario_id)
@@ -133,44 +142,74 @@ class TemaDeTesisController extends Controller
         ], 200);
     }
 
-    public function listarAreasEspecialidad($estudiante_id) : JsonResponse {
+    public function listarAreasEspecialidad($estudiante_id): JsonResponse
+    {
         $estudiante = Estudiante::with('especialidad.areas')->find($estudiante_id);
-        $areas = $estudiante->especialidad->areas;
+        if (!$estudiante) {
+            return response()->json([
+                'message' => 'Estudiante no encontrado.'
+            ], 404);
+        }
+
+        $areas = $estudiante->especialidad->areas->map(function ($area) {
+            return [
+                'id' => $area->id,
+                'nombre' => $area->nombre,
+            ];
+        });
+
         return response()->json([
             'areas' => $areas
         ], 200);
     }
 
-    public function listarDocentesEspecialidad($estudiante_id) : JsonResponse {
+    public function listarDocentesEspecialidad($estudiante_id): JsonResponse
+    {
         $estudiante = Estudiante::with('especialidad.docentes')->find($estudiante_id);
+        if (!$estudiante) {
+            return response()->json([
+                'message' => 'Estudiante no encontrado.'
+            ], 404);
+        }
         $docentes = $estudiante->especialidad->docentes;
         $docentesConNombre = $docentes->map(function ($docente) {
             return [
                 'id' => $docente->id,
-                'usuario_id' => $docente->usuario_id,
-                'codigoDocente' => $docente->codigoDocente,
-                'nombre_completo' => $docente->usuario->full_name,
-                'tipo' => $docente->tipo,
-                'especialidad_id' => $docente->especialidad_id,
+                'nombre' => $docente->usuario->full_name,
             ];
         });
-        return response()->json([
-            'docentes' => $docentesConNombre
-        ], 200);
+        return response()->json($docentesConNombre, 200);
     }
 
 
-    public function registrarTema(Request $request): JsonResponse {
+    public function registrarTema(Request $request): JsonResponse
+    {
         $request->validate([
             'estudiante_id' => 'required|exists:estudiantes,id',
             'titulo' => 'required|string|max:255',
             'resumen' => 'required|string',
             'area_id' => 'required|exists:areas,id',
             'docente_id' => 'required|exists:docentes,id',
+            'documento' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048',
         ]);
 
         DB::beginTransaction();
         try {
+            $file = $request->file('documento');
+            if (!$file || !$file->isValid()) {
+                return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
+            }
+
+            $uploadRequest = new Request([
+                'name' => $request->titulo, 
+                'file_type' => 'document', 
+                'file' => $file
+            ]);
+            $uploadRequest->files->set('file', $file);
+            $fileController = new FileController();
+            $fileResponse = $fileController->uploadFile($uploadRequest);
+            $fileUrl = $fileResponse->getData()->url;
+
             // Buscar al estudiante y obtener la especialidad
             $estudiante = Estudiante::findOrFail($request->estudiante_id);
             $especialidad_id = $estudiante->especialidad_id;
@@ -182,7 +221,8 @@ class TemaDeTesisController extends Controller
                 'especialidad_id' => $especialidad_id,
                 'area_id' => $request->area_id,
                 'estado' => 'pendiente',
-                'fecha_enviado' => Now()
+                'fecha_enviado' => Now(),
+                'documento' => $fileUrl,
             ]);
 
             // Registrar los asesores
@@ -225,7 +265,8 @@ class TemaDeTesisController extends Controller
         }
     }
 
-    public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
+    public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
+    {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
@@ -327,7 +368,8 @@ class TemaDeTesisController extends Controller
         }
     }
 
-    public function rechazarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
+    public function rechazarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
+    {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',

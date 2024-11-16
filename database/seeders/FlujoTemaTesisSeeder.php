@@ -101,17 +101,17 @@ class FlujoTemaTesisSeeder extends Seeder
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
         ]);
-        $role = Role::findByName('docente');
+        $role = Role::findByName('coordinador');
         $usuarioCoordinador->assignRole($role);
         RoleScopeUsuario::create([
             'role_id' => $role->id,
             'scope_id' => Scope::firstOrCreate([
-                'name' => 'Curso',
-                'entity_type' => Curso::class,
+                'name' => 'Area',
+                'entity_type' => Area::class,
             ])->id,
             'usuario_id' => $usuarioCoordinador->id,
-            'entity_type' => Curso::class,
-            'entity_id' => $especialidad->id,
+            'entity_type' => Area::class,
+            'entity_id' => $areas->first()->id,
         ]);
 
         $usuarioDirector = Usuario::create([
@@ -126,9 +126,9 @@ class FlujoTemaTesisSeeder extends Seeder
         $docenteDirector= Docente::factory()->create([
             'usuario_id' => $usuarioDirector->id,
             'especialidad_id' => $especialidad->id,
-            //'area_id' => $areas->first()->id
+            'area_id' => $areas->first()->id
         ]);
-        $role = Role::findByName('docente');
+        $role = Role::findByName('director');
         $usuarioDirector->assignRole($role);
         RoleScopeUsuario::create([
             'role_id' => $role->id,
@@ -168,7 +168,5 @@ class FlujoTemaTesisSeeder extends Seeder
             'file_id' => null,
             'responsable' => 'asesor'
         ]);
-
-
     }
 }

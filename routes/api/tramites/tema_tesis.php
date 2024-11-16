@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('temas-de-tesis', [TemaDeTesisController::class, 'indexPaginated'])->middleware('can:ver temas de tesis');
-Route::get('temas-de-tesis/{id}', [TemaDeTesisController::class, 'show'])->middleware('can:ver temas de tesis');
+Route::get('temas-de-tesis/{id}', [TemaDeTesisController::class, 'show']);
 Route::put('temas-de-tesis/{id}', [TemaDeTesisController::class, 'update'])->middleware('can:manage temas de tesis');
 Route::get('temas-de-tesis/estudiante/{estudiante_id}', [TemaDeTesisController::class, 'indexTemasEstudianteId']);
 Route::get('temas-de-tesis/evaluadores/{usuario_id}', [TemaDeTesisController::class, 'indexTemasPendientesUsuarioId']);
