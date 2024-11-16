@@ -50,13 +50,13 @@ class Horario extends Model
     {
         return $this->belongsToMany(Docente::class, 'docente_horario');
     }
-    
+
 
     public function usuarios(): HasManyThrough
     {
         return $this->hasManyThrough(Usuario::class, JefePractica::class, 'horario_id', 'id', 'id', 'usuario_id');
     }
-    
+
     public function horarioEstudiantes()
     {
         return $this->hasMany(HorarioEstudiante::class);
@@ -64,7 +64,14 @@ class Horario extends Model
 
     public function estudiantes(): HasManyThrough
     {
-        return $this->hasManyThrough(Estudiante::class, HorarioEstudiante::class, 'estudiante_horario','horario_id', 'id', 'id', 'estudiante_id');
+        return $this->hasManyThrough(
+            Estudiante::class,
+            HorarioEstudiante::class,
+            'horario_id',
+            'id',
+            'id',
+            'estudiante_id'
+        );
     }
 
     public function encuestas(): BelongsToMany
@@ -80,5 +87,5 @@ class Horario extends Model
     {
         return $this->hasMany(CartaPresentacion::class, 'idHorario');
     }
-    
+
 }
