@@ -89,5 +89,8 @@ class Horario extends Model
     {
         return $this->hasOne(Delegado::class, 'horario_id', 'id');
     }
-
+    public function jefesPractica()
+    {
+        return $this->hasMany(JefePractica::class, 'horario_id');
+    }
 }

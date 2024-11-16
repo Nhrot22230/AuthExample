@@ -191,4 +191,58 @@ class HorarioController extends Controller
             ], 500);
         }
     }
+    public function obtenerHorariosConJefes(Request $request)
+    {
+        // Validar que el "id_curso" fue enviado
+        $validated = $request->validate([
+            'id_curso' => 'required|exists:cursos,id', // id_curso mapeado a la columna "id" de la tabla cursos
+        ]);
+
+        try {
+            $cursoId = $validated['id_curso'];
+
+            // Obtener los horarios relacionados al curso junto con los usuarios asignados (jefes de práctica)
+            $horarios = Horario::where('curso_id', $cursoId)
+                ->with(['jefesPractica' => function ($query) {
+                    $query->join('usuarios', 'jp_horario.usuario_id', '=', 'usuarios.id')
+                        ->select(
+                            'jp_horario.horario_id',
+                            'usuarios.id as usuario_id',
+                            'usuarios.nombre',
+                            'usuarios.apellido_paterno',
+                            'usuarios.apellido_materno',
+                            'usuarios.email'
+                        );
+                }])
+                ->get(['id', 'nombre', 'codigo']); // Incluye los campos del horario
+
+            // Verificar si hay horarios
+            if ($horarios->isEmpty()) {
+                return response()->json(['message' => 'No se encontraron horarios para este curso.'], 404);
+            }
+
+            // Formatear la respuesta
+            $horariosConJefes = $horarios->map(function ($horario) {
+                return [
+                    'id' => $horario->id,
+                    'nombre' => $horario->nombre,
+                    'codigo' => $horario->codigo,
+                    'jefes' => $horario->jefesPractica->map(function ($jefe) {
+                        return [
+                            'id' => $jefe->usuario_id,
+                            'nombre' => "{$jefe->nombre} {$jefe->apellido_paterno} {$jefe->apellido_materno}",
+                            'email' => $jefe->email,
+                        ];
+                    }),
+                ];
+            });
+
+            return response()->json($horariosConJefes, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener los horarios.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
