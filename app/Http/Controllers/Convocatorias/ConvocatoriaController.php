@@ -73,6 +73,27 @@ class ConvocatoriaController extends Controller
             return response()->json(['error' => 'Ocurrió un error', 'details' => $e->getMessage()], 500);
         }
     }
+    public function show($id)
+    {
+        try {
+            // Busca la convocatoria por ID con las relaciones necesarias
+            $convocatoria = Convocatoria::with('gruposCriterios', 'comite.usuario', 'candidatos', 'seccion')->find($id);
+
+            // Verifica si la convocatoria existe
+            if (!$convocatoria) {
+                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
+            }
+
+            return response()->json($convocatoria, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al obtener la convocatoria'], 500);
+        }
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -153,6 +174,7 @@ class ConvocatoriaController extends Controller
             'descripcion' => 'nullable|string|max:1000',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'fechaEntrevista' => 'nullable|date',
             'miembros' => 'required|array|min:1',
             'miembros.*' => 'integer|exists:docentes,id',
             'criteriosNuevos' => 'array',
@@ -166,40 +188,48 @@ class ConvocatoriaController extends Controller
 
         DB::beginTransaction();
         try {
-            $convocatoria = Convocatoria::findOrFail($id);
+            // Buscar la convocatoria
+            $convocatoria = Convocatoria::find($id);
 
+            if (!$convocatoria) {
+                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
+            }
+
+            // Actualizar atributos básicos
             $convocatoria->update([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
+                'fechaEntrevista' => $validatedData['fechaEntrevista'] ?? null,
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
-            $criteriosAntiguos = $validatedData['criteriosAntiguo'] ?? [];
-            $criteriosNuevosIds = [];
+            // Actualizar criterios antiguos
+            $convocatoria->gruposCriterios()->sync($validatedData['criteriosAntiguo'] ?? []);
 
+            // Agregar criterios nuevos
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
                     $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
-                    $criteriosNuevosIds[] = $nuevoCriterio->id;
+                    $convocatoria->gruposCriterios()->attach($nuevoCriterio->id);
                 }
             }
 
-            $convocatoria->gruposCriterios()->sync(array_merge($criteriosAntiguos, $criteriosNuevosIds));
-
-            $idsAsociados = GrupoCriterios::whereHas('convocatorias', function ($query) use ($convocatoria) {
-                $query->where('convocatoria_id', $convocatoria->id);
-            })->pluck('id')->toArray();
-
-            GrupoCriterios::whereNotIn('id', $idsAsociados)->delete();
+            // Actualizar miembros
             $convocatoria->comite()->sync($validatedData['miembros']);
+
             DB::commit();
             return response()->json([
                 'message' => 'Convocatoria actualizada exitosamente.',
                 'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error al actualizar la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             DB::rollBack();
 
             return response()->json([
