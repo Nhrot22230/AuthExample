@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tramites;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Tramites\EstadoAprobacionTema;
 use App\Models\Tramites\ProcesoAprobacionTema;
 use App\Models\Tramites\TemaDeTesis;
@@ -201,8 +203,8 @@ class TemaDeTesisController extends Controller
             }
 
             $uploadRequest = new Request([
-                'name' => $request->titulo, 
-                'file_type' => 'document', 
+                'name' => $request->titulo,
+                'file_type' => 'document',
                 'file' => $file
             ]);
             $uploadRequest->files->set('file', $file);
@@ -265,12 +267,20 @@ class TemaDeTesisController extends Controller
         }
     }
 
+    private function obtenerUsuario($rol, $entidad_id){
+        $rol_id = Role::findByName($rol)->id;
+        return RoleScopeUsuario::where('role_id', $rol_id)
+            ->where('entity_id', $entidad_id)
+            ->orderBy('id', 'desc') // Asegúrate de ordenar por el campo adecuado
+            ->first()
+            ->usuario_id ?? null;
+    }
+
     public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
     {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
-            //aqui falta el archivo
         ]);
 
         $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
@@ -318,8 +328,8 @@ class TemaDeTesisController extends Controller
                         'estado' => 'aprobado',
                         'comentarios' => $request->comentarios,
                     ]);
-                    $director = Usuario::find(109); // Falta tener una forma de saber quien es el director de carrera
-                    $usuarioId = $director->id;
+
+                    $usuarioId = $this->obtenerUsuario('director', $temaTesis->especialidad_id);
                     EstadoAprobacionTema::create([
                         'proceso_aprobacion_id' => $procesoAprobacion->id,
                         'usuario_id' => $usuarioId,
@@ -346,8 +356,7 @@ class TemaDeTesisController extends Controller
                     'estado' => 'aprobado',
                     'comentarios' => $request->comentarios,
                 ]);
-                $coordinador = Usuario::find(108); // Falta tener una forma de saber quien es el coordinador de un area
-                $usuarioId = $coordinador->id;
+                $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
                 EstadoAprobacionTema::create([
                     'proceso_aprobacion_id' => $procesoAprobacion->id,
                     'usuario_id' => $usuarioId,
@@ -405,5 +414,99 @@ class TemaDeTesisController extends Controller
         return response()->json([
             'message' => 'Tema de tesis rechazado correctamente.',
         ]);
+    }
+
+    public function verDetalleTema($tema_tesis_id): JsonResponse{
+        $tema = TemaDeTesis::with([
+            'procesoAprobacion.estadoAprobacion.usuario',
+        ])->find($tema_tesis_id);
+
+        if (!$tema) {
+            return response()->json(['error' => 'Tema de Tesis no encontrado'], 404);
+        }
+
+        // Obtener el proceso de aprobación relacionado
+        $procesoAprobacion = $tema->procesoAprobacion;
+
+        // Obtener estados de aprobación ordenados cronológicamente
+        $estadosAprobacion = $procesoAprobacion
+            ? $procesoAprobacion->estadoAprobacion()->with('usuario')->orderBy('id', 'asc')->get()
+            : [];
+
+        // Determinar el estado general
+        $estadoGeneral = 'Pendiente';
+        foreach ($estadosAprobacion as $estado) {
+            if ($estado->estado === 'rechazado') {
+                $estadoGeneral = 'Rechazado';
+                break;
+            }
+            if ($estado->estado === 'aprobado') {
+                $estadoGeneral = 'Aprobado';
+            }
+        }
+
+        // Configuración de roles evaluadores en orden
+        $rolesEvaluadores = [
+            'asesor' => 'Asesor',
+            'coordinador' => 'Coordinador de Área',
+            'director' => 'Director de Carrera',
+        ];
+
+        // Construir revisiones, asegurando que todos los roles se incluyan
+        $revisiones = [];
+        foreach ($rolesEvaluadores as $responsable => $rol) {
+            $estado = $estadosAprobacion->firstWhere('responsable', $responsable);
+
+            $revisiones[] = [
+                'rol' => $rol,
+                'estado' => $estado ? ucfirst($estado->estado) : 'Esperando',
+                'fecha' => $estado && $estado->fecha_decision ? $estado->fecha_decision : null,
+                'revisor' => $estado && $estado->usuario ? $estado->usuario->nombre : null,
+            ];
+        }
+
+        // Construir detalle de revisión, excluyendo pendientes
+        $detalleRevision = [];
+        foreach ($estadosAprobacion as $estado) {
+            if ($estado->estado === 'aprobado' || $estado->estado === 'rechazado') {
+                $estadoDetalle = $estado->estado === 'aprobado' ? 'aprobado' : 'rechazado';
+                $mensaje = $estado->estado === 'aprobado'
+                    ? 'Tu tema ha sido aprobado'
+                    : 'Tu tema ha sido rechazado';
+
+                $detalleRevision[] = [
+                    'mensaje' => $mensaje,
+                    'fecha' => $estado->fecha_decision ? $estado->fecha_decision : null,
+                    'estado' => $estadoDetalle,
+                    'revisor' => $estado->usuario ? $estado->usuario->nombre : null,
+                ];
+            }
+        }
+
+        // Agregar detalle de envío inicial
+        $envio = [
+            'mensaje' => 'Tu tema ha sido enviado correctamente',
+            'fecha' => $procesoAprobacion ? $procesoAprobacion->fecha_inicio : null,
+            'estado' => 'informativo',
+        ];
+
+        // Fecha de última actualización
+        $ultimaActualizacion = $estadosAprobacion->last()
+            ? $estadosAprobacion->last()->updated_at
+            : null;
+
+        // Construir JSON final
+        $response = [
+            'tema' => $tema->titulo,
+            'estado_general' => $estadoGeneral,
+            'envio' => $envio,
+            'revisiones' => $revisiones,
+            'detalle_revision' => $detalleRevision,
+            'ultima_actualizacion' => $ultimaActualizacion,
+        ];
+
+        return response()->json($response);
+
+
     }
 }
