@@ -8,5 +8,6 @@ Route::get('/convocatorias', [ConvocatoriaController::class, 'listarConvocatoria
 Route::get('/convocatorias/criterios/{entity_id}', [ConvocatoriaController::class, 'indexCriterios']);
 Route::post('/convocatorias', [ConvocatoriaController::class, 'store']);
 Route::put('/convocatorias/{id}', [ConvocatoriaController::class, 'update']);
+Route::get('/convocatorias/{id}', [ConvocatoriaController::class, 'show']);
 Route::post('/convocatorias/criterios', [ConvocatoriaController::class, 'storeGrupoCriterios']);
 Route::put('/convocatorias/criterios/{id}', [ConvocatoriaController::class, 'updateGrupoCriterios']);

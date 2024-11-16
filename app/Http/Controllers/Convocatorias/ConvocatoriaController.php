@@ -7,6 +7,7 @@ use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ConvocatoriaController extends Controller
 {
@@ -66,6 +67,28 @@ class ConvocatoriaController extends Controller
             return response()->json($convocatorias, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Ocurrió un error', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            // Busca la convocatoria por ID con las relaciones necesarias
+            $convocatoria = Convocatoria::with('gruposCriterios', 'comite.usuario', 'candidatos', 'seccion')->find($id);
+
+            // Verifica si la convocatoria existe
+            if (!$convocatoria) {
+                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
+            }
+
+            return response()->json($convocatoria, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al obtener la convocatoria'], 500);
         }
     }
 
