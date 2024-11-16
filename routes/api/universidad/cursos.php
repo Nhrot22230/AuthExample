@@ -19,4 +19,6 @@ Route::get('cursos/{cursoId}/horarios', [CursoController::class, 'obtenerHorario
 Route::post('cursos/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
 Route::post('cursos/detalle', [CursoController::class, 'obtenerCursoPorId']);
 Route::post('cursos/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
+
 Route::post('cursos/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
+Route::post('cursos/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);

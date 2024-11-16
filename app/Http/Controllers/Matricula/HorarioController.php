@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Http\Controllers\Matricula;
-
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Semestre;
-
-
+use App\Models\Delegados\Delegado;
+use Illuminate\Support\Facades\DB;
 class HorarioController extends Controller
 {
     //
@@ -149,4 +149,46 @@ class HorarioController extends Controller
         ]);
     }
 
+    public function obtenerDelegado(Request $request)
+    {
+        // Validar el ID del horario
+        $validated = $request->validate([
+            'id_horario' => 'required|exists:horarios,id',
+        ]);
+
+        try {
+            $horarioId = $validated['id_horario'];
+
+            // Obtener el delegado asociado al horario
+            $delegado = Delegado::where('horario_id', $horarioId)
+                ->join('estudiantes', 'delegados.estudiante_id', '=', 'estudiantes.id') // Unir con estudiantes
+                ->join('usuarios', 'estudiantes.usuario_id', '=', 'usuarios.id') // Unir con usuarios
+                ->select(
+                    'delegados.id as delegado_id',
+                    'delegados.horario_id',
+                    'delegados.estudiante_id',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido_paterno, ' ', usuarios.apellido_materno) as delegado_nombre"),
+                    'usuarios.email as delegado_email'
+                )
+                ->first();
+
+            if (!$delegado) {
+                return response()->json([
+                    'message' => 'No hay delegado asignado para este horario.',
+                    'delegado' => null
+                ], 200);
+            }
+
+            // Devolver los datos del delegado
+            return response()->json([
+                'message' => 'Delegado encontrado.',
+                'delegado' => $delegado
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener el delegado.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

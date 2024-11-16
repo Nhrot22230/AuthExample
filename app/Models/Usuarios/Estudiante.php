@@ -42,9 +42,9 @@ class Estudiante extends Model
         return $this->hasMany(HorarioEstudiante::class);
     }
 
-    public function horarios(): HasManyThrough
+    public function horarios()
     {
-        return $this->hasManyThrough(Horario::class, HorarioEstudiante::class, 'estudiante_id', 'id', 'id', 'horario_id');
+        return $this->belongsToMany(Horario::class,'estudiante_horario', 'estudiante_id', 'horario_id');
     }
 
     public function estudiantesRiesgo(): HasMany
