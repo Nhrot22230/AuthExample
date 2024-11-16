@@ -58,7 +58,7 @@ class FileController extends Controller
             return response($file, 200)->header('Content-Type', $fileRecord->mime_type);
         }
 
-        return response()->json(['error' => 'File not found'], 404);
+        return response()->json(['message' => 'File not found'], 404);
     }
 
     public function downloadById($id)
@@ -70,7 +70,7 @@ class FileController extends Controller
             return response($file, 200)->header('Content-Type', $fileRecord->mime_type);
         }
 
-        return response()->json(['error' => 'File not found'], 404);
+        return response()->json(['message' => 'File not found'], 404);
     }
 
     /**
@@ -81,7 +81,7 @@ class FileController extends Controller
         $fileRecord = File::where('name', $filename)->first();
 
         if (!$fileRecord) {
-            return response()->json(['error' => 'File not found'], 404);
+            return response()->json(['message' => 'File not found'], 404);
         }
 
         try {
@@ -126,6 +126,6 @@ class FileController extends Controller
             return response()->json($fileRecord, 200);
         }
 
-        return response()->json(['error' => 'File not found'], 404);
+        return response()->json(['message' => 'File not found'], 404);
     }
 }

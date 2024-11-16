@@ -25,4 +25,8 @@ class InformeRiesgo extends Model
     {
         return $this->belongsTo(EstudianteRiesgo::class, 'codigo_alumno_riesgo', 'id');
     }
+    public function estudianteRiesgo()
+    {
+        return $this->belongsTo(EstudianteRiesgo::class, 'codigo_alumno_riesgo', 'id');
+    }
 }

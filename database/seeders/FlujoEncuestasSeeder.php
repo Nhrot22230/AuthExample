@@ -57,16 +57,13 @@ class FlujoEncuestasSeeder extends Seeder
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
+
         $gianlucaUsuario = Usuario::where('email', 'gian.luca@gianluka.zzz')->first();
+        if ($gianlucaUsuario) {
+            $estudianteRole = Role::findByName('estudiante');
+            $gianlucaUsuario->assignRole($estudianteRole);
+        }
 
-// Verificar que se obtuvo el usuario de Gianluca
-if ($gianlucaUsuario) {
-    // Obtener el rol de "estudiante"
-    $estudianteRole = Role::findByName('estudiante'); // Asegúrate de que el rol de "estudiante" existe
-
-    // Asignar el rol de "estudiante" al usuario de Gianluca
-    $gianlucaUsuario->assignRole($estudianteRole);
-}
         collect($horarios)->each(function ($horario) use ($estudiantes) {
             $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
             foreach ($estudiantesSeleccionados as $estudiante) {
@@ -129,7 +126,7 @@ if ($gianlucaUsuario) {
             ->orderBy('curso_id')
             ->get();
         $horarios->each(function ($horario) use ($estudiante_role) {
-            $horario->estudiantes->each(function ($estudiante) use ($horario, $estudiante_role) {
+            $horario->estudiantes()->each(function ($estudiante) use ($horario, $estudiante_role) {
                 RoleScopeUsuario::create([
                     'usuario_id' => $estudiante->usuario_id,
                     'role_id' => $estudiante_role->id,
@@ -147,7 +144,7 @@ if ($gianlucaUsuario) {
                     $horarioEstudiante = HorarioEstudiante::where('estudiante_id', $estudiante->id)
                         ->where('horario_id', $horario->id)
                         ->first();
-        
+
                     if ($horarioEstudiante) {
                         HorarioEstudianteJp::create([
                             'estudiante_horario_id' => $horarioEstudiante->id,
@@ -176,7 +173,7 @@ if ($gianlucaUsuario) {
             'cargo' => 'Jefe Administrativo',
             'facultad_id' => $facultad->id,  // La facultad a la que pertenece
         ]);
-        
+
         $role = Role::findByName('asistente');  // Asegúrate de que existe un rol llamado 'administrativo'
         $usuarioAdministrativo->assignRole($role);
 
@@ -191,7 +188,7 @@ if ($gianlucaUsuario) {
             'entity_type' => Especialidad::class,  // Tipo de entidad es Especialidad
             'entity_id' => $especialidad->id,  // Asignamos el ID de la especialidad específica
         ]);
-        
+
         $usuarioDocente = Usuario::create([
             'nombre' => 'David',
             'apellido_paterno' => 'Allasi',
@@ -222,34 +219,34 @@ if ($gianlucaUsuario) {
         ]);
         $gianluca = Estudiante::where('usuario_id', Usuario::where('email', 'gian.luca@gianluka.zzz')->first()->id)->first();
 
-// Obtener los horarios en los que está matriculado Gianluca
-$horariosDeGianluca = $gianluca->horarios;  // Aquí obtenemos todos los horarios
-$horario = $horariosDeGianluca->first();
+        // Obtener los horarios en los que está matriculado Gianluca
+        $horariosDeGianluca = $gianluca->horarios;  // Aquí obtenemos todos los horarios
+        $horario = $horariosDeGianluca->first();
 
-if ($horariosDeGianluca->isNotEmpty()) {
-    // Seleccionamos el primer horario en el que Gianluca está matriculado (puedes ajustar esto si es necesario)
-    $horario = $horariosDeGianluca->first();
+        if ($horariosDeGianluca->isNotEmpty()) {
+            // Seleccionamos el primer horario en el que Gianluca está matriculado (puedes ajustar esto si es necesario)
+            $horario = $horariosDeGianluca->first();
 
-    // Ahora, aseguramos que solo David Allasi sea el docente asignado a este horario
-    // Sincronizamos los docentes (esto eliminará cualquier otro docente asignado)
-    $horario->docentes()->sync([$docente->id]);
+            // Ahora, aseguramos que solo David Allasi sea el docente asignado a este horario
+            // Sincronizamos los docentes (esto eliminará cualquier otro docente asignado)
+            $horario->docentes()->sync([$docente->id]);
 
-    // Asegurarnos de que Gianluca está matriculado en este horario en la tabla estudiante_horario
-    $existeMatricula = HorarioEstudiante::where('estudiante_id', $gianluca->id)
-        ->where('horario_id', $horario->id)
-        ->exists();
+            // Asegurarnos de que Gianluca está matriculado en este horario en la tabla estudiante_horario
+            $existeMatricula = HorarioEstudiante::where('estudiante_id', $gianluca->id)
+                ->where('horario_id', $horario->id)
+                ->exists();
 
-    // Si no está matriculado, lo matriculamos
-    if (!$existeMatricula) {
-        HorarioEstudiante::create([
-            'estudiante_id' => $gianluca->id,
-            'horario_id' => $horario->id,
-        ]);
+            // Si no está matriculado, lo matriculamos
+            if (!$existeMatricula) {
+                HorarioEstudiante::create([
+                    'estudiante_id' => $gianluca->id,
+                    'horario_id' => $horario->id,
+                ]);
+            }
+        }
+
     }
-}
-
-    }
 
 
-        
+
 }

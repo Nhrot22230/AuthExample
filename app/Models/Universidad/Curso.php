@@ -4,6 +4,7 @@ namespace App\Models\Universidad;
 
 use App\Models\EstudianteRiesgo\EstudianteRiesgo;
 use App\Models\Matricula\Horario;
+use App\Models\Usuarios\Docente;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,5 +53,8 @@ class Curso extends Model
     {
         return $this->hasMany(EstudianteRiesgo::class, 'codigo_curso', 'id');
     }
-
+    public function docentes(): BelongsToMany
+    {
+    return $this->belongsToMany(Docente::class,'docente_curso','curso_id','docente_id');
+    }
 }
