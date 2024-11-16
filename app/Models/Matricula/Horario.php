@@ -50,13 +50,13 @@ class Horario extends Model
     {
         return $this->belongsToMany(Docente::class, 'docente_horario');
     }
-    
+
 
     public function usuarios(): HasManyThrough
     {
         return $this->hasManyThrough(Usuario::class, JefePractica::class, 'horario_id', 'id', 'id', 'usuario_id');
     }
-    
+
     public function horarioEstudiantes()
     {
         return $this->hasMany(HorarioEstudiante::class);
