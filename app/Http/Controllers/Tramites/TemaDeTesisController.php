@@ -337,17 +337,23 @@ class TemaDeTesisController extends Controller
                     ]);
 
                     $usuarioId = $this->obtenerUsuario('director', $temaTesis->especialidad_id);
-                    EstadoAprobacionTema::create([
-                        'proceso_aprobacion_id' => $procesoAprobacion->id,
-                        'usuario_id' => $usuarioId,
-                        'estado' => 'pendiente',
-                        'responsable' => 'director'
-                    ]);
+                    if ($usuarioId) {
+                        EstadoAprobacionTema::create([
+                            'proceso_aprobacion_id' => $procesoAprobacion->id,
+                            'usuario_id' => $usuarioId,
+                            'estado' => 'pendiente',
+                            'responsable' => 'director'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'message' => 'Esta especialidad no tiene un director'
+                        ]);
+                    }
+                    DB::commit();
+                    return response()->json([
+                        'message' => 'Proceso de aprobación actualizado correctamente.',
+                    ], 200);
                 }
-                DB::commit();
-                return response()->json([
-                    'message' => 'Proceso de aprobación actualizado correctamente.',
-                ], 200);
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json([
@@ -364,12 +370,19 @@ class TemaDeTesisController extends Controller
                     'comentarios' => $request->comentarios,
                 ]);
                 $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
-                EstadoAprobacionTema::create([
-                    'proceso_aprobacion_id' => $procesoAprobacion->id,
-                    'usuario_id' => $usuarioId,
-                    'estado' => 'pendiente',
-                    'responsable' => 'coordinador',
-                ]);
+                if($usuarioId){
+                    EstadoAprobacionTema::create([
+                        'proceso_aprobacion_id' => $procesoAprobacion->id,
+                        'usuario_id' => $usuarioId,
+                        'estado' => 'pendiente',
+                        'responsable' => 'coordinador',
+                    ]);
+                }
+                else{
+                    return response()->json([
+                        'message'=> 'Esta area no tiene un coordinador'
+                    ]);
+                }
                 DB::commit();
                 return response()->json([
                     'message' => 'Tema de tesis aprobado correctamente.',
