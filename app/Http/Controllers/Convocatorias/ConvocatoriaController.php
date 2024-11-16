@@ -16,21 +16,26 @@ class ConvocatoriaController extends Controller
      */
     public function index()
     {
-        $perPage = request('per_page', 10);
-        $search = request('search', '');
-        $seccion = request('seccion', null);
-        $filters = request('filters', []);  // This will be an array of states
+        $perPage = request('per_page', 10); // Número de resultados por página
+        $search = request('search', '');   // Término de búsqueda
+        $secciones = request('secciones', []); // Array de IDs de secciones
+        $filters = request('filters', []);  // Array de estados (por ejemplo, ['abierta', 'cerrada'])
 
         $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')
-            ->where('nombre', 'like', "%$search%")
-            ->when($filters, function ($query, $filters) {
-                return $query->whereIn('estado', $filters);
+            ->when($search, function ($query, $search) {
+                $query->where('nombre', 'like', "%$search%");
             })
-            ->where('seccion_id', 'like', "%$seccion%")
+            ->when(!empty($secciones), function ($query) use ($secciones) {
+                $query->whereIn('seccion_id', $secciones); // Filtra por secciones
+            })
+            ->when($filters, function ($query, $filters) {
+                $query->whereIn('estado', $filters); // Filtra por estados
+            })
             ->paginate($perPage);
 
         return response()->json($convocatorias, 200);
     }
+
 
     public function indexCriterios($entity_id)
     {
