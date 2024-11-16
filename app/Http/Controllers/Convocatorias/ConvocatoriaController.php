@@ -54,7 +54,7 @@ class ConvocatoriaController extends Controller
     }
 
 
-    public function listar_convocatorias_todas()
+    public function listarConvocatoriasTodas()
     {
         try {
             $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')->get();
@@ -189,6 +189,37 @@ class ConvocatoriaController extends Controller
 
             return response()->json([
                 'message' => 'Error al actualizar la convocatoria.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function storeGrupoCriterios(Request $request)
+    {
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'obligatorio' => 'required|boolean',
+            'descripcion' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $grupoCriterios = GrupoCriterios::create([
+                'nombre' => $validatedData['nombre'],
+                'obligatorio' => $validatedData['obligatorio'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Grupo de criterios creado exitosamente.',
+                'grupos_criterios' => $grupoCriterios,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al crear el grupo de criterios.',
                 'error' => $e->getMessage(),
             ], 500);
         }
