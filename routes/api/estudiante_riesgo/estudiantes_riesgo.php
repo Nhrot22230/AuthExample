@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('estudiantesRiesgo/listar_profesor', [EstudianteRiesgoController::class, 'listar_por_especialidad_profesor']);
 Route::get('estudiantesRiesgo/listar_director', [EstudianteRiesgoController::class, 'listar_por_especialidad_director']);
-Route::get('estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
+Route::post('estudiantesRiesgo/listar_informes', [EstudianteRiesgoController::class, 'listar_informes_estudiante']);
 Route::put('estudiantesRiesgo/actualizar_informe', [EstudianteRiesgoController::class, 'actualizar_informe_estudiante']);
 Route::post('estudiantesRiesgo/carga_alumnos', [EstudianteRiesgoController::class, 'carga_alumnos_riesgo']);
 Route::post('estudiantesRiesgo/manage_informes', [EstudianteRiesgoController::class, 'manage_informes']);
@@ -15,3 +15,10 @@ Route::get('estudiantesRiesgo/obtener_estadisticas_informes', [EstudianteRiesgoC
 Route::get('estudiantesRiesgo/listar_informes_director', [EstudianteRiesgoController::class, 'listar_informes_director']);
 Route::get('estudiantesRiesgo/listar_semanas_existentes/{id}', [EstudianteRiesgoController::class, 'listar_semanas_existentes']);
 Route::delete('estudiantesRiesgo/eliminar_semana', [EstudianteRiesgoController::class, 'eliminar_semana']);
+Route::post('estudiantesRiesgo/crear-por-especialidad', [EstudianteRiesgoController::class, 'crearInformePorEspecialidad']);
+Route::post('estudiantesRiesgo/semanas-por-especialidad', [EstudianteRiesgoController::class, 'obtenerSemanasPorEspecialidad']);
+Route::get('estudiantesRiesgo/estadisticas', [EstudianteRiesgoController::class, 'obtenerEstadisticas']);
+Route::get('estudiantesRiesgo/cursos', [EstudianteRiesgoController::class, 'obtenerCursos']);
+Route::post('estudiantesRiesgo/comparacion-cursos', [EstudianteRiesgoController::class, 'compararCursos']);
+Route::get('estudiantesRiesgo/ultimos-informes', [EstudianteRiesgoController::class, 'obtenerUltimosInformes']);
+

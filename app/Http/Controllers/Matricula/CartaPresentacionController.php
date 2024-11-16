@@ -133,6 +133,7 @@ public function getSolicitudDetalle($id)
         'estudiante',             // Obtener el estudiante completo
         'horario',                 // Obtener el horario
         'horario.curso',           // Obtener el curso
+        'especialidad', 
     ])
     ->findOrFail($id);  // Si no encuentra la solicitud, arroja un error 404
 
@@ -145,6 +146,7 @@ public function getSolicitudDetalle($id)
         'pdf_solicitud' => $solicitud->pdf_solicitud,
         'pdf_firmado' => $solicitud->pdf_firmado,
         'id_especialidad' =>$solicitud->especialidad_id,
+        'especialidad_nombre' => $solicitud->especialidad->nombre,
         'ultima_modificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'),
         'estudiante' => [
             'nombre_completo' => $solicitud->estudiante->usuario->nombre . ' ' . 

@@ -13,7 +13,8 @@ use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-
+use App\Models\Usuarios\Docente;
+use Illuminate\Support\Facades\DB;
 class EstudianteRiesgoController extends Controller
 {
     /**
@@ -27,31 +28,152 @@ class EstudianteRiesgoController extends Controller
         $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
     }
 
-    public function listar_por_especialidad_director(Request $request)
-    {
-        $request = $request->IdEspecialidad;
-        $ciclo = Semestre::where('estado', 'activo')->first();
-        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
-        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $request)->where('ciclo', $periodo)->get();
-        $resultado = [];
+    public function crearInformePorEspecialidad(Request $request)
+{
+    // Validar los datos de entrada
+    $request->validate([
+        'semana' => 'required|integer',
+        'fecha' => 'required|date',
+        'especialidad_id' => 'required|integer'
+    ]);
 
-        foreach ($estudiantesRiesgo as $estudiante)
-        {
-            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+    // Obtener los datos del request
+    $semana = $request->semana;
+    $fecha = $request->fecha;
+    $especialidad_id = $request->especialidad_id;
 
-            $resultado[] = [
-                'Id' => $estudiante->id,
-                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
-                'Codigo' => $estudiante->codigo_estudiante,
-                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
-                'CodigoCurso' => $estudiante->codigo_curso,
-                'Horario' => $estudiante->horario,
-                'Riesgo' => $estudiante->riesgo,
-                'Fecha' => $estudiante->fecha
-            ];
+    // Obtener todos los estudiantes en riesgo de la especialidad indicada
+    $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad_id)->get();
+
+    // Revisar si hay estudiantes en riesgo
+    if ($estudiantesRiesgo->isEmpty()) {
+        return response()->json(['message' => 'No hay estudiantes en riesgo para la especialidad especificada.'], 404);
+    }
+
+    // Insertar un informe de riesgo para cada estudiante en riesgo
+    foreach ($estudiantesRiesgo as $estudiante) {
+        InformeRiesgo::create([
+            'codigo_alumno_riesgo' => $estudiante->id,
+            'fecha' => $fecha,
+            'semana' => $semana,
+            'desempenho' => null,
+            'observaciones' => null,
+            'estado' => 'Pendiente',  // Establecer estado como "Pendiente"
+            'nombre_profesor' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    return response()->json(['message' => 'Informe(s) de riesgo creado(s) exitosamente.'], 201);
+}
+
+    public function obtenerSemanasPorEspecialidad(Request $request){
+        // Validar que el id de la especialidad se haya enviado
+        $request->validate([
+            'especialidad_id' => 'required|integer'
+        ]);
+
+        // Obtener el id de la especialidad
+        $especialidad_id = $request->especialidad_id;
+
+        // Consultar semanas y fechas únicas para la especialidad indicada
+        $semanas = InformeRiesgo::whereHas('estudianteRiesgo', function($query) use ($especialidad_id) {
+                $query->where('codigo_especialidad', $especialidad_id);
+            })
+            ->select('semana', 'fecha')
+            ->distinct()
+            ->get();
+
+        // Devolver los resultados en formato JSON
+        return response()->json($semanas);
+    }
+
+    public function listar_por_especialidad_director(Request $request){
+        try {
+            $request->validate([
+                'IdEspecialidad' => 'required|integer',
+                'search' => 'nullable|string',
+                'semana' => 'nullable|integer',
+                'riesgo' => 'nullable|string',
+            ]);
+        } catch (ValidationException $e) {
+            Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);
+            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
         }
+    
+        $especialidadId = $request->IdEspecialidad;
+        $search = $request->search;
+        $semana = $request->semana;
+        $riesgo = $request->riesgo;
+    
+        // Obtener el ciclo activo
+        $ciclo = Semestre::where('estado', 'activo')->first();
+        if (!$ciclo) {
+            return response()->json(['message' => 'No se encontró un semestre activo.'], 404);
+        }
+    
+        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+    
+        // Obtener estudiantes en riesgo de la especialidad y ciclo especificados
+        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidadId)
+            ->where('ciclo', $periodo);
+    
+        // Aplicar filtro por riesgo
+        if (!empty($riesgo) && $riesgo !== 'Todos') {
+            $estudiantesRiesgo->where('riesgo', $riesgo);
+        }
+    
+        // Filtrar por búsqueda (nombre o código del estudiante)
+        if (!empty($search)) {
+            $estudiantesRiesgo->where(function ($query) use ($search) {
+                $query->where('codigo_estudiante', 'like', '%' . $search . '%')
+                    ->orWhereHas('usuario', function ($query) use ($search) {
+                        $query->where('nombre', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+    
+        $estudiantesRiesgo = $estudiantesRiesgo->get();
+    
+        if ($estudiantesRiesgo->isEmpty()) {
+            return response()->json([]);
+        }
+    
+        $resultado = [];
+        foreach ($estudiantesRiesgo as $estudiante) {
+            $usuario = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+    
+            // Filtrar informes por estado "Respondida" y semana (si se proporciona)
+            $informesFiltrados = $estudiante->informes
+                ->where('estado', 'Respondida')
+                ->when(!is_null($semana), function ($query) use ($semana) {
+                    return $query->where('semana', $semana);
+                });
+    
+            foreach ($informesFiltrados as $informe) {
+                $resultado[] = [
+                    'Id' => $estudiante->id,
+                    'Estudiante' => $usuario->nombre . " " . $usuario->apellido_paterno,
+                    'Codigo' => $estudiante->codigo_estudiante,
+                    'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                    'CodigoCurso' => $estudiante->codigo_curso,
+                    'Horario' => $estudiante->horario,
+                    'Riesgo' => $estudiante->riesgo,
+                    'IdInforme' => $informe->id,
+                    'Estado' => $informe->estado,
+                    'Semana' => $informe->semana,
+                    'Fecha' => $informe->fecha,
+                    'Desempeño' => $informe->desempenho,
+                    'Observaciones' => $informe->observaciones,
+                    'Docente' => $informe->nombre_profesor
+                ];
+            }
+        }
+    
         return response()->json($resultado);
     }
+
 
     public function listar_informes_director(Request $request)
     {
@@ -118,24 +240,51 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
-    public function listar_informes_estudiante(Request $request)
-    {
-        $request = $request->CodigoAlumnoRiesgo;
-        $informes = InformeRiesgo::where('codigo_alumno_riesgo', $request)->get();
+    public function listar_informes_estudiante(Request $request){
+        try {
+            $request->validate([
+                'codigo_estudiante' => 'required|string',
+                'id_horario' => 'required|integer',
+                'id_curso' => 'required|integer',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+        }
+
+        $codigoEstudiante = $request->codigo_estudiante;
+        $idHorario = $request->id_horario;
+        $idCurso = $request->id_curso;
+
+        // Obtener el estudiante en riesgo correspondiente
+        $estudianteRiesgo = EstudianteRiesgo::where('codigo_estudiante', $codigoEstudiante)
+            ->where('horario', $idHorario)
+            ->where('codigo_curso', $idCurso)
+            ->first();
+
+        if (!$estudianteRiesgo) {
+            return response()->json(['message' => 'No se encontraron informes para el estudiante en el curso y horario proporcionados.'], 404);
+        }
+
+        // Obtener los informes asociados al estudiante en riesgo
+        $informes = InformeRiesgo::where('codigo_alumno_riesgo', $estudianteRiesgo->id)->get();
+
+        // Construir la respuesta
         $resultado = [];
-        foreach($informes as $i){
-            if($i->estado == 'Pendiente') continue;
+        foreach ($informes as $informe) {
             $resultado[] = [
-                'IdInforme' => $i->id,
-                'Estado' => $i->estado,
-                'Fecha' => $i->fecha,
-                'Desempeño' => $i->desempenho,
-                'Observaciones' => $i->observaciones,
-                'Docente' => $i->nombre
+                'IdInforme' => $informe->id,
+                'Estado' => $informe->estado,
+                'Fecha' => $informe->fecha,
+                'Desempeño' => $informe->desempenho,
+                'Observaciones' => $informe->observaciones,
+                'Docente' => $informe->nombre_profesor,
             ];
         }
+
         return response()->json($resultado);
     }
+
+
 
     public function agregar_informe_estudiante($numero_semana, $IdAlumnoRiesgo)
     {
@@ -184,7 +333,7 @@ class EstudianteRiesgoController extends Controller
                 'IdInforme'=> 'required',
                 'Desempeño' => 'required',
                 'Observaciones' => 'required',
-                'NombreProfesor' => 'required',
+                'Docente' => 'required',
             ]);
         } catch(ValidationException $e){
             Log::channel('usuarios')->info('Error al validar los datos del actualizado de informes', ['error' => $e->errors()]);
@@ -194,7 +343,7 @@ class EstudianteRiesgoController extends Controller
         $informe->desempenho = $request->Desempeño;
         $informe->observaciones = $request->Observaciones;
         $informe->estado = 'Respondida';
-        $informe->nombre_profesor = $request->NombreProfesor;
+        $informe->nombre_profesor = $request->Docente;
         $informe->save();
         return response()->json("",201);
     }
@@ -248,97 +397,91 @@ class EstudianteRiesgoController extends Controller
             return response()->json($resultado);
         }*/
 
-    public function listar_por_especialidad_profesor(Request $request) //Para el profesor
-    {
-        try{
-            $request->validate([
-                'CodigoProfesor'=> 'nullable',
-                'Especialidad' => 'nullable',
-                'Estado' => 'nullable',
-                'Riesgo' => 'nullable',
-                'Busqueda' => 'nullable',
-            ]);
-        } catch(ValidationException $e){
-            Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);
-            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
-        }
-        //$data = json_decode($request, true);
-        $profesor = $request->CodigoProfesor;
-        $especialidad = $request->Especialidad;
-        $estado = $request->Estado ?? 'Todos'; // "Todos", "Pendientes" o "Respondida"
-        $riesgo = $request->Riesgo ?? 'Todos'; // "Tercera", "Cuarta" u "Otros"
-        $busqueda = $request->Busqueda ?? ''; // Búsqueda por código o nombre
-
-        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)
-            ->where('codigo_docente', $profesor);
-
-// Aplicar filtro de estado
-        if ($estado !== 'Todos') {
-            $estudiantesRiesgo->whereHas('informes', function ($query) use ($estado) {
-                $query->where('estado', $estado);
-            });
-        }
-
-// Aplicar filtro de riesgo
-        if ($riesgo !== 'Todos') {
-            $estudiantesRiesgo->where('riesgo', $riesgo);
-        }
-
-// Filtrar por búsqueda de código o nombre
-        if (!empty($busqueda)) {
-            $estudiantesRiesgo->where(function ($query) use ($busqueda) {
-                $query->where('codigo_estudiante', 'like', '%' . $busqueda . '%')
-                    ->orWhereHas('usuario', function ($query) use ($busqueda) {
-                        $query->where('nombre', 'like', '%' . $busqueda . '%');
-                    });
-            });
-        }
-
-        $estudiantesRiesgo = $estudiantesRiesgo->get();
-
-        if ($estudiantesRiesgo->isEmpty()) {
-            return response()->json("");
-        }
-
-        $resultado = [];
-        $fechaActual = new DateTime();
-        $inicioSemanaActual = (clone $fechaActual)->modify('monday this week');
-        $finSemanaActual = (clone $fechaActual)->modify('sunday this week');
-
-        foreach ($estudiantesRiesgo as $estudiante) {
-            $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
-            $informes = InformeRiesgo::where('codigo_alumno_riesgo', $estudiante->id)->get();
-
-            $informe_actual = null;
-            foreach ($informes as $informe) {
-                $fechaRegistro = new DateTime($informe->fecha);
-                if ($fechaRegistro >= $inicioSemanaActual && $fechaRegistro <= $finSemanaActual) {
-                    $informe_actual = $informe;
-                    break;
-                }
+        public function listar_por_especialidad_profesor(Request $request) //Para el profesor
+        {
+            try {
+                $request->validate([
+                    'CodigoProfesor' => 'nullable',
+                    'Especialidad' => 'nullable',
+                    'Estado' => 'nullable', // "Pendiente" o "Realizada"
+                    'Riesgo' => 'nullable', // "Tercera", "Cuarta" u "Otros"
+                    'Busqueda' => 'nullable', // Código o nombre
+                ]);
+            } catch (ValidationException $e) {
+                Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);
+                return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
             }
-
-            if ($informe_actual == null) continue;
-
-            $resultado[] = [
-                'Id' => $estudiante->id,
-                'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
-                'Codigo' => $estudiante->codigo_estudiante,
-                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
-                'CodigoCurso' => $estudiante->codigo_curso,
-                'Horario' => $estudiante->horario,
-                'Riesgo' => $estudiante->riesgo,
-                'IdInforme' => $informe_actual->id,
-                'Estado' => $informe_actual->estado,
-                'Fecha' => $informe_actual->fecha,
-                'Desempeño' => $informe_actual->desempenho,
-                'Observaciones' => $informe_actual->observaciones,
-                'Docente' => $informe_actual->nombre_profesor
-            ];
+        
+            $profesor = $request->CodigoProfesor;
+            $especialidad = $request->Especialidad;
+            $estado = $request->Estado ?? 'Pendiente'; // Por defecto, filtrar pendientes
+            $riesgo = $request->Riesgo ?? 'Todos';
+            $busqueda = $request->Busqueda ?? '';
+            $fechaActual = now();
+        
+            $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidad)
+                ->where('codigo_docente', $profesor)
+                ->whereHas('informes', function ($query) use ($estado, $fechaActual) {
+                    $query->where('estado', 'Pendiente')
+                        ->where('fecha', '>=', $fechaActual); // Solo informes cuya fecha no haya pasado
+                });
+        
+            // Aplicar filtro de riesgo
+            if ($riesgo !== 'Todos') {
+                $estudiantesRiesgo->where('riesgo', $riesgo);
+            }
+        
+            // Filtrar por búsqueda de código o nombre
+            if (!empty($busqueda)) {
+                $estudiantesRiesgo->where(function ($query) use ($busqueda) {
+                    $query->where('codigo_estudiante', 'like', '%' . $busqueda . '%')
+                        ->orWhereHas('usuario', function ($query) use ($busqueda) {
+                            $query->where('nombre', 'like', '%' . $busqueda . '%');
+                        });
+                });
+            }
+        
+            $estudiantesRiesgo = $estudiantesRiesgo->get();
+        
+            if ($estudiantesRiesgo->isEmpty()) {
+                return response()->json([]);
+            }
+        
+            $resultado = [];
+            foreach ($estudiantesRiesgo as $estudiante) {
+                $est = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+                $informePendiente = $estudiante->informes
+                    ->where('estado', 'Pendiente')
+                    ->where('fecha', '>=', $fechaActual)
+                    ->first(); // Obtener el informe pendiente más relevante
+        
+                if (!$informePendiente) continue;
+        
+                // Obtener el docente asociado al código_docente
+                $docente = Docente::where('codigoDocente', $profesor)->first();
+                $nombreDocente = $docente ? $docente->usuario->nombre . " " . $docente->usuario->apellido_paterno : 'No asignado';
+        
+                $resultado[] = [
+                    'Id' => $estudiante->id,
+                    'Estudiante' => $est->nombre . " " . $est->apellido_paterno,
+                    'Codigo' => $estudiante->codigo_estudiante,
+                    'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                    'CodigoCurso' => $estudiante->codigo_curso,
+                    'Horario' => $estudiante->horario,
+                    'Riesgo' => $estudiante->riesgo,
+                    'IdInforme' => $informePendiente->id,
+                    'Estado' => $informePendiente->estado,
+                    'Fecha' => $informePendiente->fecha,
+                    'Desempeño' => $informePendiente->desempenho,
+                    'Observaciones' => $informePendiente->observaciones,
+                    'Docente' => $nombreDocente
+                ];
+            }
+        
+            return response()->json($resultado);
         }
-
-        return response()->json($resultado);
-    }
+        
+        
 
     public function crear_informes_estudiante($idEstudiante, $idEspecialidad)
     {
@@ -603,6 +746,193 @@ class EstudianteRiesgoController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+    public function obtenerEstadisticas(Request $request)
+    {
+        $request->validate([
+            'id_especialidad' => 'required|integer',
+            'semana' => 'required|integer',
+        ]);
+
+        $idEspecialidad = $request->input('id_especialidad');
+        $semana = $request->input('semana');
+
+        // Consultar los informes de la semana y especialidad
+        $informes = DB::table('informes_riesgo')
+            ->join('estudiante_riesgo', 'informes_riesgo.codigo_alumno_riesgo', '=', 'estudiante_riesgo.id')
+            ->where('estudiante_riesgo.codigo_especialidad', $idEspecialidad)
+            ->where('informes_riesgo.semana', $semana)
+            ->select('informes_riesgo.desempenho', 'informes_riesgo.estado')
+            ->get();
+
+        // Contar categorías de desempeño
+        $mal = $informes->filter(fn($i) => in_array($i->desempenho, ['Mal', 'Muy mal']))->count();
+        $regular = $informes->filter(fn($i) => $i->desempenho === 'Regular')->count();
+        $bien = $informes->filter(fn($i) => in_array($i->desempenho, ['Bien', 'Muy bien']))->count();
+        $total = $informes->count();
+
+        // Calcular completitud
+        $completos = $informes->filter(fn($i) => $i->estado === 'Respondida')->count();
+        $completitud = $total > 0 ? round(($completos / $total) * 100, 2) : 0;
+
+        // Devolver los resultados
+        return response()->json([
+            'mal' => $mal,
+            'regular' => $regular,
+            'bien' => $bien,
+            'total' => $total,
+            'completitud' => $completitud,
+        ]);
+    }
+
+
+
+    public function obtenerCursos(Request $request){
+        // Validación del campo `id_especialidad`
+        $request->validate([
+            'id_especialidad' => 'required|integer',
+        ]);
+
+        $id_especialidad = $request->input('id_especialidad');
+
+        try {
+            // Consulta solo con los estudiantes en riesgo
+            $cursos = Curso::where('especialidad_id', $id_especialidad)
+                ->withCount('estudiantesRiesgo') // Contamos estudiantes en riesgo
+                ->get()
+                ->map(function ($curso) {
+                    return [
+                        'nombre' => $curso->nombre,
+                        'inscritos_en_riesgo' => $curso->estudiantes_riesgo_count, // Campo automático de withCount
+                    ];
+                });
+
+            // Respuesta exitosa
+            return response()->json($cursos, 200);
+
+        } catch (\Exception $e) {
+            // Manejo de errores
+            return response()->json([
+                'error' => 'Error al obtener cursos',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function compararCursos(Request $request)
+{
+    // Validar los datos recibidos
+    $request->validate([
+        'cursos' => 'required|array',
+        'semana' => 'required|integer',
+        'id_especialidad' => 'required|integer',
+    ]);
+
+    $cursos = $request->input('cursos');
+    $semana = $request->input('semana');
+    $id_especialidad = $request->input('id_especialidad');
+
+    // Resultado inicial vacío
+    $resultados = [];
+
+    try {
+        foreach ($cursos as $nombreCurso) {
+            // Buscar el curso con el nombre y especialidad proporcionados
+            $curso = Curso::where('nombre', $nombreCurso)
+                ->where('especialidad_id', $id_especialidad)
+                ->first();
+
+            // Si no se encuentra el curso, agregar un resultado vacío para este curso
+            if (!$curso) {
+                $resultados[] = [
+                    'curso' => $nombreCurso,
+                    'mal' => 0,
+                    'regular' => 0,
+                    'bien' => 0,
+                    'error' => 'Curso no encontrado o no pertenece a la especialidad',
+                ];
+                continue;
+            }
+
+            // Obtener los informes para la semana seleccionada y el curso
+            $informes = InformeRiesgo::where('codigo_curso', $curso->id)
+                ->where('semana', $semana)
+                ->where('estado', 'Respondido') // Solo informes "Respondido"
+                ->get();
+
+            // Calcular las estadísticas para el curso
+            $resultados[] = [
+                'curso' => $nombreCurso,
+                'mal' => $informes->whereIn('desempenho', ['Mal', 'Muy mal'])->count(),
+                'regular' => $informes->where('desempenho', 'Regular')->count(),
+                'bien' => $informes->whereIn('desempenho', ['Bien', 'Muy bien'])->count(),
+            ];
+        }
+
+        // Si no hay resultados procesados, devolver un arreglo vacío
+        if (empty($resultados)) {
+            return response()->json([[
+                'curso' => 'Sin datos',
+                'mal' => 0,
+                'regular' => 0,
+                'bien' => 0,
+            ]]);
+        }
+    } catch (\Exception $e) {
+        // Registrar errores en los logs y devolver respuesta de error
+        Log::error('Error al comparar cursos:', ['exception' => $e]);
+        return response()->json(['error' => 'Error interno', 'details' => $e->getMessage()], 500);
+    }
+
+    // Devolver los resultados procesados
+    return response()->json($resultados);
+}
+
+    public function obtenerUltimosInformes(Request $request){
+        try {
+            // Validar la entrada
+            $request->validate([
+                'id_especialidad' => 'required|integer',
+            ]);
+
+            $idEspecialidad = $request->input('id_especialidad');
+
+            // Obtener los últimos 3 informes de riesgo para la especialidad
+            $informes = InformeRiesgo::whereHas('alumno_riesgo', function ($query) use ($idEspecialidad) {
+                $query->where('codigo_especialidad', $idEspecialidad);
+            })
+            ->with([
+                'alumno_riesgo.estudiante.usuario',
+                'alumno_riesgo.curso',
+                'alumno_riesgo.docente'
+            ])
+            ->orderBy('created_at', 'desc') // Ordenar por la fecha de creación
+            ->limit(3) // Limitar a los últimos 3 informes
+            ->get();
+
+            // Formatear los datos para la respuesta
+            $resultados = $informes->map(function ($informe) {
+                return [
+                    'docente' => $informe->alumno_riesgo->docente->nombre ?? 'Docente no registrado',
+                    'estudiante' => $informe->alumno_riesgo->estudiante->usuario->nombre ?? 'Estudiante no registrado',
+                    'codigo_estudiante' => $informe->alumno_riesgo->codigo_estudiante ?? 'N/A',
+                    'curso' => $informe->alumno_riesgo->curso->nombre ?? 'Curso no registrado',
+                    'horario' => $informe->alumno_riesgo->horario ?? 'N/A',
+                    'fecha' => $informe->fecha,
+                    'desempenho' => $informe->desempenho,
+                ];
+            });
+
+            return response()->json($resultados);
+        } catch (\Exception $e) {
+            // Capturar cualquier error y devolver un mensaje
+            Log::error('Error al obtener últimos informes', ['exception' => $e]);
+            return response()->json(['error' => 'Error al obtener últimos informes', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+
+
     /**
      * Show the form for creating a new resource.
      */
