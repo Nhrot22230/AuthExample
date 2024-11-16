@@ -1,13 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\Universidad;
-
 use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
-use App\Models\Usuarios\Docente;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 class CursoController extends Controller
 {
     //
@@ -161,34 +159,127 @@ class CursoController extends Controller
 
         return response()->json($horariosData);
     }
-    public function obtenerCursosPorDocente($docenteId)
+    public function obtenerCursosPorDocente(Request $request)
     {
-        // Obtener los cursos asociados al docente a través de la relación docente_curso
-        $cursos = Docente::where('id', $docenteId)
-            ->with(['cursos' => function ($query) {
-                $query->select('cursos.id', 'cursos.nombre', 'cursos.cod_curso', 'cursos.creditos', 'cursos.estado', 'cursos.created_at', 'cursos.updated_at');
-            }])
-            ->first();
+        $docenteId = $request->input('id'); // Obtener el ID del docente desde el cuerpo de la solicitud
 
-        // Verificar si el docente tiene cursos asignados
-        if (!$cursos || $cursos->cursos->isEmpty()) {
+        // Validar que el ID esté presente y sea un número
+        if (!$docenteId || !is_numeric($docenteId)) {
+            return response()->json(['message' => 'El ID del docente es requerido y debe ser un número.'], 400);
+        }
+
+        // Ejecutar la consulta SQL
+        $cursos = DB::select("
+            SELECT 
+                cursos.id AS curso_id,
+                cursos.nombre AS curso_nombre,
+                cursos.cod_curso AS codigo_curso,
+                cursos.creditos AS creditos,
+                cursos.estado AS estado,
+                horarios.id AS horario_id,
+                horarios.nombre AS horario_nombre,
+                horarios.codigo AS horario_codigo,
+                horarios.vacantes AS vacantes,
+                horarios.created_at AS horario_creacion,
+                horarios.updated_at AS horario_actualizacion
+            FROM 
+                docente_horario
+            JOIN 
+                horarios ON docente_horario.horario_id = horarios.id
+            JOIN 
+                cursos ON horarios.curso_id = cursos.id
+            WHERE 
+                docente_horario.docente_id = ?
+        ", [$docenteId]);
+
+        // Verificar si hay resultados
+        if (empty($cursos)) {
             return response()->json(['message' => 'No se encontraron cursos asignados para este docente.'], 404);
         }
 
-        // Formatear la respuesta
-        $cursosAsignados = $cursos->cursos->map(function ($curso) {
-            return [
-                'curso_id' => $curso->id,
-                'curso_nombre' => $curso->nombre,
-                'codigo_curso' => $curso->cod_curso,
-                'creditos' => $curso->creditos,
-                'estado' => $curso->estado,
-                'fecha_creacion' => $curso->created_at,
-                'ultima_actualizacion' => $curso->updated_at,
-            ];
-        });
+        return response()->json($cursos);
+    }
+    public function obtenerCursoPorId(Request $request)
+    {
+        // Validar que el ID esté presente en la solicitud
+        $request->validate([
+            'id' => 'required|integer',
+        ]);
 
-        return response()->json($cursosAsignados);
+        // Obtener el ID del curso
+        $cursoId = $request->input('id');
+
+        // Buscar el curso en la base de datos
+        $curso = Curso::with(['horarios', 'especialidad']) // Relación con horarios y especialidad
+            ->find($cursoId);
+
+        // Si no se encuentra el curso, devolver un error
+        if (!$curso) {
+            return response()->json(['message' => 'Curso no encontrado.'], 404);
+        }
+
+        // Devolver los datos del curso en la respuesta
+        return response()->json($curso);
+    }
+    public function obtenerHorariosPorDocenteYCursos(Request $request)
+    {
+        // Validar los parámetros requeridos
+        $docenteId = $request->input('docente_id');
+        $cursoId = $request->input('curso_id');
+
+        if (!$docenteId || !$cursoId) {
+            return response()->json(['message' => 'El ID del docente y del curso son requeridos.'], 400);
+        }
+
+        // Obtener los horarios del curso asignados al docente
+        $horarios = Horario::whereHas('docentes', function ($query) use ($docenteId) {
+                $query->where('docente_id', $docenteId);
+            })
+            ->where('curso_id', $cursoId)
+            ->get(['id', 'nombre', 'codigo', 'vacantes', 'created_at', 'updated_at']);
+
+        // Verificar si hay resultados
+        if ($horarios->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron horarios para este docente en este curso.'], 404);
+        }
+
+        // Devolver la lista de horarios
+        return response()->json($horarios);
+    }
+    public function obtenerAlumnosPorHorario(Request $request)
+    {
+        $horarioId = $request->input('id_horario');
+
+        // Validar que el ID del horario esté presente
+        if (!$horarioId) {
+            return response()->json(['message' => 'El ID del horario es requerido.'], 400);
+        }
+
+        // Verificar si el horario existe
+        $horario = Horario::find($horarioId);
+        if (!$horario) {
+            return response()->json(['message' => 'El horario no existe.'], 404);
+        }
+
+        // Obtener los estudiantes asociados al horario desde la tabla estudiante_horario
+        $estudiantes = DB::table('estudiante_horario')
+            ->join('estudiantes', 'estudiante_horario.estudiante_id', '=', 'estudiantes.id')
+            ->join('usuarios', 'estudiantes.usuario_id', '=', 'usuarios.id')
+            ->where('estudiante_horario.horario_id', $horarioId)
+            ->select(
+                'estudiantes.id as estudiante_id',
+                'estudiantes.codigoEstudiante as codigo',
+                DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido_paterno, ' ', usuarios.apellido_materno) as nombre_completo"),
+                'usuarios.email as email'
+            )
+            ->get();
+
+        // Verificar si hay estudiantes inscritos en el horario
+        if ($estudiantes->isEmpty()) {
+            return response()->json(['message' => 'No hay estudiantes inscritos en este horario.'], 404);
+        }
+
+        return response()->json($estudiantes, 200);
     }
 
 }

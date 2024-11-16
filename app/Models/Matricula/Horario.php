@@ -64,7 +64,7 @@ class Horario extends Model
 
     public function estudiantes(): HasManyThrough
     {
-        return $this->hasManyThrough(Estudiante::class, HorarioEstudiante::class, 'horario_id', 'id', 'id', 'estudiante_id');
+        return $this->hasManyThrough(Estudiante::class, HorarioEstudiante::class, 'estudiante_horario','horario_id', 'id', 'id', 'estudiante_id');
     }
 
     public function encuestas(): BelongsToMany
@@ -80,4 +80,5 @@ class Horario extends Model
     {
         return $this->hasMany(CartaPresentacion::class, 'idHorario');
     }
+    
 }
