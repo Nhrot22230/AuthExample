@@ -24,9 +24,9 @@ Route::prefix('cursos')->group(function () {
         Route::put('/{entity_id}', [CursoController::class, 'update']);
         Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
 
-Route::post('cursos/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
-Route::post('cursos/detalle', [CursoController::class, 'obtenerCursoPorId']);
-Route::post('cursos/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
-Route::post('cursos/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
+        Route::get('/{entity_id}/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
+        Route::get('/{entity_id}/detalle', [CursoController::class, 'obtenerCursoPorId']);
+        Route::get('/{entity_id}/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
+        Route::get('/{entity_id}/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
     });
 });
