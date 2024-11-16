@@ -75,7 +75,6 @@ class TemaDeTesisController extends Controller
     }
 
 
-    // Método para mostrar un tema de tesis específico
     public function show($id)
     {
         $temaDeTesis = TemaDeTesis::with([
