@@ -407,30 +407,4 @@ class TemaDeTesisController extends Controller
             'message' => 'Tema de tesis rechazado correctamente.',
         ]);
     }
-
-    public function showById($temaId): JsonResponse
-    {
-        try {
-            $temaTesis = TemaDeTesis::select('titulo', 'resumen', 'documento', 'estado', 'area_id')
-                ->with(['asesores.usuario' => function($query) {
-                    $query->select('id', 'nombre', 'apellido_paterno', 'apellido_materno');
-                }])
-                ->findOrFail($temaId);
-            if (!$temaTesis) {
-                return response()->json([
-                    'message' => 'Tema de tesis no encontrado.',
-                ], 404);
-            }
-
-            if ($temaTesis->asesores->isNotEmpty()) {
-                $asesor = $temaTesis->asesores->first();
-                $temaTesis->asesor = $asesor->usuario->full_name;
-            }
-            return response()->json($temaTesis, 200);
-        } catch (\Exception $e) {
-            return response()->json([
-            'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
 }
