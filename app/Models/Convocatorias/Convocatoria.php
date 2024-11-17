@@ -33,7 +33,7 @@ class Convocatoria extends Model
 
     public function gruposCriterios(): BelongsToMany
     {
-        return $this->belongsToMany(GrupoCriterios::class, 'grupo_criterios_convocatoria');
+        return $this->belongsToMany(GrupoCriterios::class, 'grupo_criterios_convocatoria', 'convocatoria_id', 'grupo_criterios_id');
     }
 
     public function comite(): BelongsToMany
