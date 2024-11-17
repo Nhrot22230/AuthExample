@@ -177,37 +177,37 @@ class PedidoCursosController extends Controller
         // Obtener el número de resultados por página
         $perPage = $request->input('per_page', 10);
         $searchTerm = $request->input('searchTerm', '');
-    
+
         // Buscar el pedido de cursos de la especialidad e incluir el semestre
         $pedido = PedidoCursos::where('especialidad_id', $especialidadId)
-                    ->with(['planEstudio', 'semestre']) // Incluimos la relación con semestre
-                    ->first();
-    
+            ->with(['planEstudio', 'semestre']) // Incluimos la relación con semestre
+            ->first();
+
         // Verificar si existe el pedido de cursos
         if (!$pedido) {
             return response()->json(['error' => 'Pedido de cursos no encontrado para la especialidad indicada'], 404);
         }
-    
+
         // Obtener todos los cursos del pedido (obligatorios y electivos)
         $cursosQuery = $pedido->obtenerCursos();
-    
+
         // Aplicar filtro de búsqueda si se proporciona un searchTerm
         if (!empty($searchTerm)) {
             $cursosQuery = $cursosQuery->filter(function ($curso) use ($searchTerm) {
                 return stripos($curso->nombre, $searchTerm) !== false;
             });
         }
-    
+
         // Paginar los resultados
         $cursosPaginated = $cursosQuery->forPage($request->input('page', 1), $perPage)->values();
-    
+
         // Retornar los cursos junto con la información del semestre y de paginación
         return response()->json([
             'data' => $cursosPaginated,
             'total' => $cursosQuery->count(),
             'per_page' => $perPage,
             'current_page' => $request->input('page', 1),
-            'semestre' => $pedido->semestre, 
+            'semestre' => $pedido->semestre,
             'pedido_id' => $pedido->id,
             'pedido' => $pedido,
         ], 200);
@@ -217,24 +217,24 @@ class PedidoCursosController extends Controller
     {
         // Buscar el horario por su ID
         $horario = \App\Models\Matricula\Horario::find($id);
-    
+
         // Verificar si el horario existe
         if (!$horario) {
             return response()->json(['error' => 'Horario no encontrado'], 404);
         }
-    
+
         // Eliminar relaciones dependientes
         $horario->jefePracticas()->delete(); // Elimina los registros relacionados de jefe de prácticas
         $horario->docentes()->detach();      // Desasocia los docentes
         $horario->usuarios()->detach();       // Desasocia los usuarios, si existe esta relación
         $horario->horarioEstudiantes()->delete(); // Elimina estudiantes asignados a este horario
         $horario->encuestas()->detach();      // Desasocia las encuestas
-    
+
         // Finalmente, eliminar el horario
         $horario->delete();
-    
+
         return response()->json(['message' => 'Horario eliminado correctamente'], 200);
-    }    
+    }
 
     public function destroyMultipleHorarios(Request $request)
     {
@@ -243,35 +243,35 @@ class PedidoCursosController extends Controller
             'horario_ids' => 'required|array',
             'horario_ids.*' => 'exists:horarios,id' // Asegura que cada ID exista en la tabla de horarios
         ]);
-    
+
         $horarioIds = $request->input('horario_ids');
-    
+
         // Buscar los horarios por sus IDs
         $horarios = \App\Models\Matricula\Horario::whereIn('id', $horarioIds)->get();
-    
+
         foreach ($horarios as $horario) {
             // Eliminar relaciones dependientes de cada horario
             $horario->jefePracticas()->delete(); // Eliminar registros de jefePracticas relacionados
             $horario->docentes()->detach();      // Desasociar docentes
             $horario->horarioEstudiantes()->delete(); // Eliminar estudiantes asignados a este horario
             $horario->encuestas()->detach();     // Desasociar encuestas
-    
+
             // Para relaciones HasManyThrough, como usuarios y estudiantes, eliminamos los registros indirectamente
             foreach ($horario->usuarios as $usuario) {
                 $usuario->pivot->delete(); // Eliminar el registro de la tabla intermedia
             }
-    
+
             foreach ($horario->estudiantes as $estudiante) {
                 $estudiante->pivot->delete(); // Eliminar el registro de la tabla intermedia
             }
-    
+
             // Finalmente, eliminar el horario
             $horario->delete();
         }
-    
+
         return response()->json(['message' => 'Horarios eliminados correctamente'], 200);
-    }   
-    
+    }
+
     public function createHorarios(Request $request)
     {
         // Validar los datos de entrada
