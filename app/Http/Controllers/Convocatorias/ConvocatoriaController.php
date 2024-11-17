@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
-use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
