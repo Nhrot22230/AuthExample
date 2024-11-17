@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
@@ -391,7 +392,67 @@ class ConvocatoriaController extends Controller
         }
     }
 
-    public function cambiarEstadoMiembroComite(Request $request, $idConvocatoria, $idCandidato)
+    public function actualizarEstado(Request $request, $idConvocatoria, $idCandidato)
+    {
+        // Verificar el tipo de parámetros que llegaron en el request
+        if ($request->has('docente_id') && $request->has('estado')) {
+            // Lógica para la actualización de estado del miembro del comité
+            return $this->actualizarEstadoMiembroComite($request, $idConvocatoria, $idCandidato);
+        } elseif ($request->has('estado')) {
+            // Lógica para actualizar solo el estado del candidato
+            return $this->actualizarEstadoCandidato($request, $idConvocatoria, $idCandidato);
+        } else {
+            return response()->json(['error' => 'Datos inválidos.'], 400);
+        }
+    }
+
+    private function actualizarEstadoCandidato(Request $request, $idConvocatoria, $idCandidato)
+    {
+        $validatedData = $request->validate([
+            'estado' => 'required|string'
+        ]);
+
+        if (!is_numeric($idConvocatoria)) {
+            return response()->json(['error' => 'Invalid ID convocatoria.'], 400);
+        }
+
+        if (!is_numeric($idCandidato)) {
+            return response()->json(['error' => 'Invalid ID candidato.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Actualizamos el estado final del candidato en la tabla candidato_convocatoria
+            $estadoFinal = $validatedData['estado'];
+            $actualizado = CandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                ->where('candidato_id', $idCandidato)
+                ->update(['estadoFinal' => $estadoFinal]);
+
+            // Si el estado global del candidato es "culminado entrevista", actualizamos todos los estados de los miembros del comité
+            if ($estadoFinal === 'culminado entrevista') {
+                ComiteCandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                    ->where('candidato_id', $idCandidato)
+                    ->update(['estado' => 'culminado entrevista']);
+            }
+            
+            DB::commit();
+
+            if ($actualizado) {
+                return response()->json(['message' => 'Estado actualizado correctamente.', 200]);
+            } else {
+                return response()->json(['message' => 'No se encontró el registro para actualizar.'], 404);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar el estado del candidato.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function actualizarEstadoMiembroComite(Request $request, $idConvocatoria, $idCandidato)
     {
         $validatedData = $request->validate([
             'docente_id' => 'integer|exists:docentes,id',
@@ -412,11 +473,23 @@ class ConvocatoriaController extends Controller
                 ->where('candidato_id', $idCandidato)
                 ->where('docente_id', $validatedData['docente_id'])
                 ->update(['estado' => $validatedData['estado']]);
-            
-            DB::commit();
 
             if ($actualizado) {
-                return response()->json(['message' => 'Estado actualizado correctamente.', 200]);
+                // Verifica los estados parciales de todos los miembros del comité
+                $estados = ComiteCandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                    ->where('candidato_id', $idCandidato)
+                    ->pluck('estado'); // Obtenemos solo los estados
+
+                // Lógica para determinar el estado final del candidato
+                $estadoFinal = $this->determinarEstadoFinal($estados);
+
+                // Actualiza el estado final del candidato en la tabla candidato_convocatoria
+                CandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                    ->where('candidato_id', $idCandidato)
+                    ->update(['estadoFinal' => $estadoFinal]);
+
+                DB::commit();
+                return response()->json(['message' => 'Estado actualizado correctamente.'], 200);
             } else {
                 return response()->json(['message' => 'No se encontró el registro para actualizar.'], 404);
             }
@@ -428,5 +501,41 @@ class ConvocatoriaController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function determinarEstadoFinal($estados)
+    {
+        // 1. Si hay al menos un "pendiente cv", el estado final es "pendiente cv"
+        if ($estados->contains('pendiente cv')) {
+            return 'pendiente cv';
+        }
+
+        // 2. Si todos son "aprobado cv", el estado final es "aprobado cv"
+        if ($estados->every(fn($estado) => $estado === 'aprobado cv')) {
+            return 'aprobado cv';
+        }
+
+        // 3. Si al menos uno es "desaprobado cv" y ninguno es "pendiente cv", el estado final es "desaprobado cv"
+        if ($estados->contains('desaprobado cv') && !$estados->contains('pendiente cv')) {
+            return 'desaprobado cv';
+        }
+
+        // 4. Si hay al menos uno "culminado entrevista", el estado final es "culminado entrevista"
+        if ($estados->contains('culminado entrevista')) {
+            return 'culminado entrevista';
+        }
+
+        // 5. Si todos son "aprobado entrevista", el estado final es "aprobado entrevista"
+        if ($estados->every(fn($estado) => $estado === 'aprobado entrevista')) {
+            return 'aprobado entrevista';
+        }
+
+        // 6. Si al menos uno es "desaprobado entrevista" y ninguno es "culminado entrevista", el estado final es "desaprobado entrevista"
+        if ($estados->contains('desaprobado entrevista') && !$estados->contains('culminado entrevista')) {
+            return 'desaprobado entrevista';
+        }
+
+        // Si no se cumple ninguna de las condiciones anteriores, el estado final será "pendiente cv"
+        return 'pendiente cv';
     }
 }
