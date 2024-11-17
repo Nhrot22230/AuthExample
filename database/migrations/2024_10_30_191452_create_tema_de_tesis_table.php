@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->text('resumen');
-            $table->string('documento')->nullable();
+            $table->unsignedBigInteger('file_id')->nullable();
             $table->enum('estado', ['aprobado', 'pendiente', 'desaprobado'])->default('pendiente');
             $table->enum('estado_jurado', ['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido'])->default('pendiente');
             $table->date('fecha_enviado')->nullable();

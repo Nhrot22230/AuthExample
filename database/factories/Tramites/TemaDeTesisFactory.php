@@ -25,7 +25,7 @@ class TemaDeTesisFactory extends Factory
         return [
             'titulo' => $this->faker->sentence(),
             'resumen' => $this->faker->paragraph(),
-            'documento' => null,
+            'file_id' => null,
             'estado' => $estado,
             'estado_jurado' => $estadoJurado,
             'fecha_enviado' => $this->faker->date(),
