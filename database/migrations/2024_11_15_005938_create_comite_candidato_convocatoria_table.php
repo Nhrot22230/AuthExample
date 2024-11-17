@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade'); // Relación con docente
             $table->foreignId('candidato_id')->constrained('usuarios')->onDelete('cascade'); // Relación con candidato (usuario)
             $table->foreignId('convocatoria_id')->constrained('convocatoria')->onDelete('cascade'); // Relación con convocatoria
-            $table->enum('estadoFinal', ['pendiente cv', 'desaprobado cv', 'aprobado cv', 'culminado entrevista', 
+            $table->enum('estado', ['pendiente cv', 'desaprobado cv', 'aprobado cv', 'culminado entrevista', 
                          'desaprobado entrevista', 'aprobado entrevista'])->default('pendiente cv');
             $table->timestamps();
         });
