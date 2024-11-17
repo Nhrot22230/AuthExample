@@ -14,6 +14,7 @@ use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class ProcesoConvocatoriaSeeder extends Seeder
 {
@@ -23,7 +24,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
     public function run()
     {
         // Crear 20 grupos de criterios
-        $gruposCriterios = GrupoCriterios::factory(10)->create();
+        $gruposCriterios = GrupoCriterios::factory(20)->create();
 
         // Crear 15 convocatorias
         $convocatorias = Convocatoria::factory(15)->create();
@@ -39,12 +40,15 @@ class ProcesoConvocatoriaSeeder extends Seeder
                 'apellido_paterno' => 'Candia',
                 'apellido_materno' => 'Aroni',
                 'email' => 'fernando.candia@gianluka.zzz',
+                'password' => Hash::make('12345678'),
             ])
         ]);
 
+        // el asistente es tiene poder sobre dos secciones como asistente
         $role_asistente = Role::findByName('asistente');
         $scope = Scope::where('name', 'Seccion')->first();
         $asistente->usuario->assignRole('asistente');
+
         RoleScopeUsuario::create([
             'usuario_id' => $asistente->usuario_id,
             'role_id' => $role_asistente->id,
@@ -60,6 +64,28 @@ class ProcesoConvocatoriaSeeder extends Seeder
             'entity_id' => $seccionSecond->id,
             'entity_type' => $scope->entity_type,
         ]);
+
+        // el asisnte es tiene poder sobre dos secciones como miembro del comite
+        $role_comite = Role::findByName('comite');
+        $scope = Scope::where('name', 'Seccion')->first();
+        $asistente->usuario->assignRole('comite');
+
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_comite->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionFirst->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_comite->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionSecond->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
 
 
         // Asignar entre 1 y 3 grupos de criterios a cada convocatoria
