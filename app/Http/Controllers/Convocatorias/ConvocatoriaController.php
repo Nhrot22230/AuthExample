@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
@@ -429,4 +430,45 @@ class ConvocatoriaController extends Controller
             ], 500);
         }
     }
+
+    public function addCandidatoToConvocatoria(Request $request)
+{
+    $validatedData = $request->validate([
+        'convocatoria_id' => 'required|exists:convocatoria,id', // Verifica que el ID de convocatoria exista
+        'candidato_id' => 'required|exists:usuarios,id', // Verifica que el ID del candidato exista
+        'urlCV' => 'nullable|string|max:255', // La URL del CV es opcional
+    ]);
+
+    try {
+        // Verifica si la relación ya existe
+        $existingRelation = CandidatoConvocatoria::where('convocatoria_id', $validatedData['convocatoria_id'])
+            ->where('candidato_id', $validatedData['candidato_id'])
+            ->first();
+
+        if ($existingRelation) {
+            return response()->json(['message' => 'El candidato ya está relacionado con esta convocatoria.'], 400);
+        }
+
+        // Crea la relación
+        $candidatoConvocatoria = CandidatoConvocatoria::create([
+            'convocatoria_id' => $validatedData['convocatoria_id'],
+            'candidato_id' => $validatedData['candidato_id'],
+            'estadoFinal' => 'pendiente cv', // Estado inicial automático
+            'urlCV' => $validatedData['urlCV'] ?? null, // Si no se envía, será null
+        ]);
+
+        return response()->json([
+            'message' => 'Candidato agregado a la convocatoria exitosamente.',
+            'data' => $candidatoConvocatoria,
+        ], 201);
+    } catch (\Exception $e) {
+        Log::error('Error al agregar candidato a la convocatoria:', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json(['error' => 'Ocurrió un error al agregar el candidato a la convocatoria.'], 500);
+    }
+}
+
 }
