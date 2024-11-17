@@ -12,3 +12,4 @@ Route::delete('horarios/{id}', [PedidoCursosController::class, 'destroyHorario']
 Route::delete('/horarios', [PedidoCursosController::class, 'destroyMultipleHorarios']);
 Route::post('/horarios', [PedidoCursosController::class, 'createHorarios']);
 Route::delete('/pedidos/{pedidoId}/cursos-electivos', [PedidoCursosController::class, 'removeCursosElectivos']);
+Route::post('/pedidos/{pedidoId}/cursos-horarios', [PedidoCursosController::class, 'addCursosHorarios']);
