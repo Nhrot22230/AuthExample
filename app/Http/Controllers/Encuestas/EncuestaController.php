@@ -920,7 +920,8 @@ class EncuestaController extends Controller
                 })
                 ->map(function ($horarioEstudiante) {
                     return $horarioEstudiante->estudiante->usuario_id;
-                });
+                })
+                ->unique()->values();
 
             return response()->json($estudiantes);
             
