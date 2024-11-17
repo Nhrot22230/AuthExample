@@ -6,23 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Usuarios\Estudiante;
-use App\Models\Universidad\Especialidad; // Importar la clase Especialidad
+use App\Models\Universidad\Especialidad;
+use App\Models\Storage\File; // Importar el modelo File
 
 class CartaPresentacionSolicitud extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'carta_presentacion_solicitudes';
 
     protected $fillable = [
         'estudiante_id',
         'horario_id',
-        'especialidad_id', // Añadir especialidad_id
+        'especialidad_id',
         'estado', // Pendiente, Secretaria Pendiente Firma DC, Aprobado, Rechazado
         'motivo',
         'motivo_rechazo',  // Motivo de rechazo (nullable)
-        'pdf_solicitud',   // Ruta del PDF generado (antes de firmar)
-        'pdf_firmado',     // Ruta del PDF firmado
+        'file_id',         // Relación con la tabla de archivos
     ];
 
     // Relaciones
@@ -33,12 +33,24 @@ class CartaPresentacionSolicitud extends Model
 
     public function especialidad(): BelongsTo
     {
-        return $this->belongsTo(Especialidad::class); // Relación con la especialidad
+        return $this->belongsTo(Especialidad::class);
     }
 
     public function horario(): BelongsTo
     {
         return $this->belongsTo(Horario::class);
+    }
+
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(File::class, 'file_id'); // Relación con la tabla de archivos
+    }
+
+    // Método para asociar un archivo
+    public function asociarArchivo(File $file)
+    {
+        $this->file_id = $file->id;
+        $this->save();
     }
 
     // Método para generar el PDF (esto lo llamamos en el controlador)

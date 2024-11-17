@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('carta_presentacion_solicitudes', function (Blueprint $table) {
+        /*Schema::create('carta_presentacion_solicitudes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('estudiante_id');
             $table->unsignedBigInteger('horario_id');
@@ -29,7 +29,23 @@ return new class extends Migration
             $table->foreign('estudiante_id')->references('id')->on('estudiantes')->onDelete('cascade');
             $table->foreign('horario_id')->references('id')->on('horarios')->onDelete('cascade');
             $table->foreign('especialidad_id')->references('id')->on('especialidades')->onDelete('cascade'); // Relación con la especialidad
+        });*/
+
+        Schema::create('carta_presentacion_solicitudes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade');
+            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
+            $table->unsignedBigInteger('file_id')->nullable(); // Relación con la tabla files
+            $table->string('estado')->default('Pendiente'); // Estado de la solicitud
+            $table->text('motivo'); // Motivo general
+            $table->text('motivo_rechazo')->nullable(); // Motivo de rechazo
+            $table->timestamps();
+        
+            // Relaciones
+            $table->foreign('file_id')->references('id')->on('files')->onDelete('set null'); // Eliminar archivo no afecta la solicitud
         });
+        
     }
 
     /**
