@@ -11,5 +11,4 @@ Route::get('/convocatorias/{id}', [ConvocatoriaController::class, 'show']);
 Route::put('/convocatorias/{id}', [ConvocatoriaController::class, 'update']);
 Route::get('/convocatorias/{id}/candidatos', [ConvocatoriaController::class, 'getCandidatosByConvocatoria']);
 Route::get('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'obtenerEstadoCandidato']);
-Route::put('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'cambiarEstadoMiembroComite']);
-Route::post('/convocatorias/candidatos', [ConvocatoriaController::class, 'addCandidatoToConvocatoria']);
+Route::put('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'actualizarEstado']);
