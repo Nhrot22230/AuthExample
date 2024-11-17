@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
@@ -19,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Models\Storage\File;
 
 class TemaDeTesisController extends Controller
 {
@@ -248,8 +249,7 @@ class TemaDeTesisController extends Controller
                 'file' => $file
             ]);
             $uploadRequest->files->set('file', $file);
-            $fileController = new FileController();
-            $fileResponse = $fileController->subirArchivo($uploadRequest);
+            $fileResponse = $this->subirArchivo($uploadRequest);
             $fileId = $fileResponse->getData()->file->id;
 
             // Buscar al estudiante y obtener la especialidad
@@ -341,8 +341,7 @@ class TemaDeTesisController extends Controller
                 ]);
                 $uploadRequest->files->set('file', $file);
 
-                $fileController = new FileController();
-                $fileResponse = $fileController->subirArchivo($uploadRequest);
+                $fileResponse = $this->subirArchivo($uploadRequest);
                 $fileId = $fileResponse->getData()->file->id;
 
                 $temaTesis->update(['file_firmado_id' => $fileUrl]);
