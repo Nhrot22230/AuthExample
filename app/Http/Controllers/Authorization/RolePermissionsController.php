@@ -254,7 +254,30 @@ class RolePermissionsController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $roles = $usuario->roles;
+        $roleScope = RoleScopeUsuario::with([
+            'role',
+            'scope',
+            'entity',
+        ])->where('usuario_id', $usuario->id)->get();
+
+        $roles = $usuario->roles->map(function ($role) use ($roleScope) {
+            $roleScopes = $roleScope->where('role_id', $role->id);
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'scopes' => $roleScopes->map(function ($roleScope) {
+                    return [
+                        'id' => $roleScope->scope->id,
+                        'name' => $roleScope->scope->name,
+                        'entity_id' => $roleScope->entity_id,
+                        'entity_type' => $roleScope->entity_type,
+                        'entity' => $roleScope->entity,
+                    ];
+                }),
+            ];
+        });
+
+
         return response()->json($roles, 200);
     }
 }
