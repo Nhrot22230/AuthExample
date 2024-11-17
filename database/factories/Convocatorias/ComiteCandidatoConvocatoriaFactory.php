@@ -21,7 +21,7 @@ class ComiteCandidatoConvocatoriaFactory extends Factory
             'docente_id' => Docente::factory()->create()->id,
             'candidato_id' => Usuario::factory()->create()->id,
             'convocatoria_id' => Convocatoria::factory()->create()->id,
-            'estadoFinal' => $this->faker->randomElement([
+            'estado' => $this->faker->randomElement([
                 'pendiente cv',
                 'desaprobado cv',
                 'aprobado cv',
