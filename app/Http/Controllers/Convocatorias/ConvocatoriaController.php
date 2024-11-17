@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
@@ -367,6 +368,45 @@ class ConvocatoriaController extends Controller
             ]);
 
             return response()->json(['error' => 'Ocurrió un error al obtener el estado del candidato'], 500);
+        }
+    }
+
+    public function cambiarEstadoMiembroComite(Request $request, $idConvocatoria, $idCandidato)
+    {
+        $validatedData = $request->validate([
+            'docente_id' => 'integer|exists:docentes,id',
+            'estado' => 'required|string'
+        ]);
+
+        if (!is_numeric($idConvocatoria)) {
+            return response()->json(['error' => 'Invalid ID convocatoria.'], 400);
+        }
+
+        if (!is_numeric($idCandidato)) {
+            return response()->json(['error' => 'Invalid ID candidato.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $actualizado = ComiteCandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                ->where('candidato_id', $idCandidato)
+                ->where('docente_id', $validatedData['docente_id'])
+                ->update(['estado' => $validatedData['estado']]);
+            
+            DB::commit();
+
+            if ($actualizado) {
+                return response()->json(['message' => 'Estado actualizado correctamente.', 200]);
+            } else {
+                return response()->json(['message' => 'No se encontró el registro para actualizar.'], 404);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar el estado del candidato.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }
