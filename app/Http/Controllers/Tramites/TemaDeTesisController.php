@@ -333,9 +333,9 @@ class TemaDeTesisController extends Controller
             $file = $request->file('documento_firmado');
             if ($file->isValid()) {
                 $titulo_modificado = strtolower(str_replace(' ', '-', $temaTesis->titulo));
-
+                $numero = $responsable === "director" ? 1 : ($responsable === "coordinador" ? 2 : 3);
                 $uploadRequest = new Request([
-                    'name' => $titulo_modificado . '-firmado',
+                    'name' => $titulo_modificado . '-' . $numero,
                     'file_type' => 'document',
                     'file' => $file
                 ]);
@@ -344,7 +344,7 @@ class TemaDeTesisController extends Controller
                 $fileResponse = $this->subirArchivo($uploadRequest);
                 $fileId = $fileResponse->getData()->file->id;
 
-                $temaTesis->update(['file_firmado_id' => $fileUrl]);
+                $temaTesis->update(['file_firmado_id' => $fileId]);
             } else {
                 return response()->json(['message' => 'El archivo firmado no es válido.'], 400);
             }
