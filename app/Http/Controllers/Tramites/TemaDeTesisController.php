@@ -17,6 +17,8 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TemaDeTesisController extends Controller
 {
@@ -289,6 +291,7 @@ class TemaDeTesisController extends Controller
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
+            'documento_firmado' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048'
         ]);
 
         $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
@@ -296,6 +299,28 @@ class TemaDeTesisController extends Controller
         $procesoAprobacion = $temaTesis->procesoAprobacion;
         $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
         $responsable = $estadoAprobacion->responsable;
+
+        if ($request->hasFile('documento_firmado')) {
+            $file = $request->file('documento_firmado');
+            if ($file->isValid()) {
+                $titulo_modificado = strtolower(str_replace(' ', '-', $temaTesis->titulo));
+
+                $uploadRequest = new Request([
+                    'name' => $titulo_modificado . '-firmado',
+                    'file_type' => 'document',
+                    'file' => $file
+                ]);
+                $uploadRequest->files->set('file', $file);
+
+                $fileController = new FileController();
+                $fileResponse = $fileController->uploadFile($uploadRequest);
+                $fileUrl = $fileResponse->getData()->url;
+
+                $temaTesis->update(['documento' => $fileUrl]);
+            } else {
+                return response()->json(['message' => 'El archivo firmado no es válido.'], 400);
+            }
+        }
 
         if ($responsable === 'director') {
             DB::beginTransaction();
@@ -529,5 +554,31 @@ class TemaDeTesisController extends Controller
         return response()->json($response);
 
 
+    }
+
+    public function descargarArchivo($tema_tesis_id)
+    {
+        try {
+            $temaTesis = TemaDeTesis::findOrFail($tema_tesis_id);
+
+            // Verificar si el tema de tesis tiene un archivo asociado
+            if (!$temaTesis->archivo_path || !Storage::disk('s3')->exists($temaTesis->archivo_path)) {
+                return response()->json(['message' => 'El archivo asociado al tema de tesis no se encuentra.'], 404);
+            }
+
+            // Obtener el archivo desde S3
+            $contenidoArchivo = Storage::disk('s3')->get($temaTesis->archivo_path);
+
+            // Obtener el nombre del archivo
+            $nombreArchivo = basename($temaTesis->archivo_path); // Extrae solo el nombre del archivo de la ruta completa
+
+            // Retornar el archivo para la descarga
+            return response($contenidoArchivo, 200)
+                ->header('Content-Type', Storage::disk('s3')->mimeType($temaTesis->archivo_path))
+                ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
+        } catch (\Exception $e) {
+            Log::error('Error al descargar archivo: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al intentar descargar el archivo.', 'error' => $e->getMessage()], 500);
+        }
     }
 }

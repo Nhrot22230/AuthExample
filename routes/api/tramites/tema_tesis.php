@@ -15,3 +15,4 @@ Route::post('temas-de-tesis/registro', [TemaDeTesisController::class, 'registrar
 Route::post('temas-de-tesis/aprobar/{tema_tesis_id}', [TemaDeTesisController::class, 'aprobarTemaUsuario']);
 Route::put('temas-de-tesis/rechazar/{tema_tesis_id}', [TemaDeTesisController::class, 'rechazarTemaUsuario']);
 Route::get('temas-de-tesis/estado/{tema_tesis_id}', [TemaDeTesisController::class, 'verDetalleTema']);
+Route::get('temas-de-tesis/descargar/{tema_tesis_id}', [TemaDeTesisController::class, 'descargarArchivo']);
