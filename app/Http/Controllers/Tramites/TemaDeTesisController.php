@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tramites;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Tramites\EstadoAprobacionTema;
 use App\Models\Tramites\ProcesoAprobacionTema;
 use App\Models\Tramites\TemaDeTesis;
@@ -15,7 +17,8 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Log;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TemaDeTesisController extends Controller
 {
@@ -135,12 +138,20 @@ class TemaDeTesisController extends Controller
                 $query->where('usuario_id', $usuario_id)
                     ->where('estado', 'pendiente');
             });
-        })->get();
+        })
+        ->with(['estudiantes:usuario_id'])
+        ->select('id', 'titulo', 'estado')
+        ->get();
 
-        return response()->json([
-            'temasPendientes' => $temasPendientes
-        ], 200);
+        $temasPendientes = $temasPendientes->map(function ($tema) {
+            $tema->estudiante = $tema->estudiantes->first()->usuario->full_name;
+            unset($tema->estudiantes);
+            return $tema;
+        });
+
+        return response()->json($temasPendientes, 200);
     }
+
 
     public function listarAreasEspecialidad($estudiante_id): JsonResponse
     {
@@ -196,19 +207,20 @@ class TemaDeTesisController extends Controller
         DB::beginTransaction();
         try {
             $file = $request->file('documento');
+            $titulo_modificado = strtolower(str_replace(' ', '-', $request->titulo));
             if (!$file || !$file->isValid()) {
                 return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
             }
 
             $uploadRequest = new Request([
-                'name' => $request->titulo, 
-                'file_type' => 'document', 
+                'name' => $titulo_modificado,
+                'file_type' => 'document',
                 'file' => $file
             ]);
             $uploadRequest->files->set('file', $file);
             $fileController = new FileController();
             $fileResponse = $fileController->uploadFile($uploadRequest);
-            $fileUrl = $fileResponse->getData()->url;
+            $fileId = $fileResponse->getData()->file->id;
 
             // Buscar al estudiante y obtener la especialidad
             $estudiante = Estudiante::findOrFail($request->estudiante_id);
@@ -222,7 +234,7 @@ class TemaDeTesisController extends Controller
                 'area_id' => $request->area_id,
                 'estado' => 'pendiente',
                 'fecha_enviado' => Now(),
-                'documento' => $fileUrl,
+                'file_id' => $fileId,
             ]);
 
             // Registrar los asesores
@@ -265,12 +277,21 @@ class TemaDeTesisController extends Controller
         }
     }
 
+    private function obtenerUsuario($rol, $entidad_id){
+        $rol_id = Role::findByName($rol)->id;
+        return RoleScopeUsuario::where('role_id', $rol_id)
+            ->where('entity_id', $entidad_id)
+            ->orderBy('id', 'desc') // Asegúrate de ordenar por el campo adecuado
+            ->first()
+            ->usuario_id ?? null;
+    }
+
     public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
     {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
-            //aqui falta el archivo
+            'documento_firmado' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048'
         ]);
 
         $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
@@ -278,6 +299,28 @@ class TemaDeTesisController extends Controller
         $procesoAprobacion = $temaTesis->procesoAprobacion;
         $estadoAprobacion = $procesoAprobacion ? $procesoAprobacion->estadoAprobacion()->orderBy('id', 'desc')->first() : null;
         $responsable = $estadoAprobacion->responsable;
+
+        if ($request->hasFile('documento_firmado')) {
+            $file = $request->file('documento_firmado');
+            if ($file->isValid()) {
+                $titulo_modificado = strtolower(str_replace(' ', '-', $temaTesis->titulo));
+
+                $uploadRequest = new Request([
+                    'name' => $titulo_modificado . '-firmado',
+                    'file_type' => 'document',
+                    'file' => $file
+                ]);
+                $uploadRequest->files->set('file', $file);
+
+                $fileController = new FileController();
+                $fileResponse = $fileController->uploadFile($uploadRequest);
+                $fileUrl = $fileResponse->getData()->url;
+
+                $temaTesis->update(['documento' => $fileUrl]);
+            } else {
+                return response()->json(['message' => 'El archivo firmado no es válido.'], 400);
+            }
+        }
 
         if ($responsable === 'director') {
             DB::beginTransaction();
@@ -318,19 +361,25 @@ class TemaDeTesisController extends Controller
                         'estado' => 'aprobado',
                         'comentarios' => $request->comentarios,
                     ]);
-                    $director = Usuario::find(109); // Falta tener una forma de saber quien es el director de carrera
-                    $usuarioId = $director->id;
-                    EstadoAprobacionTema::create([
-                        'proceso_aprobacion_id' => $procesoAprobacion->id,
-                        'usuario_id' => $usuarioId,
-                        'estado' => 'pendiente',
-                        'responsable' => 'director'
-                    ]);
+
+                    $usuarioId = $this->obtenerUsuario('director', $temaTesis->especialidad_id);
+                    if ($usuarioId) {
+                        EstadoAprobacionTema::create([
+                            'proceso_aprobacion_id' => $procesoAprobacion->id,
+                            'usuario_id' => $usuarioId,
+                            'estado' => 'pendiente',
+                            'responsable' => 'director'
+                        ]);
+                    } else {
+                        return response()->json([
+                            'message' => 'Esta especialidad no tiene un director'
+                        ]);
+                    }
+                    DB::commit();
+                    return response()->json([
+                        'message' => 'Proceso de aprobación actualizado correctamente.',
+                    ], 200);
                 }
-                DB::commit();
-                return response()->json([
-                    'message' => 'Proceso de aprobación actualizado correctamente.',
-                ], 200);
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json([
@@ -346,14 +395,20 @@ class TemaDeTesisController extends Controller
                     'estado' => 'aprobado',
                     'comentarios' => $request->comentarios,
                 ]);
-                $coordinador = Usuario::find(108); // Falta tener una forma de saber quien es el coordinador de un area
-                $usuarioId = $coordinador->id;
-                EstadoAprobacionTema::create([
-                    'proceso_aprobacion_id' => $procesoAprobacion->id,
-                    'usuario_id' => $usuarioId,
-                    'estado' => 'pendiente',
-                    'responsable' => 'coordinador',
-                ]);
+                $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
+                if($usuarioId){
+                    EstadoAprobacionTema::create([
+                        'proceso_aprobacion_id' => $procesoAprobacion->id,
+                        'usuario_id' => $usuarioId,
+                        'estado' => 'pendiente',
+                        'responsable' => 'coordinador',
+                    ]);
+                }
+                else{
+                    return response()->json([
+                        'message'=> 'Esta area no tiene un coordinador'
+                    ]);
+                }
                 DB::commit();
                 return response()->json([
                     'message' => 'Tema de tesis aprobado correctamente.',
@@ -373,7 +428,6 @@ class TemaDeTesisController extends Controller
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'comentarios' => 'nullable|string',
-            // Aquí falta la validación del archivo si es necesario
         ]);
         DB::transaction(function () use ($tema_tesis_id, $request) {
             // Obtener el tema de tesis con sus relaciones
@@ -405,5 +459,126 @@ class TemaDeTesisController extends Controller
         return response()->json([
             'message' => 'Tema de tesis rechazado correctamente.',
         ]);
+    }
+
+    public function verDetalleTema($tema_tesis_id): JsonResponse{
+        $tema = TemaDeTesis::with([
+            'procesoAprobacion.estadoAprobacion.usuario',
+        ])->find($tema_tesis_id);
+
+        if (!$tema) {
+            return response()->json(['error' => 'Tema de Tesis no encontrado'], 404);
+        }
+
+        // Obtener el proceso de aprobación relacionado
+        $procesoAprobacion = $tema->procesoAprobacion;
+
+        // Obtener estados de aprobación ordenados cronológicamente
+        $estadosAprobacion = $procesoAprobacion
+            ? $procesoAprobacion->estadoAprobacion()->with('usuario')->orderBy('id', 'asc')->get()
+            : [];
+
+        // Determinar el estado general
+        $estadoGeneral = 'Pendiente';
+        foreach ($estadosAprobacion as $estado) {
+            if ($estado->estado === 'rechazado') {
+                $estadoGeneral = 'Rechazado';
+                break;
+            }
+            if ($estado->estado === 'aprobado') {
+                $estadoGeneral = 'Aprobado';
+            }
+        }
+
+        // Configuración de roles evaluadores en orden
+        $rolesEvaluadores = [
+            'asesor' => 'Asesor',
+            'coordinador' => 'Coordinador de Área',
+            'director' => 'Director de Carrera',
+        ];
+
+        // Construir revisiones, asegurando que todos los roles se incluyan
+        $revisiones = [];
+        foreach ($rolesEvaluadores as $responsable => $rol) {
+            $estado = $estadosAprobacion->firstWhere('responsable', $responsable);
+
+            $revisiones[] = [
+                'rol' => $rol,
+                'estado' => $estado ? ucfirst($estado->estado) : 'Esperando',
+                'fecha' => $estado && $estado->fecha_decision ? $estado->fecha_decision : null,
+                'revisor' => $estado && $estado->usuario ? $estado->usuario->nombre : null,
+            ];
+        }
+
+        // Construir detalle de revisión, excluyendo pendientes
+        $detalleRevision = [];
+        foreach ($estadosAprobacion as $estado) {
+            if ($estado->estado === 'aprobado' || $estado->estado === 'rechazado') {
+                $estadoDetalle = $estado->estado === 'aprobado' ? 'aprobado' : 'rechazado';
+                $mensaje = $estado->estado === 'aprobado'
+                    ? 'Tu tema ha sido aprobado'
+                    : 'Tu tema ha sido rechazado';
+
+                $detalleRevision[] = [
+                    'mensaje' => $mensaje,
+                    'fecha' => $estado->fecha_decision ? $estado->fecha_decision : null,
+                    'estado' => $estadoDetalle,
+                    'revisor' => $estado->usuario ? $estado->usuario->nombre : null,
+                    'comentarios' => $estado->comentarios ?? null,
+                ];
+            }
+        }
+
+        // Agregar detalle de envío inicial
+        $envio = [
+            'mensaje' => 'Tu tema ha sido enviado correctamente',
+            'fecha' => $procesoAprobacion ? $procesoAprobacion->fecha_inicio : null,
+            'estado' => 'informativo',
+        ];
+
+        // Fecha de última actualización
+        $ultimaActualizacion = $estadosAprobacion->last()
+            ? $estadosAprobacion->last()->updated_at
+            : null;
+
+        // Construir JSON final
+        $response = [
+            'tema' => $tema->titulo,
+            'estado_general' => $estadoGeneral,
+            'envio' => $envio,
+            'revisiones' => $revisiones,
+            'detalle_revision' => $detalleRevision,
+            'ultima_actualizacion' => $ultimaActualizacion,
+        ];
+
+        return response()->json($response);
+
+
+    }
+
+    public function descargarArchivo($tema_tesis_id)
+    {
+        try {
+            $temaTesis = TemaDeTesis::findOrFail($tema_tesis_id);
+
+            // Verificar si el tema de tesis tiene un archivo asociado
+            if (!$temaTesis->archivo_path || !Storage::disk('s3')->exists($temaTesis->archivo_path)) {
+                return response()->json(['message' => 'El archivo asociado al tema de tesis no se encuentra.'], 404);
+            }
+
+            // Obtener el archivo desde S3
+            $contenidoArchivo = Storage::disk('s3')->get($temaTesis->archivo_path);
+
+            // Obtener el nombre del archivo
+            $nombreArchivo = basename($temaTesis->archivo_path); // Extrae solo el nombre del archivo de la ruta completa
+
+            // Retornar el archivo para la descarga
+            return response($contenidoArchivo, 200)
+                ->header('Content-Type', Storage::disk('s3')->mimeType($temaTesis->archivo_path))
+                ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
+        } catch (\Exception $e) {
+            Log::error('Error al descargar archivo: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al intentar descargar el archivo.', 'error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -10,7 +10,7 @@ class GrupoCriterios extends Model
 {
     use HasFactory;
 
-    protected $table = 'grupo_criterios';
+    protected $table = 'grupos_criterios';
 
     protected $fillable = [
         'nombre',
@@ -18,7 +18,7 @@ class GrupoCriterios extends Model
         'descripcion'
     ];
 
-    public function gruposCriterios(): BelongsToMany
+    public function convocatorias(): BelongsToMany
     {
         return $this->belongsToMany(Convocatoria::class, 'grupo_criterios_convocatoria');
     }
