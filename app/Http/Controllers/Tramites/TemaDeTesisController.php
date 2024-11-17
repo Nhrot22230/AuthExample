@@ -205,12 +205,13 @@ class TemaDeTesisController extends Controller
         DB::beginTransaction();
         try {
             $file = $request->file('documento');
+            $titulo_modificado = strtolower(str_replace(' ', '-', $request->titulo));
             if (!$file || !$file->isValid()) {
                 return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
             }
 
             $uploadRequest = new Request([
-                'name' => $request->titulo,
+                'name' => $titulo_modificado,
                 'file_type' => 'document',
                 'file' => $file
             ]);
