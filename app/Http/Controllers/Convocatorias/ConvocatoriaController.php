@@ -17,21 +17,27 @@ class ConvocatoriaController extends Controller
      */
     public function index()
     {
-        $perPage = request('per_page', 10);
-        $search = request('search', '');
-        $seccion = request('seccion', null);
-        $filters = request('filters', []);  // This will be an array of states
+        $perPage = request('per_page', 10); // Número de resultados por página
+        $search = request('search', '');   // Término de búsqueda
+        $secciones = request('secciones', []); // Array de IDs de secciones
+        $filters = request('filters', []);  // Array de estados (por ejemplo, ['abierta', 'cerrada'])
 
-        $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')
-            ->where('nombre', 'like', "%$search%")
-            ->when($filters, function ($query, $filters) {
-                return $query->whereIn('estado', $filters);
+        $convocatorias = Convocatoria::with('gruposCriterios', 'comite')
+            ->withCount('candidatos') // Agrega la cantidad de candidatos
+            ->when($search, function ($query, $search) {
+                $query->where('nombre', 'like', "%$search%");
             })
-            ->where('seccion_id', 'like', "%$seccion%")
+            ->when(!empty($secciones), function ($query) use ($secciones) {
+                $query->whereIn('seccion_id', $secciones); // Filtra por secciones
+            })
+            ->when($filters, function ($query, $filters) {
+                $query->whereIn('estado', $filters); // Filtra por estados
+            })
             ->paginate($perPage);
 
         return response()->json($convocatorias, 200);
     }
+
 
     public function indexCriterios($entity_id)
     {
@@ -42,17 +48,21 @@ class ConvocatoriaController extends Controller
         $perPage = request()->input('per_page', 10);
         $search = request()->input('search', '');
 
-        $grupoCriterios = GrupoCriterios::with('convocatorias')
-            ->whereHas('convocatorias', function ($query) use ($entity_id) {
-                $query->where('seccion_id', $entity_id);
-            })
-            ->when($search, function ($query, $search) {
-                $query->where('nombre', 'like', "%{$search}%");
-            })
-            ->paginate($perPage)
-            ->appends(request()->only(['search', 'per_page']));
+        try {
+            $grupoCriterios = GrupoCriterios::with('convocatorias')
+                ->whereHas('convocatorias', function ($query) use ($entity_id) {
+                    $query->where('seccion_id', $entity_id);
+                })
+                ->when($search, function ($query, $search) {
+                    $query->where('nombre', 'like', "%{$search}%");
+                })
+                ->paginate($perPage)
+                ->appends(request()->only(['search', 'per_page']));
 
-        return response()->json($grupoCriterios, 200);
+            return response()->json($grupoCriterios, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error retrieving criteria', 'details' => $e->getMessage()], 500);
+        }
     }
 
 
@@ -71,11 +81,25 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     public function show($id)
     {
         try {
             // Busca la convocatoria por ID con las relaciones necesarias
+<<<<<<< HEAD
             $convocatoria = Convocatoria::with('gruposCriterios', 'comite.usuario', 'candidatos', 'seccion')->find($id);
+=======
+            $convocatoria = Convocatoria::with([
+                'gruposCriterios', // Criterios asociados
+                'comite.usuario', // Detalles del comité
+                'seccion' // Detalles completos de la sección
+            ])
+                ->withCount('candidatos') // Incluye la cantidad de candidatos
+                ->find($id);
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
 
             // Verifica si la convocatoria existe
             if (!$convocatoria) {
@@ -93,6 +117,50 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+=======
+
+    public function getCandidatosByConvocatoria($id)
+    {
+        try {
+            // Número de resultados por página (por defecto 10)
+            $perPage = request('per_page', 10);
+
+            // Término de búsqueda
+            $search = request('search', '');
+
+            // Busca la convocatoria por ID
+            $convocatoria = Convocatoria::find($id);
+
+            // Verifica si la convocatoria existe
+            if (!$convocatoria) {
+                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
+            }
+
+            // Obtener candidatos con paginación y filtro de búsqueda
+            $candidatos = $convocatoria->candidatos()
+                ->when($search, function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%$search%")
+                            ->orWhere('apellido', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    });
+                })
+                ->paginate($perPage);
+
+            return response()->json($candidatos, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener los candidatos de la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al obtener los candidatos'], 500);
+        }
+    }
+
+
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     /**
      * Store a newly created resource in storage.
      */
@@ -104,6 +172,7 @@ class ConvocatoriaController extends Controller
             'fechaEntrevista' => 'required|date|after_or_equal:fechaInicio',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
+            'fechaEntrevista' => 'nullable|date',
             'miembros' => 'required|array|min:1',
             'miembros.*' => 'integer|exists:docentes,id',
             'criteriosNuevos' => 'array',
@@ -114,6 +183,7 @@ class ConvocatoriaController extends Controller
             'criteriosAntiguo.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
+        Log::info('Datos validados recibidos:', $validatedData);
 
         DB::beginTransaction();
         try {
@@ -123,13 +193,19 @@ class ConvocatoriaController extends Controller
                 'fechaEntrevista' => $validatedData['fechaEntrevista'],
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
+<<<<<<< HEAD
                 'estado' => 'abierta', // Estado inicial
+=======
+                'fechaEntrevista' => $validatedData['fechaEntrevista'] ?? null,
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
+
 
             if (!empty($validatedData['criteriosAntiguo'])) {
                 $convocatoria->gruposCriterios()->attach($validatedData['criteriosAntiguo']);
             }
+
 
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
@@ -138,6 +214,7 @@ class ConvocatoriaController extends Controller
                 }
             }
 
+
             $convocatoria->comite()->attach($validatedData['miembros']);
             DB::commit();
             return response()->json([
@@ -145,6 +222,11 @@ class ConvocatoriaController extends Controller
                 'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Error al crear la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             DB::rollBack();
 
             return response()->json([
@@ -254,6 +336,7 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
     public function storeGrupoCriterios(Request $request)
     {
         $validatedData = $request->validate([
@@ -322,6 +405,8 @@ class ConvocatoriaController extends Controller
         }
     }
 
+=======
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     public function obtenerEstadoCandidato($idConvocatoria, $idCandidato)
     {
         if (!is_numeric($idConvocatoria)) {
@@ -371,6 +456,7 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
     public function cambiarEstadoMiembroComite(Request $request, $idConvocatoria, $idCandidato)
     {
         $validatedData = $request->validate([
@@ -409,4 +495,6 @@ class ConvocatoriaController extends Controller
             ], 500);
         }
     }
+=======
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
 }

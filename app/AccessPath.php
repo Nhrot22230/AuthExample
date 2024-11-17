@@ -23,6 +23,8 @@ enum AccessPath: string
     case TRAMITES_ACADEMICOS                = 'TramitesAcademicos';
     case UNIDADES                           = 'Unidades';
     case CONVOCATORIAS                      = 'Convocatorias';
+    case POSTULANTE                         = 'Postulante';
+    case COMITE                             = 'Comite';
 
     public static function toArray(): array
     {
