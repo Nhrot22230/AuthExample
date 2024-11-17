@@ -203,7 +203,7 @@ class TemaDeTesisController extends Controller
             ]);
 
             $file = $request->file('file');
-            $path = 'files/tema-tesis/' . $file->getClientOriginalName();
+            $path = 'files/tema-tesis/'. uniqid() . '-' . $file->getClientOriginalName();
 
             Storage::disk('s3')->put($path, file_get_contents($file));
 
