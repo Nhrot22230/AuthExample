@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
@@ -536,5 +537,66 @@ class ConvocatoriaController extends Controller
 
         // Si no se cumple ninguna de las condiciones anteriores, el estado final será "pendiente cv"
         return 'pendiente cv';
+    }
+
+    public function postularConvocatoria(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'candidato_id' => 'integer|exists:usuarios,id',
+            'urlCV' => 'required|string|max:255'
+        ]);
+
+        if (!is_numeric($id)) {
+            return response()->json(['error' => 'Invalid ID.'], 400);
+        }
+
+        // Verificar que la convocatoria exista en la base de datos
+        $convocatoria = Convocatoria::find($id);
+        if (!$convocatoria) {
+            return response()->json(['error' => 'Convocatoria no encontrada.'], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $candidato_convocatoria = CandidatoConvocatoria::create([
+                'convocatoria_id' => $id,
+                'candidato_id' => $validatedData['candidato_id'],
+                'estadoFinal' => 'pendiente cv',
+                'urlCV' => $validatedData['urlCV']
+            ]);
+
+            // Obtener todos los docentes asociados a la convocatoria
+            $docentes = $convocatoria->comite;
+
+            // Crear un registro en comite_candidato_convocatoria para cada docente
+            $comiteCandidatoConvocatoriaData = [];
+            foreach ($docentes as $docente) {
+                $comiteCandidatoConvocatoriaData[] = [
+                    'convocatoria_id' => $id,
+                    'candidato_id' => $validatedData['candidato_id'],
+                    'docente_id' => $docente->id,  // Usamos el ID del docente
+                    'estado' => 'pendiente cv',  // Estado inicial
+                    'created_at' => now(), // Fecha de creación
+                    'updated_at' => now()  // Fecha de actualización
+                ];
+            }
+
+            // Insertar todos los registros de una sola vez en la tabla comite_candidato_convocatoria
+            ComiteCandidatoConvocatoria::insert($comiteCandidatoConvocatoriaData);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Postulación realizada correctamente.',
+                'candidato_convocatoria' => $candidato_convocatoria,
+            ], 201);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al postular a la convocatoria.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
