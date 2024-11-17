@@ -75,6 +75,12 @@ class AssignRoles extends Seeder
         $estudiante_role->syncPermissions($permisos_estudiante);
         $asistente_role = Role::findByName('asistente');
 
+        $comite_role = Role::findByName('comite');
+        $permisos_comite = Permission::where('name', 'like', '%convocatorias%')
+            ->orWhere('name', 'like', '%comite%')
+            ->get();
+        $comite_role->syncPermissions($permisos_comite);
+
     // Obtenemos los permisos que correspondan a los asistentes
     $permisos_asistente = Permission::where('name', 'like', '%mis unidades%')
         ->orWhere('name', 'like', '%unidades%')
@@ -89,7 +95,6 @@ class AssignRoles extends Seeder
         ->orWhere('name', 'like', '%roles%')
         ->orWhere('name', 'like', '%usuarios%')
         ->orWhere('name', 'like', '%postulante%')
-        ->orWhere('name', 'like', '%comite%')
         ->get();
 
     // Asignamos los permisos al rol de "asistente"

@@ -47,6 +47,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
         $role_asistente = Role::findByName('asistente');
         $scope = Scope::where('name', 'Seccion')->first();
         $asistente->usuario->assignRole('asistente');
+
         RoleScopeUsuario::create([
             'usuario_id' => $asistente->usuario_id,
             'role_id' => $role_asistente->id,
@@ -62,6 +63,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
             'entity_id' => $seccionSecond->id,
             'entity_type' => $scope->entity_type,
         ]);
+
 
 
         // Asignar entre 1 y 3 grupos de criterios a cada convocatoria

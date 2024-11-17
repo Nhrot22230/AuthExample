@@ -10,3 +10,4 @@ Route::post('/convocatorias', [ConvocatoriaController::class, 'store']);
 Route::get('/convocatorias/{id}', [ConvocatoriaController::class, 'show']);
 Route::put('/convocatorias/{id}', [ConvocatoriaController::class, 'update']);
 Route::get('/convocatorias/{id}/candidatos', [ConvocatoriaController::class, 'getCandidatosByConvocatoria']);
+Route::get('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'obtenerEstadoCandidato']);

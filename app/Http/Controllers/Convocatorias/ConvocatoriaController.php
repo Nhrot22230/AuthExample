@@ -227,9 +227,9 @@ class ConvocatoriaController extends Controller
         $validatedData = $request->validate([
             'nombreConvocatoria' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:1000',
+            'fechaEntrevista' => 'required|date|after_or_equal:fechaInicio',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
-            'fechaEntrevista' => 'nullable|date',
             'miembros' => 'required|array|min:1',
             'miembros.*' => 'integer|exists:docentes,id',
             'criteriosNuevos' => 'array',
@@ -237,42 +237,72 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'criteriosAntiguo' => 'array',
-            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'criteriosAntiguo.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
 
+        if (!is_numeric($id)) {
+            return response()->json(['error' => 'Invalid ID.'], 400);
+        }
+
         DB::beginTransaction();
         try {
-            // Buscar la convocatoria
-            $convocatoria = Convocatoria::find($id);
+            $convocatoria = Convocatoria::findOrFail($id);
 
-            if (!$convocatoria) {
-                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
-            }
-
-            // Actualizar atributos básicos
+            // Actualizar la convocatoria
             $convocatoria->update([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaEntrevista' => $validatedData['fechaEntrevista'],
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
-                'fechaEntrevista' => $validatedData['fechaEntrevista'] ?? null,
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
-            // Actualizar criterios antiguos
-            $convocatoria->gruposCriterios()->sync($validatedData['criteriosAntiguo'] ?? []);
+            // Manejo de criterios antiguos y nuevos
+            $criteriosAntiguos = $validatedData['criteriosAntiguo'] ?? [];
+            $criteriosNuevosIds = [];
 
-            // Agregar criterios nuevos
+            // Crear nuevos criterios
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
                     $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
-                    $convocatoria->gruposCriterios()->attach($nuevoCriterio->id);
+                    $criteriosNuevosIds[] = $nuevoCriterio->id;
                 }
             }
 
-            // Actualizar miembros
+            // Sincronizar los criterios de la convocatoria
+            $convocatoria->gruposCriterios()->sync(array_merge($criteriosAntiguos, $criteriosNuevosIds));
+
+            // Sincronizar miembros del comité (relación convocatoria-docente)
             $convocatoria->comite()->sync($validatedData['miembros']);
+
+            // Obtener los candidatos asociados con esta convocatoria
+            $candidatos = DB::table('candidato_convocatoria')
+                ->where('convocatoria_id', $id)
+                ->pluck('candidato_id')
+                ->toArray();
+
+            // Obtener los miembros actuales de la convocatoria
+            $miembros = $validatedData['miembros'];
+
+            // Insertar las relaciones entre docentes y candidatos
+            $dataToInsert = [];
+
+            foreach ($miembros as $docente_id) {
+                foreach ($candidatos as $candidato_id) {
+                    // Solo insertamos si la relación no existe
+                    $dataToInsert[] = [
+                        'docente_id' => $docente_id,
+                        'candidato_id' => $candidato_id,
+                        'convocatoria_id' => $id,
+                        'estado' => 'pendiente cv',
+                    ];
+                }
+            }
+
+            // Realizamos la inserción masiva sin duplicados
+            DB::table('comite_candidato_convocatoria')->upsert($dataToInsert, ['docente_id', 'candidato_id', 'convocatoria_id'], ['estado']);
 
             DB::commit();
             return response()->json([
@@ -280,11 +310,6 @@ class ConvocatoriaController extends Controller
                 'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Error al actualizar la convocatoria:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             DB::rollBack();
 
             return response()->json([
@@ -293,4 +318,54 @@ class ConvocatoriaController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerEstadoCandidato($idConvocatoria, $idCandidato)
+    {
+        if (!is_numeric($idConvocatoria)) {
+            return response()->json(['error' => 'Invalid ID convocatoria.'], 400);
+        }
+
+        if (!is_numeric($idCandidato)) {
+            return response()->json(['error' => 'Invalid ID candidato.'], 400);
+        }
+
+        try {
+            // Busca el estado global del candidato en la convocatoria
+            $estadoGlobal = DB::table('candidato_convocatoria')
+                ->where('convocatoria_id', $idConvocatoria)
+                ->where('candidato_id', $idCandidato)
+                ->value('estadoFinal');
+            
+            if (empty($estadoGlobal)) {
+                return response()->json(['message' => 'No se encontraró al candidato en la convocatoria.'], 404);
+            }
+            
+            // Obtener estados parciales por miembro del comité
+            $estados = DB::table('comite_candidato_convocatoria')
+                ->where('convocatoria_id', $idConvocatoria)
+                ->where('candidato_id', $idCandidato)
+                ->select('docente_id', 'estado')
+                ->get();
+
+            $jsonResponse = [
+                'estadoFinal' => $estadoGlobal,
+                'estadosPorMiembroComite' => $estados->map(function ($estadoMiembro) {
+                    return [
+                        'id' => $estadoMiembro->docente_id,
+                        'estadoMiembro' => $estadoMiembro->estado,
+                    ];
+                })->toArray(),
+            ];
+            
+            return response()->json($jsonResponse, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener el estado del candidato:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al obtener el estado del candidato'], 500);
+        }
+    }
+
 }
