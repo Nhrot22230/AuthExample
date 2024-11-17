@@ -44,6 +44,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
             ])
         ]);
 
+        // el asistente es tiene poder sobre dos secciones como asistente
         $role_asistente = Role::findByName('asistente');
         $scope = Scope::where('name', 'Seccion')->first();
         $asistente->usuario->assignRole('asistente');
@@ -59,6 +60,27 @@ class ProcesoConvocatoriaSeeder extends Seeder
         RoleScopeUsuario::create([
             'usuario_id' => $asistente->usuario_id,
             'role_id' => $role_asistente->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionSecond->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
+        // el asisnte es tiene poder sobre dos secciones como miembro del comite
+        $role_comite = Role::findByName('comite');
+        $scope = Scope::where('name', 'Seccion')->first();
+        $asistente->usuario->assignRole('comite');
+
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_comite->id,
+            'scope_id' => $scope->id,
+            'entity_id' => $seccionFirst->id,
+            'entity_type' => $scope->entity_type,
+        ]);
+
+        RoleScopeUsuario::create([
+            'usuario_id' => $asistente->usuario_id,
+            'role_id' => $role_comite->id,
             'scope_id' => $scope->id,
             'entity_id' => $seccionSecond->id,
             'entity_type' => $scope->entity_type,
