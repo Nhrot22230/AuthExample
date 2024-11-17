@@ -70,7 +70,7 @@ class PedidoCursosSeeder extends Seeder
         // Asignar cursos obligatorios al plan de estudios con niveles aleatorios
         foreach ($cursosObligatorios as $cursoObligatorio) {
             $nivelAleatorio = rand(1, $planEstudio->cantidad_semestres);
-            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => $nivelAleatorio, 'creditosReq' => $cursoObligatorio->creditos]]);
+            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => (string)($nivelAleatorio), 'creditosReq' => $cursoObligatorio->creditos]]);
         }
 
         // Asignar cursos electivos al plan de estudios con nivel 'E'
@@ -90,9 +90,11 @@ class PedidoCursosSeeder extends Seeder
         ]);
 
         // Asociar los cursos obligatorios al pedido
+        /*
         foreach ($cursosObligatorios as $cursoObligatorio) {
             $pedido->cursosObligatorios()->attach($cursoObligatorio->id);
         }
+        */
 
         // Asociar los cursos electivos al pedido
         foreach ($cursosElectivos as $cursoElectivo) {
