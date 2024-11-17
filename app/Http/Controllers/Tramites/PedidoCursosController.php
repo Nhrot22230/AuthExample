@@ -177,37 +177,37 @@ class PedidoCursosController extends Controller
         // Obtener el número de resultados por página
         $perPage = $request->input('per_page', 10);
         $searchTerm = $request->input('searchTerm', '');
-    
+
         // Buscar el pedido de cursos de la especialidad e incluir el semestre
         $pedido = PedidoCursos::where('especialidad_id', $especialidadId)
-                    ->with(['planEstudio', 'semestre']) // Incluimos la relación con semestre
-                    ->first();
-    
+            ->with(['planEstudio', 'semestre']) // Incluimos la relación con semestre
+            ->first();
+
         // Verificar si existe el pedido de cursos
         if (!$pedido) {
             return response()->json(['error' => 'Pedido de cursos no encontrado para la especialidad indicada'], 404);
         }
-    
+
         // Obtener todos los cursos del pedido (obligatorios y electivos)
         $cursosQuery = $pedido->obtenerCursos();
-    
+
         // Aplicar filtro de búsqueda si se proporciona un searchTerm
         if (!empty($searchTerm)) {
             $cursosQuery = $cursosQuery->filter(function ($curso) use ($searchTerm) {
                 return stripos($curso->nombre, $searchTerm) !== false;
             });
         }
-    
+
         // Paginar los resultados
         $cursosPaginated = $cursosQuery->forPage($request->input('page', 1), $perPage)->values();
-    
+
         // Retornar los cursos junto con la información del semestre y de paginación
         return response()->json([
             'data' => $cursosPaginated,
             'total' => $cursosQuery->count(),
             'per_page' => $perPage,
             'current_page' => $request->input('page', 1),
-            'semestre' => $pedido->semestre, 
+            'semestre' => $pedido->semestre,
             'pedido_id' => $pedido->id,
             'pedido' => $pedido,
         ], 200);
@@ -217,24 +217,24 @@ class PedidoCursosController extends Controller
     {
         // Buscar el horario por su ID
         $horario = \App\Models\Matricula\Horario::find($id);
-    
+
         // Verificar si el horario existe
         if (!$horario) {
             return response()->json(['error' => 'Horario no encontrado'], 404);
         }
-    
+
         // Eliminar relaciones dependientes
         $horario->jefePracticas()->delete(); // Elimina los registros relacionados de jefe de prácticas
         $horario->docentes()->detach();      // Desasocia los docentes
         $horario->usuarios()->detach();       // Desasocia los usuarios, si existe esta relación
         $horario->horarioEstudiantes()->delete(); // Elimina estudiantes asignados a este horario
         $horario->encuestas()->detach();      // Desasocia las encuestas
-    
+
         // Finalmente, eliminar el horario
         $horario->delete();
-    
+
         return response()->json(['message' => 'Horario eliminado correctamente'], 200);
-    }    
+    }
 
     public function destroyMultipleHorarios(Request $request)
     {
@@ -243,35 +243,35 @@ class PedidoCursosController extends Controller
             'horario_ids' => 'required|array',
             'horario_ids.*' => 'exists:horarios,id' // Asegura que cada ID exista en la tabla de horarios
         ]);
-    
+
         $horarioIds = $request->input('horario_ids');
-    
+
         // Buscar los horarios por sus IDs
         $horarios = \App\Models\Matricula\Horario::whereIn('id', $horarioIds)->get();
-    
+
         foreach ($horarios as $horario) {
             // Eliminar relaciones dependientes de cada horario
             $horario->jefePracticas()->delete(); // Eliminar registros de jefePracticas relacionados
             $horario->docentes()->detach();      // Desasociar docentes
             $horario->horarioEstudiantes()->delete(); // Eliminar estudiantes asignados a este horario
             $horario->encuestas()->detach();     // Desasociar encuestas
-    
+
             // Para relaciones HasManyThrough, como usuarios y estudiantes, eliminamos los registros indirectamente
             foreach ($horario->usuarios as $usuario) {
                 $usuario->pivot->delete(); // Eliminar el registro de la tabla intermedia
             }
-    
+
             foreach ($horario->estudiantes as $estudiante) {
                 $estudiante->pivot->delete(); // Eliminar el registro de la tabla intermedia
             }
-    
+
             // Finalmente, eliminar el horario
             $horario->delete();
         }
-    
+
         return response()->json(['message' => 'Horarios eliminados correctamente'], 200);
-    }   
-    
+    }
+
     public function createHorarios(Request $request)
     {
         // Validar los datos de entrada
@@ -402,6 +402,7 @@ class PedidoCursosController extends Controller
             'per_page' => $perPage,
             'current_page' => $request->input('page', 1),
             'pedido_id' => $pedido->id, // Agregamos el ID del pedido en la respuesta
+            'pedido' => $pedido, 
         ], 200);
     }
 
@@ -489,5 +490,110 @@ class PedidoCursosController extends Controller
             'observacion' => $pedido->observaciones,
         ], 200);
     }    
+
+    public function addCursosHorarios(Request $request, $pedidoId)
+    {
+        // Validar la estructura de entrada
+        $request->validate([
+            'cursos' => 'required|array',
+            'cursos.*.codigo_curso' => 'required|string|exists:cursos,cod_curso', // Verifica que el código de curso exista
+            'cursos.*.codigo_horario' => 'required|string|max:10', // Código del horario
+            'cursos.*.vacantes' => 'required|integer|min:1', // Vacantes como número positivo
+            'cursos.*.oculto' => 'required|in:SI,NO', // Campo oculto debe ser YES o NO
+        ]);
+
+        // Buscar el pedido y su plan de estudios asociado
+        $pedido = PedidoCursos::with('planEstudio')->find($pedidoId);
+
+        if (!$pedido) {
+            return response()->json(['error' => 'Pedido no encontrado'], 404);
+        }
+
+        $planEstudio = $pedido->planEstudio;
+
+        // Verificar si el plan de estudios existe
+        if (!$planEstudio) {
+            return response()->json(['error' => 'El pedido no tiene un plan de estudios asociado'], 400);
+        }
+
+        $semestreId = $pedido->semestre_id;
+
+        $cursosAgregados = [];
+        foreach ($request->input('cursos') as $cursoData) {
+            $codigoCurso = $cursoData['codigo_curso'];
+            $codigoHorario = $cursoData['codigo_horario'];
+            $vacantes = $cursoData['vacantes'];
+            $oculto = $cursoData['oculto'] === 'SI';
+
+            // Buscar el curso por su código
+            $curso = Curso::where('cod_curso', $codigoCurso)->first();
+
+            if (!$curso) {
+                continue; // Si no existe el curso, lo omitimos
+            }
+
+            // Verificar si el curso ya está en el pedido
+            $isInPedido = $pedido->obtenerCursos()->contains('id', $curso->id);
+
+            if (!$isInPedido) {
+                // Verificar si es un curso electivo del plan de estudios
+                $isElectivo = $planEstudio->cursos()
+                    ->where('id', $curso->id)
+                    ->wherePivot('nivel', 'E') // Asegura que sea electivo
+                    ->exists();
+
+                if (!$isElectivo) {
+                    continue; // Si no es electivo válido, lo omitimos
+                }
+
+                // Agregar el curso electivo al pedido
+                $pedido->cursosElectivosSeleccionados()->attach($curso->id, [
+                    'nivel' => 'E',
+                    'creditosReq' => $curso->creditos,
+                ]);
+            }
+
+            // Verificar si el horario ya existe por su código para este curso y semestre
+            $horarioExistente = \App\Models\Matricula\Horario::where('curso_id', $curso->id)
+                ->where('semestre_id', $semestreId)
+                ->where('codigo', $codigoHorario)
+                ->first();
+
+            if ($horarioExistente) {
+                // Actualizar vacantes y oculto del horario existente
+                $horarioExistente->update([
+                    'vacantes' => $vacantes,
+                    'oculto' => $oculto,
+                ]);
+
+                $cursosAgregados[] = [
+                    'curso_id' => $curso->id,
+                    'horario_id' => $horarioExistente->id,
+                    'accion' => 'actualizado',
+                ];
+            } else {
+                // Crear un nuevo horario si no existe
+                $horario = \App\Models\Matricula\Horario::create([
+                    'curso_id' => $curso->id,
+                    'semestre_id' => $semestreId,
+                    'codigo' => $codigoHorario,
+                    'vacantes' => $vacantes,
+                    'oculto' => $oculto,
+                    'nombre' => '',
+                ]);
+
+                $cursosAgregados[] = [
+                    'curso_id' => $curso->id,
+                    'horario_id' => $horario->id,
+                    'accion' => 'creado',
+                ];
+            }
+        }
+
+        return response()->json([
+            'message' => 'Cursos y horarios procesados correctamente',
+            'data' => $cursosAgregados,
+        ], 200);
+    }
 
 }

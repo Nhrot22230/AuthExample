@@ -16,3 +16,4 @@ Route::get('/especialidades/{especialidadId}/cursos-electivos', [PedidoCursosCon
 Route::post('/pedidos/{pedidoId}/cursos-electivos', [PedidoCursosController::class, 'addCursosElectivosToPedido']);
 Route::patch('/pedidos/{pedidoId}/recibir', [PedidoCursosController::class, 'markPedidoAsReceived']);
 Route::patch('/pedidos/{pedidoId}/estado', [PedidoCursosController::class, 'updatePedidoStatus']);
+Route::post('/pedidos/{pedidoId}/cursos-horarios', [PedidoCursosController::class, 'addCursosHorarios']);
