@@ -51,7 +51,6 @@ class RolePermissionsController extends Controller
         return response()->json($response, 200);
     }
 
-
     public function indexScopes(): JsonResponse
     {
         $scopes = Scope::all();
@@ -180,6 +179,7 @@ class RolePermissionsController extends Controller
         }
 
         $role->delete();
+        RoleScopeUsuario::where('role_id', $role->id)->delete();
         return response()->json(['message' => 'Rol eliminado'], 200);
     }
 
@@ -227,24 +227,6 @@ class RolePermissionsController extends Controller
             DB::rollBack();
             return response()->json(['message' => "Error al asignar roles al usuario: {$e->getMessage()}"], 500);
         }
-    }
-
-    public function syncPermissions(Request $request, $id): JsonResponse
-    {
-        $request->validate([
-            'permissions' => 'required|array',
-            'permissions.*' => 'required|exists:permissions,id',
-        ]);
-
-        $usuario = Usuario::find($request->usuario_id);
-        if (!$usuario) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
-        $usuario->syncPermissions($request->permissions);
-
-        return response()->json([
-            'message' => 'Permisos correctamente asignados al usuario',
-        ], 200);
     }
 
     public function authUserPermissions(Request $request): JsonResponse

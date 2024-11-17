@@ -31,9 +31,9 @@ class EspecialidadController extends Controller
         return response()->json($especialidades, 200);
     }
 
-    public function show($id)
+    public function show($entity_id)
     {
-        $especialidad = Especialidad::with('areas')->find($id);
+        $especialidad = Especialidad::with('areas')->find($entity_id);
 
         if (!$especialidad) {
             return response()->json(['message' => 'Especialidad no encontrada'], 404);
@@ -70,9 +70,9 @@ class EspecialidadController extends Controller
         return response()->json($especialidad, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $entity_id)
     {
-        $especialidad = Especialidad::find($id);
+        $especialidad = Especialidad::find($entity_id);
         if (!$especialidad) {
             return response()->json(['message' => 'Especialidad no encontrada'], 404);
         }
@@ -94,9 +94,9 @@ class EspecialidadController extends Controller
         return response()->json($especialidad, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
-        $especialidad = Especialidad::find($id);
+        $especialidad = Especialidad::find($entity_id);
         if (!$especialidad) {
             return response()->json(['message' => 'Especialidad no encontrada'], 404);
         }
