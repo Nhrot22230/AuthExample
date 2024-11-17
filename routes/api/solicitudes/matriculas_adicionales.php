@@ -25,6 +25,9 @@ Route::patch('carta-presentacion/{id}/rechazar', [CartaPresentacionController::c
 Route::patch('carta-presentacion/{id}/aprobar-secretaria', [CartaPresentacionController::class, 'aprobarCartaSecretaria']);
 Route::get('solicitudes/profesor/{profesorId}', [CartaPresentacionController::class, 'getByProfesor']);
 Route::put('/cartas/aprobar/{horario_id}', [CartaPresentacionController::class, 'aprobarPorHorario']);
+Route::patch('/carta-presentacion/{id}/aprobar-director', [CartaPresentacionController::class, 'aprobarCartaDirector']);
+Route::post('/carta-presentacion/{id}/subir-archivo', [CartaPresentacionController::class, 'subirArchivo']);
+Route::get('/carta-presentacion/{id}/descargar-archivo', [CartaPresentacionController::class, 'descargarArchivo']);
 
 
 Route::prefix('cartas')->group(function () {
