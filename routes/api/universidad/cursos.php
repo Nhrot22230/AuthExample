@@ -28,5 +28,6 @@ Route::prefix('cursos')->group(function () {
         Route::get('/{entity_id}/detalle', [CursoController::class, 'obtenerCursoPorId']);
         Route::get('/{entity_id}/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
         Route::get('/{entity_id}/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
+        Route::post('/{entity_id}/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);
     });
 });

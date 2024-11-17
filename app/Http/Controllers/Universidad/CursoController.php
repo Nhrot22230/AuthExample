@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Universidad;
 use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
+use App\Models\Delegados\Delegado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class CursoController extends Controller
@@ -236,6 +237,17 @@ class CursoController extends Controller
                 $query->where('docente_id', $docenteId);
             })
             ->where('curso_id', $cursoId)
+            ->with(['delegado' => function ($query) {
+                $query->select(
+                    'delegados.id as delegado_id',
+                    'delegados.horario_id',
+                    'delegados.estudiante_id',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido_paterno, ' ', usuarios.apellido_materno) as delegado_nombre"),
+                    'usuarios.email as delegado_email'
+                )
+                ->join('estudiantes', 'delegados.estudiante_id', '=', 'estudiantes.id') // Unir con estudiantes
+                ->join('usuarios', 'estudiantes.usuario_id', '=', 'usuarios.id'); // Unir con usuarios
+            }])
             ->get(['id', 'nombre', 'codigo', 'vacantes', 'created_at', 'updated_at']);
 
         // Verificar si hay resultados
@@ -243,9 +255,49 @@ class CursoController extends Controller
             return response()->json(['message' => 'No se encontraron horarios para este docente en este curso.'], 404);
         }
 
-        // Devolver la lista de horarios
-        return response()->json($horarios);
+        // Formatear la respuesta para manejar el caso de delegados no asignados
+        $horariosConDelegados = $horarios->map(function ($horario) {
+            if (isset($horario->delegado) && $horario->delegado !== null) {
+                // Retornar los datos del delegado si está asignado
+                return [
+                    'id' => $horario->id,
+                    'nombre' => $horario->nombre,
+                    'codigo' => $horario->codigo,
+                    'vacantes' => $horario->vacantes,
+                    'created_at' => $horario->created_at,
+                    'updated_at' => $horario->updated_at,
+                    'delegado' => [
+                        'delegado_id' => $horario->delegado->delegado_id ?? null,
+                        'estudiante_id' => $horario->delegado->estudiante_id ?? null,
+                        'delegado_nombre' => $horario->delegado->delegado_nombre ?? 'No hay delegado asignado',
+                        'delegado_email' => $horario->delegado->delegado_email ?? null,
+                    ],
+                ];
+            }
+
+            // Caso en que no haya delegado asignado
+            return [
+                'id' => $horario->id,
+                'nombre' => $horario->nombre,
+                'codigo' => $horario->codigo,
+                'vacantes' => $horario->vacantes,
+                'created_at' => $horario->created_at,
+                'updated_at' => $horario->updated_at,
+                'delegado' => [
+                    'delegado_id' => null,
+                    'estudiante_id' => null,
+                    'delegado_nombre' => 'No hay delegado asignado',
+                    'delegado_email' => null,
+                ],
+            ];
+        });
+
+        // Devolver la lista de horarios junto con los datos del delegado (o vacíos si no hay delegado)
+        return response()->json($horariosConDelegados);
     }
+
+
+
     public function obtenerAlumnosPorHorario(Request $request)
     {
         $horarioId = $request->input('id_horario');
@@ -281,5 +333,40 @@ class CursoController extends Controller
 
         return response()->json($estudiantes, 200);
     }
+    public function actualizarDelegado(Request $request)
+    {
+        // Validar los datos de la solicitud
+        $validated = $request->validate([
+            'id_horario' => 'required|exists:horarios,id',
+            'estudiante_id' => 'required|exists:estudiantes,id',
+        ]);
 
+        try {
+            // Obtener el horario
+            $horarioId = $validated['id_horario'];
+            $estudianteId = $validated['estudiante_id'];
+
+            // Buscar y actualizar el delegado del horario
+            $delegado = Delegado::updateOrCreate(
+                ['horario_id' => $horarioId], // Condición para encontrar el delegado existente
+                ['estudiante_id' => $estudianteId] // Datos para actualizar o crear
+            );
+
+            // Respuesta de éxito
+            return response()->json([
+                'message' => 'Delegado actualizado correctamente.',
+                'delegado' => [
+                    'id' => $delegado->id,
+                    'horario_id' => $delegado->horario_id,
+                    'estudiante_id' => $delegado->estudiante_id,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            // Respuesta de error
+            return response()->json([
+                'message' => 'Error al actualizar el delegado.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

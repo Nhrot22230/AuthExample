@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Usuarios;
-
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUsuarioRequest;
 use App\Models\Usuarios\Usuario;
@@ -115,4 +115,5 @@ class UsuarioController extends Controller
         $usuario->delete();
         return response()->json(['message' => 'Usuario eliminado exitosamente'], 200);
     }
+    
 }

@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-
+use App\Models\Delegados\Delegado;
 class Horario extends Model
 {
     use HasFactory;
@@ -62,15 +62,13 @@ class Horario extends Model
         return $this->hasMany(HorarioEstudiante::class);
     }
 
-    public function estudiantes(): HasManyThrough
+    public function estudiantes()
     {
-        return $this->hasManyThrough(
-            Estudiante::class,
-            HorarioEstudiante::class,
-            'horario_id',
-            'id',
-            'id',
-            'estudiante_id'
+        return $this->belongsToMany(
+            Estudiante::class,        // Modelo relacionado
+            'estudiante_horario',     // Nombre de la tabla intermedia
+            'horario_id',             // Llave foránea del modelo actual en la tabla intermedia
+            'estudiante_id'           // Llave foránea del modelo relacionado en la tabla intermedia
         );
     }
 
@@ -87,5 +85,13 @@ class Horario extends Model
     {
         return $this->hasMany(CartaPresentacion::class, 'idHorario');
     }
-
+    public function delegado()
+    {
+        return $this->hasOne(Delegado::class, 'horario_id', 'id');
+    }
+    public function jefesPractica()
+    {
+        return $this->hasMany(JefePractica::class, 'horario_id');
+    }
+    
 }
