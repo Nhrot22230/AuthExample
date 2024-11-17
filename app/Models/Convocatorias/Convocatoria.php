@@ -33,7 +33,7 @@ class Convocatoria extends Model
 
     public function gruposCriterios(): BelongsToMany
     {
-        return $this->belongsToMany(GrupoCriterios::class, 'grupo_criterios_convocatoria');
+        return $this->belongsToMany(GrupoCriterios::class, 'grupo_criterios_convocatoria', 'convocatoria_id', 'grupo_criterios_id');
     }
 
     public function comite(): BelongsToMany
@@ -44,5 +44,11 @@ class Convocatoria extends Model
     public function candidatos(): BelongsToMany
     {
         return $this->belongsToMany(Usuario::class, 'candidato_convocatoria', 'convocatoria_id', 'candidato_id');
+    }
+
+    public function comiteCandidatos(): BelongsToMany
+    {
+        return $this->belongsToMany(Usuario::class, 'comite_candidato_convocatoria', 'convocatoria_id', 'candidato_id')
+                    ->withPivot('docente_id', 'estadoFinal');
     }
 }
