@@ -45,11 +45,12 @@ class ConvocatoriaController extends Controller
                     $query->whereIn('estado', $filters); // Filtrar por estados
                 })
                 ->when($miembroId, function ($query) use ($miembroId) {
-                    // Filtrar convocatorias donde el usuario es miembro del comité
                     $query->whereHas('comite', function ($subQuery) use ($miembroId) {
-                        $subQuery->where('docentes.id', $miembroId);
+                        $subQuery->whereHas('usuario', function ($userQuery) use ($miembroId) {
+                            $userQuery->where('usuarios.id', $miembroId);
+                        });
                     });
-                })
+                })        
                 ->when($postulanteId && !$noInscrito, function ($query) use ($postulanteId) {
                     // Filtrar convocatorias donde el usuario es postulante
                     $query->whereHas('candidatos', function ($subQuery) use ($postulanteId) {
@@ -62,6 +63,7 @@ class ConvocatoriaController extends Controller
                         $subQuery->where('usuarios.id', $postulanteId);
                     });
                 })
+                
                 ->paginate($perPage);
 
             return response()->json($convocatorias, 200);
@@ -140,6 +142,7 @@ class ConvocatoriaController extends Controller
 
             // Obtener candidatos con paginación y filtro de búsqueda
             $candidatos = $convocatoria->candidatos()
+                ->select('usuarios.*', 'candidato_convocatoria.estadoFinal')
                 ->when($search, function ($query, $search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('nombre', 'like', "%$search%")
