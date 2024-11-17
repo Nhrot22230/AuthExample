@@ -903,4 +903,30 @@ class EncuestaController extends Controller
             return response()->json(['message' => 'Error interno del servidor.'], 500);
         }
     }
+
+    public function getEstudiantesConEncuesta($encuestaId)
+    {
+        try {
+            $encuesta = Encuesta::findOrFail($encuestaId);
+            if (!$encuesta) {
+                return response()->json(['message' => 'Encuesta no encontrada.'], 404);
+            }
+            $estudiantes = $encuesta
+                ->horario()
+                ->with(['horarioEstudiantes.estudiante'])
+                ->get()
+                ->flatMap(function ($horario) {
+                    return $horario->horarioEstudiantes;
+                })
+                ->map(function ($horarioEstudiante) {
+                    return $horarioEstudiante->estudiante->usuario_id;
+                });
+
+            return response()->json($estudiantes);
+            
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Ocurrió un error en el servidor: ' . $e->getMessage()], 500);
+        }
+    }
+
 }

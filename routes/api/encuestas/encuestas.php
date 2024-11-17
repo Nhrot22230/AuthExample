@@ -19,3 +19,4 @@ Route::get('encuestas-preguntas/{encuesta_id}', [EncuestaController::class, 'lis
 Route::put('encuestas/{especialidad_id}/{encuesta_id}', [EncuestaController::class, 'gestionarEncuesta']);
 Route::get('encuestas-docente/resultados/{horarioId}', [EncuestaController::class, 'progresoEncuestaDocentePorHorario']);
 Route::get('encuestas-jp/resultados/{jpId}', [EncuestaController::class, 'progresoEncuestaJPPorHorario']);
+Route::get('encuestas-estudiantes/${encuestaId}', [EncuestaController::class, 'getEstudiantesConEncuesta']);
