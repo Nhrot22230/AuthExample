@@ -81,6 +81,44 @@ class ConvocatoriaController extends Controller
             return response()->json(['error' => 'Ocurrió un error', 'details' => $e->getMessage()], 500);
         }
     }
+    public function getCandidatosByConvocatoria($id)
+    {
+        try {
+            // Número de resultados por página (por defecto 10)
+            $perPage = request('per_page', 10);
+
+            // Término de búsqueda
+            $search = request('search', '');
+
+            // Busca la convocatoria por ID
+            $convocatoria = Convocatoria::find($id);
+
+            // Verifica si la convocatoria existe
+            if (!$convocatoria) {
+                return response()->json(['message' => 'Convocatoria no encontrada'], 404);
+            }
+
+            // Obtener candidatos con paginación y filtro de búsqueda
+            $candidatos = $convocatoria->candidatos()
+                ->when($search, function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%$search%")
+                            ->orWhere('apellido', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    });
+                })
+                ->paginate($perPage);
+
+            return response()->json($candidatos, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener los candidatos de la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al obtener los candidatos'], 500);
+        }
+    }
 
     public function show($id)
     {
@@ -359,11 +397,11 @@ class ConvocatoriaController extends Controller
                 ->where('convocatoria_id', $idConvocatoria)
                 ->where('candidato_id', $idCandidato)
                 ->value('estadoFinal');
-            
+
             if (empty($estadoGlobal)) {
                 return response()->json(['message' => 'No se encontraró al candidato en la convocatoria.'], 404);
             }
-            
+
             // Obtener estados parciales por miembro del comité
             $estados = DB::table('comite_candidato_convocatoria')
                 ->where('convocatoria_id', $idConvocatoria)
@@ -380,7 +418,7 @@ class ConvocatoriaController extends Controller
                     ];
                 })->toArray(),
             ];
-            
+
             return response()->json($jsonResponse, 200);
         } catch (\Exception $e) {
             Log::error('Error al obtener el estado del candidato:', [
@@ -413,7 +451,7 @@ class ConvocatoriaController extends Controller
                 ->where('candidato_id', $idCandidato)
                 ->where('docente_id', $validatedData['docente_id'])
                 ->update(['estado' => $validatedData['estado']]);
-            
+
             DB::commit();
 
             if ($actualizado) {
@@ -432,43 +470,42 @@ class ConvocatoriaController extends Controller
     }
 
     public function addCandidatoToConvocatoria(Request $request)
-{
-    $validatedData = $request->validate([
-        'convocatoria_id' => 'required|exists:convocatoria,id', // Verifica que el ID de convocatoria exista
-        'candidato_id' => 'required|exists:usuarios,id', // Verifica que el ID del candidato exista
-        'urlCV' => 'nullable|string|max:255', // La URL del CV es opcional
-    ]);
+    {
+        $validatedData = $request->validate([
+            'convocatoria_id' => 'required|exists:convocatoria,id', // Verifica que el ID de convocatoria exista
+            'candidato_id' => 'required|exists:usuarios,id', // Verifica que el ID del candidato exista
+            'urlCV' => 'nullable|string|max:255', // La URL del CV es opcional
+        ]);
 
-    try {
-        // Verifica si la relación ya existe
-        $existingRelation = CandidatoConvocatoria::where('convocatoria_id', $validatedData['convocatoria_id'])
-            ->where('candidato_id', $validatedData['candidato_id'])
-            ->first();
+        try {
+            // Verifica si la relación ya existe
+            $existingRelation = CandidatoConvocatoria::where('convocatoria_id', $validatedData['convocatoria_id'])
+                ->where('candidato_id', $validatedData['candidato_id'])
+                ->first();
 
-        if ($existingRelation) {
-            return response()->json(['message' => 'El candidato ya está relacionado con esta convocatoria.'], 400);
+            if ($existingRelation) {
+                return response()->json(['message' => 'El candidato ya está relacionado con esta convocatoria.'], 400);
+            }
+
+            // Crea la relación
+            $candidatoConvocatoria = CandidatoConvocatoria::create([
+                'convocatoria_id' => $validatedData['convocatoria_id'],
+                'candidato_id' => $validatedData['candidato_id'],
+                'estadoFinal' => 'pendiente cv', // Estado inicial automático
+                'urlCV' => $validatedData['urlCV'] ?? null, // Si no se envía, será null
+            ]);
+
+            return response()->json([
+                'message' => 'Candidato agregado a la convocatoria exitosamente.',
+                'data' => $candidatoConvocatoria,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error al agregar candidato a la convocatoria:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al agregar el candidato a la convocatoria.'], 500);
         }
-
-        // Crea la relación
-        $candidatoConvocatoria = CandidatoConvocatoria::create([
-            'convocatoria_id' => $validatedData['convocatoria_id'],
-            'candidato_id' => $validatedData['candidato_id'],
-            'estadoFinal' => 'pendiente cv', // Estado inicial automático
-            'urlCV' => $validatedData['urlCV'] ?? null, // Si no se envía, será null
-        ]);
-
-        return response()->json([
-            'message' => 'Candidato agregado a la convocatoria exitosamente.',
-            'data' => $candidatoConvocatoria,
-        ], 201);
-    } catch (\Exception $e) {
-        Log::error('Error al agregar candidato a la convocatoria:', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return response()->json(['error' => 'Ocurrió un error al agregar el candidato a la convocatoria.'], 500);
     }
-}
-
 }
