@@ -21,7 +21,7 @@ class TemaDeTesis extends Model
     protected $fillable = [
         'titulo',
         'resumen',
-        'documento',
+        'file_id',
         'estado',
         'estado_jurado',
         'fecha_enviado',

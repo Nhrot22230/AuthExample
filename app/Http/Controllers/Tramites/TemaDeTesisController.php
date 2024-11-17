@@ -220,7 +220,7 @@ class TemaDeTesisController extends Controller
             $uploadRequest->files->set('file', $file);
             $fileController = new FileController();
             $fileResponse = $fileController->uploadFile($uploadRequest);
-            $fileUrl = $fileResponse->getData()->url;
+            $fileId = $fileResponse->getData()->file->id;
 
             // Buscar al estudiante y obtener la especialidad
             $estudiante = Estudiante::findOrFail($request->estudiante_id);
@@ -234,7 +234,7 @@ class TemaDeTesisController extends Controller
                 'area_id' => $request->area_id,
                 'estado' => 'pendiente',
                 'fecha_enviado' => Now(),
-                'documento' => $fileUrl,
+                'file_id' => $fileId,
             ]);
 
             // Registrar los asesores
