@@ -7,6 +7,7 @@ use App\Models\Matricula\Horario;
 use App\Models\Universidad\Semestre;
 use App\Models\Delegados\Delegado;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 class HorarioController extends Controller
 {
     //
@@ -245,4 +246,146 @@ class HorarioController extends Controller
             ], 500);
         }
     }
+
+    public function eliminarJefePractica(Request $request)
+    {
+        // Validar los datos proporcionados en la solicitud
+        $validated = $request->validate([
+            'horario_id' => 'required|exists:horarios,id',
+            'usuario_id' => 'required|exists:usuarios,id',
+        ]);
+
+        try {
+            // Eliminar la fila de la tabla jp_horario
+            $deleted = DB::table('jp_horario')
+                ->where('horario_id', $validated['horario_id'])
+                ->where('usuario_id', $validated['usuario_id'])
+                ->delete();
+
+            if ($deleted) {
+                return response()->json(['message' => 'Jefe de práctica eliminado correctamente.'], 200);
+            } else {
+                return response()->json(['message' => 'No se encontró la combinación de horario y usuario.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar jefe de práctica.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function listarUsuariosEstudiantesYDocentes(Request $request)
+    {
+        try {
+            // Obtener parámetros de búsqueda, tipo y horario_id
+            $search = $request->input('search', ''); // Búsqueda (por nombre, código o especialidad)
+            $tipo = $request->input('tipo', ''); // Tipo (Docente, Estudiante o vacío para ambos)
+            $horarioId = $request->input('horario_id'); // ID del horario
+
+            // Obtener IDs de usuarios ya relacionados al horario en jp_horario
+            $usuariosRelacionados = DB::table('jp_horario')
+                ->where('horario_id', $horarioId)
+                ->pluck('usuario_id')
+                ->toArray();
+
+            // Consulta base para estudiantes
+            $estudiantesQuery = DB::table('usuarios')
+                ->join('estudiantes', 'usuarios.id', '=', 'estudiantes.usuario_id')
+                ->join('especialidades', 'estudiantes.especialidad_id', '=', 'especialidades.id')
+                ->select(
+                    'usuarios.id as id',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido_paterno, ' ', usuarios.apellido_materno) as nombre"),
+                    'usuarios.email',
+                    'estudiantes.codigoEstudiante as codigo',
+                    'especialidades.nombre as especialidad',
+                    DB::raw("'Estudiante' as tipo") // Agregar el tipo "Estudiante"
+                )
+                ->whereNotIn('usuarios.id', $usuariosRelacionados); // Excluir usuarios ya relacionados
+
+            // Consulta base para docentes
+            $docentesQuery = DB::table('usuarios')
+                ->join('docentes', 'usuarios.id', '=', 'docentes.usuario_id')
+                ->join('especialidades', 'docentes.especialidad_id', '=', 'especialidades.id')
+                ->select(
+                    'usuarios.id as id',
+                    DB::raw("CONCAT(usuarios.nombre, ' ', usuarios.apellido_paterno, ' ', usuarios.apellido_materno) as nombre"),
+                    'usuarios.email',
+                    'docentes.codigoDocente as codigo',
+                    'especialidades.nombre as especialidad',
+                    DB::raw("'Docente' as tipo") // Agregar el tipo "Docente"
+                )
+                ->whereNotIn('usuarios.id', $usuariosRelacionados); // Excluir usuarios ya relacionados
+
+            // Filtro por búsqueda (nombre, código o especialidad)
+            if (!empty($search)) {
+                $estudiantesQuery->where(function ($query) use ($search) {
+                    $query->where('usuarios.nombre', 'LIKE', "%$search%")
+                        ->orWhere('usuarios.apellido_paterno', 'LIKE', "%$search%")
+                        ->orWhere('usuarios.apellido_materno', 'LIKE', "%$search%")
+                        ->orWhere('estudiantes.codigoEstudiante', 'LIKE', "%$search%")
+                        ->orWhere('especialidades.nombre', 'LIKE', "%$search%");
+                });
+
+                $docentesQuery->where(function ($query) use ($search) {
+                    $query->where('usuarios.nombre', 'LIKE', "%$search%")
+                        ->orWhere('usuarios.apellido_paterno', 'LIKE', "%$search%")
+                        ->orWhere('usuarios.apellido_materno', 'LIKE', "%$search%")
+                        ->orWhere('docentes.codigoDocente', 'LIKE', "%$search%")
+                        ->orWhere('especialidades.nombre', 'LIKE', "%$search%");
+                });
+            }
+
+            // Filtro por tipo
+            if ($tipo === 'Estudiante') {
+                $usuarios = $estudiantesQuery->get(); // Solo estudiantes
+            } elseif ($tipo === 'Docente') {
+                $usuarios = $docentesQuery->get(); // Solo docentes
+            } else {
+                // Ambos tipos
+                $estudiantes = $estudiantesQuery->get();
+                $docentes = $docentesQuery->get();
+                $usuarios = $estudiantes->merge($docentes);
+            }
+
+            return response()->json($usuarios, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al obtener usuarios.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    
+
+    public function agregarJefePracticaAHorario(Request $request)
+    {
+        // Validar los datos de entrada
+        $validator = Validator::make($request->all(), [
+            'horario_id' => 'required|exists:horarios,id',
+            'usuario_id' => 'required|exists:usuarios,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validación fallida.',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        try {
+            // Insertar una nueva fila en la tabla jp_horario
+            DB::table('jp_horario')->insert([
+                'horario_id' => $request->input('horario_id'),
+                'usuario_id' => $request->input('usuario_id'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Jefe de práctica agregado exitosamente.',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al agregar el jefe de práctica.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

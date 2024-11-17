@@ -93,4 +93,5 @@ class Horario extends Model
     {
         return $this->hasMany(JefePractica::class, 'horario_id');
     }
+    
 }
