@@ -10,7 +10,7 @@ class GrupoCriterios extends Model
 {
     use HasFactory;
 
-    protected $table = 'grupo_criterios';
+    protected $table = 'grupos_criterios';
 
     protected $fillable = [
         'nombre',

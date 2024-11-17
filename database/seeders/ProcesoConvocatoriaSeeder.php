@@ -129,7 +129,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
                         'docente_id' => $docente->id,
                         'candidato_id' => $candidato->id,
                         'convocatoria_id' => $convocatoria->id,
-                        'estadoFinal' => 'pendiente cv',
+                        'estado' => 'pendiente cv',
                     ]);
                 }
             }

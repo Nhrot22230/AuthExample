@@ -15,6 +15,7 @@ use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
 use App\Models\Matricula\Horario;
+use App\Models\Usuarios\Administrativo;
 use Illuminate\Support\Facades\Hash;
 
 class PedidoCursosSeeder extends Seeder
@@ -69,7 +70,7 @@ class PedidoCursosSeeder extends Seeder
         // Asignar cursos obligatorios al plan de estudios con niveles aleatorios
         foreach ($cursosObligatorios as $cursoObligatorio) {
             $nivelAleatorio = rand(1, $planEstudio->cantidad_semestres);
-            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => $nivelAleatorio, 'creditosReq' => $cursoObligatorio->creditos]]);
+            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => (string)($nivelAleatorio), 'creditosReq' => $cursoObligatorio->creditos]]);
         }
 
         // Asignar cursos electivos al plan de estudios con nivel 'E'
@@ -89,9 +90,11 @@ class PedidoCursosSeeder extends Seeder
         ]);
 
         // Asociar los cursos obligatorios al pedido
+        /*
         foreach ($cursosObligatorios as $cursoObligatorio) {
             $pedido->cursosObligatorios()->attach($cursoObligatorio->id);
         }
+        */
 
         // Asociar los cursos electivos al pedido
         foreach ($cursosElectivos as $cursoElectivo) {
@@ -142,6 +145,36 @@ class PedidoCursosSeeder extends Seeder
             'usuario_id' => $usuario->id,
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad ? $especialidad->id : null,
+        ]);       
+        
+        //Usuario secretario academico
+        $usuario = Usuario::create([
+            'nombre' => 'Daniel Secretario',
+            'apellido_paterno' => 'Rivas',
+            'apellido_materno' => 'Pareja',
+            'email' => 'daniel.rivas.secretario@gianluca.zzz',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'),  // Cambia la contraseña si es necesario
         ]);        
+
+        Administrativo::factory()->create([
+            'usuario_id' => $usuario->id,
+            'facultad_id' => $facultad ? $facultad->id : null,
+        ]);
+
+        $role = Role::findByName('secretario-academico');
+        $usuario->assignRole($role);
+
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Facultad',
+                'entity_type' => Facultad::class,
+            ])->id,
+            'usuario_id' => $usuario->id,
+            'entity_type' => Facultad::class,
+            'entity_id' => $facultad ? $facultad->id : null,
+        ]);
     }
 }

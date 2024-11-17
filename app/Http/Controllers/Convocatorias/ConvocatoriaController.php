@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class ConvocatoriaController extends Controller
     }
 
 
-    public function listar_convocatorias_todas()
+    public function listarConvocatoriasTodas()
     {
         try {
             $convocatorias = Convocatoria::with('gruposCriterios', 'comite', 'candidatos')->get();
@@ -80,11 +81,17 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     public function show($id)
     {
         try {
             // Busca la convocatoria por ID con las relaciones necesarias
+<<<<<<< HEAD
+            $convocatoria = Convocatoria::with('gruposCriterios', 'comite.usuario', 'candidatos', 'seccion')->find($id);
+=======
             $convocatoria = Convocatoria::with([
                 'gruposCriterios', // Criterios asociados
                 'comite.usuario', // Detalles del comité
@@ -92,6 +99,7 @@ class ConvocatoriaController extends Controller
             ])
                 ->withCount('candidatos') // Incluye la cantidad de candidatos
                 ->find($id);
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
 
             // Verifica si la convocatoria existe
             if (!$convocatoria) {
@@ -109,6 +117,8 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+=======
 
     public function getCandidatosByConvocatoria($id)
     {
@@ -150,6 +160,7 @@ class ConvocatoriaController extends Controller
     }
 
 
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     /**
      * Store a newly created resource in storage.
      */
@@ -158,6 +169,7 @@ class ConvocatoriaController extends Controller
         $validatedData = $request->validate([
             'nombreConvocatoria' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:1000',
+            'fechaEntrevista' => 'required|date|after_or_equal:fechaInicio',
             'fechaInicio' => 'required|date|before_or_equal:fechaFin',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
             'fechaEntrevista' => 'nullable|date',
@@ -168,7 +180,7 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'criteriosAntiguo' => 'array',
-            'criteriosAntiguo.*' => 'integer|exists:grupo_criterios,id',
+            'criteriosAntiguo.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
         ]);
         Log::info('Datos validados recibidos:', $validatedData);
@@ -178,9 +190,14 @@ class ConvocatoriaController extends Controller
             $convocatoria = Convocatoria::create([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
+                'fechaEntrevista' => $validatedData['fechaEntrevista'],
                 'fechaInicio' => $validatedData['fechaInicio'],
                 'fechaFin' => $validatedData['fechaFin'],
+<<<<<<< HEAD
+                'estado' => 'abierta', // Estado inicial
+=======
                 'fechaEntrevista' => $validatedData['fechaEntrevista'] ?? null,
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
@@ -319,6 +336,77 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+    public function storeGrupoCriterios(Request $request)
+    {
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'obligatorio' => 'required|boolean',
+            'descripcion' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $grupoCriterios = GrupoCriterios::create([
+                'nombre' => $validatedData['nombre'],
+                'obligatorio' => $validatedData['obligatorio'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Grupo de criterios creado exitosamente.',
+                'grupos_criterios' => $grupoCriterios,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al crear el grupo de criterios.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateGrupoCriterios(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'obligatorio' => 'required|boolean',
+            'descripcion' => 'nullable|string|max:1000',
+        ]);
+
+        if (!is_numeric($id)) {
+            return response()->json(['error' => 'Invalid ID.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $grupoCriterios = GrupoCriterios::findOrFail($id);
+
+            $grupoCriterios->update([
+                'nombre' => $validatedData['nombre'],
+                'obligatorio' => $validatedData['obligatorio'],
+                'descripcion' => $validatedData['descripcion'] ?? null,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Grupo de criterios actualizado exitosamente.',
+                'grupos_criterios' => $grupoCriterios,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar el grupo de criterios.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+=======
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
     public function obtenerEstadoCandidato($idConvocatoria, $idCandidato)
     {
         if (!is_numeric($idConvocatoria)) {
@@ -368,4 +456,45 @@ class ConvocatoriaController extends Controller
         }
     }
 
+<<<<<<< HEAD
+    public function cambiarEstadoMiembroComite(Request $request, $idConvocatoria, $idCandidato)
+    {
+        $validatedData = $request->validate([
+            'docente_id' => 'integer|exists:docentes,id',
+            'estado' => 'required|string'
+        ]);
+
+        if (!is_numeric($idConvocatoria)) {
+            return response()->json(['error' => 'Invalid ID convocatoria.'], 400);
+        }
+
+        if (!is_numeric($idCandidato)) {
+            return response()->json(['error' => 'Invalid ID candidato.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $actualizado = ComiteCandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+                ->where('candidato_id', $idCandidato)
+                ->where('docente_id', $validatedData['docente_id'])
+                ->update(['estado' => $validatedData['estado']]);
+            
+            DB::commit();
+
+            if ($actualizado) {
+                return response()->json(['message' => 'Estado actualizado correctamente.', 200]);
+            } else {
+                return response()->json(['message' => 'No se encontró el registro para actualizar.'], 404);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar el estado del candidato.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+=======
+>>>>>>> dda2736893ebabb4892f2787a1d78be13e08119b
 }
