@@ -4,27 +4,12 @@ namespace App;
 
 enum AccessPath: string
 {
-    case CANDIDATURAS                       = 'Candidaturas';
-    case CONFIGURACION_PERSONAL             = 'ConfiguracionPersonal';
-    case CONFIGURACION_SISTEMA              = 'ConfiguracionSistema';
-    case CURSOS                             = 'Cursos';
-    case JEFE_PRACTICA                      = 'JefePractica';
-    case JURADOS_TESIS_SECRETARIO_ACADEMICO = 'Jurado tesis secretario academico';
-    case MATRICULAS_ADICIONALES             = 'MatriculasAdicionales';
-    case MIS_CANDIDATURAS                   = 'MisCandidaturas';
-    case MIS_CURSOS                         = 'MisCursos';
-    case MIS_ENCUESTAS                      = 'MisEncuestas';
-    case MIS_UNIDADES                       = 'MisUnidades';
-    case PEDIDOS_HORARIOS                   = 'PedidosHorarios';
-    case PERSONAS                           = 'Personas';
-    case PLAN_ESTUDIOS                      = 'PlanDeEstudios';
-    case SEMESTRES                          = 'Semestres';
-    case SOLICITUDES_ENCUENTAS              = 'SolicitudesEncuestas';
-    case TRAMITES_ACADEMICOS                = 'TramitesAcademicos';
-    case UNIDADES                           = 'Unidades';
-    case CONVOCATORIAS                      = 'Convocatorias';
-    case POSTULANTE                         = 'Postulante';
-    case COMITE                             = 'Comite';
+    case MIS_SOLICITUDES = "mis_solicitudes";
+    case TRAMITES_ACADEMICOS = "tramites_academicos";
+    case MIS_UNIDADES = "mis_unidades";
+    case MIS_CURSOS = "mis_cursos";
+    case CONVOCATORIAS = "convocatorias";
+    case CONFIGURACION_SISTEMA = "configuracion_sistema";
 
     public static function toArray(): array
     {

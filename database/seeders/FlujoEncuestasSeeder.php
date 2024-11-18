@@ -27,19 +27,19 @@ class FlujoEncuestasSeeder extends Seeder
      */
     public function run(): void
     {
-        $facultad = Facultad::inRandomOrder()->firstOrCreate();
+        $facultad = Facultad::factory()->create([
+            'nombre' => 'Facultad de Ciencias e Ingeniería',
+        ]);
         $especialidad = Especialidad::factory()->create([
             'nombre' => "Ingeniería Informática y de Sistemas Industriales",
             'descripcion' => "Especialidad enfocada en la Ingeniería para el desarrollo de competencias en Computacional y Experimental.",
             'facultad_id' => $facultad->id,
         ]);
         $cursos = Curso::factory(20)->create(['especialidad_id' => $especialidad->id]);
-
         $semestre = Semestre::updateOrCreate(
             ['anho' => 2024, 'periodo' => 2],
             ['estado' => 'activo']
         );
-
         $horarios = $cursos->flatMap(fn($curso) => Horario::factory(random_int(1, 3))->create([
             'curso_id' => $curso->id,
             'semestre_id' => $semestre->id,
@@ -57,12 +57,6 @@ class FlujoEncuestasSeeder extends Seeder
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
-
-        $gianlucaUsuario = Usuario::where('email', 'gian.luca@gianluka.zzz')->first();
-        if ($gianlucaUsuario) {
-            $estudianteRole = Role::findByName('estudiante');
-            $gianlucaUsuario->assignRole($estudianteRole);
-        }
 
         collect($horarios)->each(function ($horario) use ($estudiantes) {
             $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
@@ -89,8 +83,6 @@ class FlujoEncuestasSeeder extends Seeder
             $horario->docentes()->attach($docente);
             $horario->jefePracticas()->create(['usuario_id' => $docente->usuario_id]);
         });
-
-        # DIRECTOR DE CARRERA
 
         $usuario = Usuario::create([
             'nombre' => 'Sofia',
@@ -166,7 +158,7 @@ class FlujoEncuestasSeeder extends Seeder
             'password' => Hash::make('12345678'),
         ]);
 
-        $administrativo = Administrativo::create([
+        Administrativo::create([
             'usuario_id' => $usuarioAdministrativo->id,
             'codigoAdministrativo' => 'ADM123456',
             'lugarTrabajo' => 'Oficina administrativa',

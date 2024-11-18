@@ -2,9 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Usuarios\Administrativo;
-use App\Models\Usuarios\Docente;
-use App\Models\Usuarios\Estudiante;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -24,10 +21,7 @@ class UsuariosSeeder extends Seeder
             'password' => Hash::make('12345678'),
             'estado' => 'activo',
         ]);
+
         
-        $factor = 2;
-        Docente::factory()->count(5 * $factor)->create();
-        Estudiante::factory()->count(20 * $factor)->create();
-        Administrativo::factory()->count(1 * $factor)->create();
     }
 }

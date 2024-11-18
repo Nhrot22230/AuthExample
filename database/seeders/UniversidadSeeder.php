@@ -20,12 +20,6 @@ class UniversidadSeeder extends Seeder
     public function run(): void
     {
         Institucion::factory(5)->create();
-        Facultad::factory(10)->create();
-        Departamento::factory(20)->create();
-        Especialidad::factory(30)->create();
-        Seccion::factory(10)->create();
-        Area::factory(10)->create();
-
         $int_year_now = date('Y');
         $anhos = range($int_year_now - 10, $int_year_now);
         $periodos = [
@@ -45,7 +39,6 @@ class UniversidadSeeder extends Seeder
                 ]);
             }
         }
-
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
         Curso::factory(50)->create();
     }

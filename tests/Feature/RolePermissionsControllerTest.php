@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Authorization\Permission;
 use App\Models\Authorization\Role;
 use App\Models\Usuarios\Usuario;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,13 +19,15 @@ class RolePermissionsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(PermissionSeeder::class);
+        $this->seed(RoleSeeder::class);
+        Role::factory()->create([
+            "name"=> "super-admin",
+        ]);
+        Role::findByName("super-admin")->givePermissionTo(Permission::findByName("autorizacion"));
 
-        Role::factory()->create(['name' => 'Super Admin']);
-        Role::findByName('Super Admin')->givePermissionTo(Permission::create(['name' => 'manage roles']));
-        Role::findByName('Super Admin')->givePermissionTo(Permission::create(['name' => 'ver roles']));
-        Role::findByName('Super Admin')->givePermissionTo(Permission::create(['name' => 'ver permisos']));
         $this->user = Usuario::factory()->create();
-        $this->user->assignRole('Super Admin');
+        $this->user->assignRole('super-admin');
         $this->actingAs($this->user);
     }
 
@@ -49,7 +53,7 @@ class RolePermissionsControllerTest extends TestCase
         $response = $this->getJson('/api/v1/permissions');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(13);
+        $response->assertJsonCount(Permission::count());
     }
 
     public function test_show_role_returns_role_with_permissions()
@@ -62,7 +66,10 @@ class RolePermissionsControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'id', 'name', 'guard_name', 'permissions' => [
+            'id',
+            'name',
+            'guard_name',
+            'permissions' => [
                 '*' => ['id', 'name', 'guard_name']
             ]
         ]);
