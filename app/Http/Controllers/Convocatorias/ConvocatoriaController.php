@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Convocatorias;
 use App\Http\Controllers\Controller;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
-use App\Models\Convocatorias\Convocatoria;
+use App\Models\Convocatorias\Convocatoria;  
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +33,7 @@ class ConvocatoriaController extends Controller
             $postulanteId = request('postulante_id', null); // ID del postulante (opcional)
             $noInscrito = filter_var(request('no_inscrito', false), FILTER_VALIDATE_BOOLEAN); // Filtro de no inscripción
 
-            $convocatorias = Convocatoria::with(['gruposCriterios', 'comite'])
+            $convocatorias = Convocatoria::with(['gruposCriterios', 'comite', 'seccion'])
                 ->withCount('candidatos') // Contar los candidatos
                 ->when($search, function ($query, $search) {
                     $query->where('nombre', 'like', "%$search%");
