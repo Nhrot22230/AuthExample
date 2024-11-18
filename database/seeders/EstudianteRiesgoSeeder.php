@@ -15,18 +15,20 @@ class EstudianteRiesgoSeeder extends Seeder
     public function run()
     {
         // Todos estos datos son de ejemplo y usan suposiciones
-
-        // Crear una especialidad con ID 999
-        $especialidad = Especialidad::factory()->create([
-            'id' => 999, // Establecer el ID deseado
-        ]);
+        $especialidad = Especialidad::first();
 
         // Crear 5 estudiantes
-        $estudiantes = Estudiante::factory()->count(5)->create();
+        $estudiantes = Estudiante::factory()->count(5)->create([
+            'especialidad_id' => $especialidad->id,
+        ]);
 
         // Crear un curso y un docente para los estudiantes
-        $curso = Curso::factory()->create();
-        $docente = Docente::factory()->create();
+        $curso = Curso::factory()->create([
+            'especialidad_id' => $especialidad->id,
+        ]);
+        $docente = Docente::factory()->create([
+            'especialidad_id' => $especialidad->id,
+        ]);
 
         // Crear registros de estudiante_riesgo y sus informes
         foreach ($estudiantes as $estudiante) {

@@ -62,14 +62,7 @@ class AssignRoles extends Seeder
         $estudiante_role = Role::findByName('estudiante');
 
         // Obtenemos los permisos que correspondan a los estudiantes
-        $permisos_estudiante = Permission::where('name', 'like', '%mis cursos%')
-            ->orWhere('name', 'like', '%mis encuestas%')
-            ->orWhere('name', 'like', '%solicitudes%')
-            ->orWhere('name', 'like', '%matriculas%')
-            ->orWhere('name', 'like', '%mis unidades%')
-            ->orWhere('name', 'like', '%candidaturas%')
-            ->orWhere('name', 'like', '%temas de tesis%')
-            ->get();
+        $permisos_estudiante = [];
     
         // Asignamos los permisos al rol de "estudiante"
         $estudiante_role->syncPermissions($permisos_estudiante);

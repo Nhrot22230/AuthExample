@@ -30,9 +30,9 @@ class SeccionController extends Controller
         return response()->json($secciones, 200);
     }
 
-    public function show($id)
+    public function show($entity_id)
     {
-        $seccion = Seccion::find($id);
+        $seccion = Seccion::find($entity_id);
 
         if (!$seccion) {
             return response()->json(['message' => 'Seccion no encontrada'], 404);
@@ -56,14 +56,14 @@ class SeccionController extends Controller
         return response()->json($seccion, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $entity_id)
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'departamento_id' => 'required|integer|exists:departamentos,id',
         ]);
 
-        $seccion = Seccion::find($id);
+        $seccion = Seccion::find($entity_id);
         if (!$seccion) {
             return response()->json(['message' => 'Seccion no encontrada'], 404);
         }
@@ -73,9 +73,9 @@ class SeccionController extends Controller
         return response()->json($seccion, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
-        $seccion = Seccion::find($id);
+        $seccion = Seccion::find($entity_id);
         if (!$seccion) {
             return response()->json(['message' => 'Seccion no encontrada'], 404);
         }

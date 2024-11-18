@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Storage\FileController;
 use App\Models\Authorization\PermissionCategory;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
@@ -19,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Models\Storage\File;
 
 class TemaDeTesisController extends Controller
 {
@@ -192,6 +193,37 @@ class TemaDeTesisController extends Controller
         return response()->json($docentesConNombre, 200);
     }
 
+    public function subirArchivo(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'file_type' => ['required', Rule::in(['document'])],
+                'file' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            ]);
+
+            $file = $request->file('file');
+            $path = 'files/tema-tesis/' . $file->getClientOriginalName();
+
+            Storage::disk('s3')->put($path, file_get_contents($file));
+
+            $fileRecord = File::create([
+                'name' => $request->name,
+                'file_type' => $request->file_type,
+                'mime_type' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+                'path' => $path,
+                'url' => Storage::url($path),
+            ]);
+
+            return response()->json(['url' => $fileRecord->url, 'file' => $fileRecord], 201);
+
+        } catch (\Exception $e) {
+            Log::error('File Upload Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Error uploading tema de tesis file: ' . $e->getMessage()], 500);
+        }
+    }
+
 
     public function registrarTema(Request $request): JsonResponse
     {
@@ -211,15 +243,13 @@ class TemaDeTesisController extends Controller
             if (!$file || !$file->isValid()) {
                 return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
             }
-
             $uploadRequest = new Request([
                 'name' => $titulo_modificado,
                 'file_type' => 'document',
                 'file' => $file
             ]);
             $uploadRequest->files->set('file', $file);
-            $fileController = new FileController();
-            $fileResponse = $fileController->uploadFile($uploadRequest);
+            $fileResponse = $this->subirArchivo($uploadRequest);
             $fileId = $fileResponse->getData()->file->id;
 
             // Buscar al estudiante y obtener la especialidad
@@ -290,8 +320,7 @@ class TemaDeTesisController extends Controller
     {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
-            'comentarios' => 'nullable|string',
-            'documento_firmado' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048'
+            'documento_firmado' => 'nullable|file|mimes:pdf,doc,docx|max:2048'
         ]);
 
         $temaTesis = TemaDeTesis::with('procesoAprobacion.estadoAprobacion')->find($tema_tesis_id);
@@ -304,19 +333,18 @@ class TemaDeTesisController extends Controller
             $file = $request->file('documento_firmado');
             if ($file->isValid()) {
                 $titulo_modificado = strtolower(str_replace(' ', '-', $temaTesis->titulo));
-
+                $numero = $responsable === "director" ? 1 : ($responsable === "coordinador" ? 2 : 3);
                 $uploadRequest = new Request([
-                    'name' => $titulo_modificado . '-firmado',
+                    'name' => $titulo_modificado . '-' . $numero,
                     'file_type' => 'document',
                     'file' => $file
                 ]);
                 $uploadRequest->files->set('file', $file);
 
-                $fileController = new FileController();
-                $fileResponse = $fileController->uploadFile($uploadRequest);
-                $fileUrl = $fileResponse->getData()->url;
+                $fileResponse = $this->subirArchivo($uploadRequest);
+                $fileId = $fileResponse->getData()->file->id;
 
-                $temaTesis->update(['documento' => $fileUrl]);
+                $temaTesis->update(['file_firmado_id' => $fileId]);
             } else {
                 return response()->json(['message' => 'El archivo firmado no es válido.'], 400);
             }
@@ -329,7 +357,7 @@ class TemaDeTesisController extends Controller
                     $estadoAprobacion->update([
                         'fecha_decision' => now(),
                         'estado' => 'aprobado',
-                        'comentarios' => $request->comentarios,
+                        'file_id' => $fileId,
                     ]);
                 }
                 if ($procesoAprobacion) {
@@ -359,7 +387,7 @@ class TemaDeTesisController extends Controller
                     $estadoAprobacion->update([
                         'fecha_decision' => now(),
                         'estado' => 'aprobado',
-                        'comentarios' => $request->comentarios,
+                        'file_id' => $fileId,
                     ]);
 
                     $usuarioId = $this->obtenerUsuario('director', $temaTesis->especialidad_id);
@@ -393,7 +421,7 @@ class TemaDeTesisController extends Controller
                 $estadoAprobacion->update([
                     'fecha_decision' => now(),
                     'estado' => 'aprobado',
-                    'comentarios' => $request->comentarios,
+                    'file_id' => $fileId,
                 ]);
                 $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
                 if($usuarioId){

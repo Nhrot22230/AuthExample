@@ -25,12 +25,11 @@ class AuthzMiddlewareTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Permission::create(['name' => 'ver especialidades']);
-        Role::firstOrCreate(['name' => 'Administrador']);
-        Role::firstOrCreate(['name' => 'Docente'])->givePermissionTo('ver especialidades');
-        Scope::create(['name' => 'departamento', 'entity_type' => Departamento::class]);
-        Scope::create(['name' => 'facultad', 'entity_type' => Facultad::class]);
-        Scope::create(['name' => 'especialidad', 'entity_type' => Especialidad::class]);
+        Permission::create(['name' => 'especialidades']);
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+
+        Role::findByName('docente')
+            ->permissions()->attach(Permission::where('name', 'especialidades')->first());
     }
 
     #[Test]
@@ -41,7 +40,7 @@ class AuthzMiddlewareTest extends TestCase
             'password' => Hash::make('password123')
         ]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         $scope = Scope::where('name', 'especialidad')->first();
 
         $role->scopes([])->attach($scope);
@@ -69,7 +68,7 @@ class AuthzMiddlewareTest extends TestCase
             'password' => Hash::make('password123')
         ]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         $user->assignRole($role);
 
         RoleScopeUsuario::create([
@@ -106,7 +105,7 @@ class AuthzMiddlewareTest extends TestCase
             'password' => Hash::make('password123')
         ]);
 
-        $adminRole = Role::where('name', 'Administrador')->first();
+        $adminRole = Role::where('name', 'administrador')->first();
         $user->assignRole($adminRole);
 
         $response = $this->postJson('/api/auth/login', [
@@ -133,7 +132,7 @@ class AuthzMiddlewareTest extends TestCase
         $user = Usuario::factory()->create([
             'password' => Hash::make('password123')
         ]);
-        $role = Role::where('name', 'Docente')->first();
+        $role = Role::where('name', 'docente')->first();
         Permission::create(['name' => 'ver cursos']);
         $role->givePermissionTo('ver cursos');
         $user->assignRole($role);
@@ -159,7 +158,7 @@ class AuthzMiddlewareTest extends TestCase
         $departamento = Departamento::factory()->create(['facultad_id' => $facultad->id]);
         $user = Usuario::factory()->create(['password' => Hash::make('password123')]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         Permission::create(['name' => 'ver departamentos']);
         $role->givePermissionTo('ver departamentos');
         $user->assignRole($role);
@@ -184,7 +183,7 @@ class AuthzMiddlewareTest extends TestCase
         $seccion = Seccion::factory()->create(['departamento_id' => $departamento->id]);
         $user = Usuario::factory()->create(['password' => Hash::make('password123')]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         Permission::create(['name' => 'ver secciones']);
         $role->givePermissionTo('ver secciones');
         $user->assignRole($role);
@@ -210,7 +209,7 @@ class AuthzMiddlewareTest extends TestCase
         $curso = Curso::factory()->create(['especialidad_id' => $especialidad->id]);
         $user = Usuario::factory()->create(['password' => Hash::make('password123')]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         Permission::create(['name' => 'ver cursos']);
         $role->givePermissionTo('ver cursos');
         $user->assignRole($role);
@@ -227,7 +226,7 @@ class AuthzMiddlewareTest extends TestCase
         $area = Area::factory()->create(['especialidad_id' => $especialidad->id]);
         $user = Usuario::factory()->create(['password' => Hash::make('password123')]);
 
-        $role = Role::findByName('Docente');
+        $role = Role::findByName('docente');
         Permission::create(['name' => 'ver áreas']);
         $role->givePermissionTo('ver áreas');
         $user->assignRole($role);

@@ -5,10 +5,21 @@ use App\Http\Middleware\AuthzMiddleware;
 use App\Models\Universidad\Seccion;
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('secciones')->group(function () {
+    Route::get('/', [SeccionController::class, 'indexAll']);
+    Route::get('/paginated', [SeccionController::class, 'index']);
 
-Route::get('secciones', [SeccionController::class, 'indexAll'])->middleware('can:ver secciones');
-Route::get('secciones/paginated', [SeccionController::class, 'index'])->middleware('can:ver secciones');
-Route::post('secciones', [SeccionController::class, 'store'])->middleware('can:manage secciones');
-Route::get('secciones/{id}', [SeccionController::class, 'show'])->middleware([AuthzMiddleware::class . ':ver secciones,' . Seccion::class]);
-Route::put('secciones/{id}', [SeccionController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage secciones,' . Seccion::class]);
-Route::delete('secciones/{id}', [SeccionController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage secciones,' . Seccion::class]);
+
+    Route::middleware("can:unidades")->group(function () {
+        Route::post('/', [SeccionController::class, 'store']);
+        Route::get('/{entity_id}', [SeccionController::class, 'show']);
+        Route::put('/{entity_id}', [SeccionController::class, 'update']);
+        Route::delete('/{entity_id}', [SeccionController::class, 'destroy']);
+    });
+
+    Route::middleware(AuthzMiddleware::class . ":secciones," . Seccion::class)->group(function () {
+        Route::get('/{entity_id}', [SeccionController::class, 'show']);
+        Route::put('/{entity_id}', [SeccionController::class, 'update']);
+        Route::delete('/{entity_id}', [SeccionController::class, 'destroy']);
+    });
+});

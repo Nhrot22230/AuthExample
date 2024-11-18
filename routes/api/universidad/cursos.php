@@ -5,20 +5,29 @@ use App\Http\Middleware\AuthzMiddleware;
 use App\Models\Universidad\Curso;
 use Illuminate\Support\Facades\Route;
 
-Route::get('cursos', [CursoController::class, 'index']);
-Route::get('cursos/paginated', [CursoController::class, 'indexPaginated'])->middleware('can:ver cursos');
-Route::get('cursos/codigo/{codigo}', [CursoController::class, 'getByCodigo']);
-Route::post('cursos', [CursoController::class, 'store'])->middleware('can:manage cursos');
-Route::get('cursos/{id}', [CursoController::class, 'show']);
-Route::put('cursos/{id}', [CursoController::class, 'update'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
-Route::delete('cursos/{id}', [CursoController::class, 'destroy'])->middleware([AuthzMiddleware::class . ':manage cursos,' . Curso::class]);
+Route::prefix('cursos')->group(function () {
+    Route::get('/', [CursoController::class, 'index']);
+    Route::get('/paginated', [CursoController::class, 'indexPaginated']);
+    Route::get('/codigo/{codigo}', [CursoController::class, 'getByCodigo']);
+    Route::get('/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
+    Route::get('/{cursoId}/horarios', [CursoController::class, 'obtenerHorariosPorCurso']);
 
-Route::get('cursos/{cursoId}/docentes', [CursoController::class, 'obtenerDocentesPorCurso']);
-Route::get('cursos/{cursoId}/horarios', [CursoController::class, 'obtenerHorariosPorCurso']);
+    Route::middleware("can:unidades")->group(function () {
+        Route::post('/', [CursoController::class, 'store']);
+        Route::get('/{entity_id}', [CursoController::class, 'show']);
+        Route::put('/{entity_id}', [CursoController::class, 'update']);
+        Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
+    });
 
-Route::post('cursos/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
-Route::post('cursos/detalle', [CursoController::class, 'obtenerCursoPorId']);
-Route::post('cursos/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
+    Route::middleware(AuthzMiddleware::class . ":cursos," . Curso::class)->group(function () {
+        Route::get('/{entity_id}', [CursoController::class, 'show']);
+        Route::put('/{entity_id}', [CursoController::class, 'update']);
+        Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
 
-Route::post('cursos/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
-Route::post('cursos/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);
+        Route::get('/{entity_id}/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
+        Route::get('/{entity_id}/detalle', [CursoController::class, 'obtenerCursoPorId']);
+        Route::get('/{entity_id}/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
+        Route::get('/{entity_id}/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
+        Route::post('/{entity_id}/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);
+    });
+});

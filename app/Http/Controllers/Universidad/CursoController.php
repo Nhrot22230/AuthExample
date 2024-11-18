@@ -51,10 +51,10 @@ class CursoController extends Controller
         }
     }
 
-    public function show($id)
+    public function show($entity_id)
     {
         try {
-            $curso = Curso::with('especialidad', 'planesEstudio')->findOrFail($id);
+            $curso = Curso::with('especialidad', 'planesEstudio')->findOrFail($entity_id);
             return response()->json($curso, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Curso no encontrado'], 404);
@@ -82,9 +82,9 @@ class CursoController extends Controller
         return response()->json($curso, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $entity_id)
     {
-        $curso = Curso::find($id);
+        $curso = Curso::find($entity_id);
         if (!$curso) {
             return response()->json(['message' => 'Curso no encontrado'], 404);
         }
@@ -109,9 +109,9 @@ class CursoController extends Controller
         return response()->json($curso, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
-        $curso = Curso::find($id);
+        $curso = Curso::find($entity_id);
         if (!$curso) {
             return response()->json(['message' => 'Curso no encontrado'], 404);
         }
