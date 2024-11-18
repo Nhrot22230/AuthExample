@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Matricula\CartaPresentacionController;
 use App\Http\Controllers\Matricula\HorarioActividadController;
 
-
+Route::get('/cursosM/buscar', [MatriculaAdicionalController::class, 'buscarCursosMat']);
 Route::post('matriculas-adicionales', [MatriculaAdicionalController::class, 'store']);
 Route::get('matriculas-adicionales/facultad/{facultadId}', [MatriculaAdicionalController::class, 'getByFacultad']);
 Route::get('matriculas-adicionales/{id}', [MatriculaAdicionalController::class, 'getByEspecialidad']);
