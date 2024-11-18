@@ -55,7 +55,7 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%solicitudes de encuestas%')
             ->orWhere('name', 'like', '%horarios%')
             ->orWhere('name', 'like', '%solicitudes%')
-            ->orWhere('name', 'like', '%comite%')
+            ->orWhere('name', 'like', '%evaluar-candidatos%')
             ->get();
 
         // Asignamos los permisos al rol de "docente"
