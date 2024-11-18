@@ -54,8 +54,8 @@ class CartaPresentacionSolicitudSeeder extends Seeder
                 'estado' => $estado,                           // Estado aleatorio
                 'motivo' => $faker->text(200),                 // Motivo de la solicitud generado aleatoriamente
                 'motivo_rechazo' => $motivoRechazo,            // Motivo de rechazo si aplica
-                'pdf_solicitud' => null,                       // No hay PDF aún
-                'pdf_firmado' => null,                         // No hay PDF firmado aún
+                'file_id' => null,                       // No hay PDF aún
+                                       // No hay PDF firmado aún
             ]);
         }
     }

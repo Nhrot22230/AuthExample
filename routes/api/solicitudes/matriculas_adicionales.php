@@ -14,6 +14,7 @@ Route::get('matricula-adicional/{id}', [MatriculaAdicionalController::class, 'ge
 Route::patch('matricula-adicional/{id}/rechazar', [MatriculaAdicionalController::class, 'rechazar'])->middleware('can:ver matriculas_especialidad');
 Route::patch('matricula-adicional/aprobar-dc/{id}', [MatriculaAdicionalController::class, 'aprobarPorDC'])->middleware('can:ver matriculas_especialidad');
 Route::patch('matricula-adicional/aprobar-sa/{id}', [MatriculaAdicionalController::class, 'aprobarPorSA'])->middleware('can:ver matriculas_especialidad');
+Route::get('/cursosM/buscar', [MatriculaAdicionalController::class, 'buscarCursosMat']);
 
 
 Route::get('solicitudes/carta/{estudianteId}', [CartaPresentacionController::class, 'getByEstudiante']);
