@@ -22,6 +22,7 @@ class TemaDeTesis extends Model
         'titulo',
         'resumen',
         'file_id',
+        'file_firmado_id',
         'estado',
         'estado_jurado',
         'fecha_enviado',
