@@ -63,7 +63,7 @@ class EspecialidadController extends Controller
 
         $especialidad = new Especialidad();
         $especialidad->nombre = $validatedData['nombre'];
-        $especialidad->descripcion = $validatedData['descripcion'];
+        $especialidad->descripcion = $validatedData['descripcion'] ?? null;
         $especialidad->facultad_id = $validatedData['facultad_id'];
         $especialidad->save();
 
@@ -80,15 +80,17 @@ class EspecialidadController extends Controller
             $validatedData = $request->validate([
                 'nombre' => 'required|string|max:255',
                 'descripcion' => 'nullable|string',
-                'facultad_id' => 'required|integer|exists:facultades,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::channel('errors')->error($e->getMessage());
-            return response()->json(['message' => 'Error en los datos enviados'], 420);
+            return response()->json(['message' => 'Error en los datos enviados: ' . $e->getMessage()], 422);
         }
-        $especialidad->nombre = $validatedData['nombre'];
-        $especialidad->descripcion = $validatedData['descripcion'];
-        $especialidad->facultad_id = $validatedData['facultad_id'];
+
+        if ($validatedData['nombre'])
+            $especialidad->nombre = $validatedData['nombre'];
+        if ($validatedData['descripcion'])
+            $especialidad->descripcion = $validatedData['descripcion'];
+
         $especialidad->save();
 
         return response()->json($especialidad, 200);

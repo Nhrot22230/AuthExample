@@ -96,7 +96,8 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        $docenteCoordinador = Docente::factory()->create([
+        
+        Docente::factory()->create([
             'usuario_id' => $usuarioCoordinador->id,
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
@@ -123,7 +124,8 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        $docenteDirector= Docente::factory()->create([
+        
+        Docente::factory()->create([
             'usuario_id' => $usuarioDirector->id,
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
@@ -159,7 +161,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado_proceso' => 'pendiente'
         ]);
 
-        $estadoAprobacion = EstadoAprobacionTema::factory()->create([
+        EstadoAprobacionTema::factory()->create([
             'proceso_aprobacion_id' => $procesoAprobacion->id,
             'usuario_id' => $usuarioDocente->id,
             'estado' => 'pendiente',

@@ -30,12 +30,12 @@ class AreaController extends Controller
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'especialidad_id' => 'required|integer|exists:especialidades,entity_id',
+            'especialidad_id' => 'required|integer|exists:especialidades,id',
         ]);
 
         $area = new Area();
         $area->nombre = $validatedData['nombre'];
-        $area->descripcion = $validatedData['descripcion'];
+        $area->descripcion = $validatedData['descripcion'] ?? '';
         $area->especialidad_id = $validatedData['especialidad_id'];
         $area->save();
 
