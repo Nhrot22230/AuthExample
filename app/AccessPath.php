@@ -8,7 +8,9 @@ enum AccessPath: string
     case TRAMITES_ACADEMICOS = "tramites_academicos";
     case MIS_UNIDADES = "mis_unidades";
     case MIS_CURSOS = "mis_cursos";
-    case CONVOCATORIAS = "convocatorias";
+    case MIS_CONVOCATORIAS = "mis_convocatorias";
+    CASE GESTION_CONVOCATORIAS = "gestion_convocatorias";
+    CASE EVALUAR_CANDIDATOS = "evaluar_candidatos";
     case CONFIGURACION_SISTEMA = "configuracion_sistema";
 
     public static function toArray(): array

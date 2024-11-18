@@ -57,11 +57,24 @@ class PermissionSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'convoctorias',
-                'access_path' => AccessPath::CONVOCATORIAS,
+                'name' => 'gestion_convocatorias',
+                'access_path' => AccessPath::GESTION_CONVOCATORIAS,
+                'sub_permissions' => [
+                    'gestion-convocatorias',
+                ]
+            ],
+            [
+                'name' => 'evaluar_candidatos',
+                'access_path' => AccessPath::EVALUAR_CANDIDATOS,
+                'sub_permissions' => [
+                    'evaluar-candidatos',
+                ]
+            ],
+            [
+                'name' => 'mis_convocatorias',
+                'access_path' => AccessPath::MIS_CONVOCATORIAS,
                 'sub_permissions' => [
                     'mis-convocatorias',
-                    'convocatorias',
                 ]
             ],
             [
