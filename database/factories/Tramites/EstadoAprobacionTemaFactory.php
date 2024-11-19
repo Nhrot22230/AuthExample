@@ -22,7 +22,6 @@ class EstadoAprobacionTemaFactory extends Factory {
             'estado' => $estado,
             'fecha_decision' => $estado !== 'pendiente' ? $this->faker->date() : null,
             'comentarios' => $estado !== 'pendiente' ? $this->faker->text() : null,
-            'file_id' => $estado !== 'pendiente' ? 123 : null
         ];
     }
 }

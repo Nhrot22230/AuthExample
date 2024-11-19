@@ -10,16 +10,18 @@ return new class extends Migration
     {
         Schema::create('tema_de_tesis', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
+            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
+            $table->unsignedBigInteger('tema_original_id')->nullable()->constrained('tema_de_tesis')->onDelete('cascade');
+            $table->boolean('es_version_actual')->default(true);
             $table->string('titulo');
             $table->text('resumen');
-            $table->unsignedBigInteger('file_id')->nullable();
-            $table->unsignedBigInteger('file_firmado_id')->nullable();
             $table->enum('estado', ['aprobado', 'pendiente', 'desaprobado'])->default('pendiente');
             $table->enum('estado_jurado', ['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido'])->default('pendiente');
             $table->date('fecha_enviado')->nullable();
-            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
-            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
             $table->text('comentarios')->nullable();
+            $table->unsignedBigInteger('file_id')->nullable();
+            $table->unsignedBigInteger('file_firmado_id')->nullable();
             $table->timestamps();
         });
 
@@ -44,6 +46,7 @@ return new class extends Migration
             $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
         });
 
+        // Tabla que sigue el proceso de aprobacion del tema
         Schema::create('proceso_aprobacion_tema', function(Blueprint $table){
             $table->id();
             $table->foreignId('tema_tesis_id')->constrained('tema_de_tesis')->onDelete('cascade');
@@ -53,6 +56,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Tabla que almacena la información de las respuestas de los evaluadores(asesor, coordinador, director)
         Schema::create('estado_aprobacion_tema', function(Blueprint $table){
             $table->id();
             $table->foreignId('proceso_aprobacion_id')->constrained('proceso_aprobacion_tema')->onDelete('cascade');
@@ -61,8 +65,6 @@ return new class extends Migration
             $table->enum('estado', ['aprobado', 'pendiente', 'rechazado'])->default('pendiente');
             $table->date('fecha_decision')->nullable();
             $table->text('comentarios')->nullable();
-            $table->unsignedBigInteger('file_id')->nullable(); // Define el campo como nullable
-            $table->foreign('file_id')->references('id')->on('files')->onDelete('cascade');
             $table->timestamps();
         });
     }

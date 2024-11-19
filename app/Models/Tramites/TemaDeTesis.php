@@ -65,4 +65,14 @@ class TemaDeTesis extends Model
     {
         return $this->hasOne(ProcesoAprobacionTema::class, 'tema_tesis_id');
     }
+
+    public function temaOriginal() : BelongsTo
+    {
+        return $this->belongsTo(TemaDeTesis::class, 'tema_original_id');
+    }
+
+    public function versiones() : HasMany
+    {
+        return $this->hasMany(TemaDeTesis::class, 'tema_original_id');
+    }
 }

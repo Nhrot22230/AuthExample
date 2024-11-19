@@ -165,7 +165,6 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'pendiente',
             'fecha_decision' => null,
             'comentarios' => null,
-            'file_id' => null,
             'responsable' => 'asesor'
         ]);
     }

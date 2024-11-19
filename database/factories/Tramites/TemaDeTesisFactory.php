@@ -29,10 +29,11 @@ class TemaDeTesisFactory extends Factory
             'file_firmado_id' => null,
             'estado' => $estado,
             'estado_jurado' => $estadoJurado,
-            'fecha_enviado' => $this->faker->date(),
+            'fecha_enviado' => Now(),
             'especialidad_id' => Especialidad::factory(),
             'comentarios' => $comentarios,
-            'area_id' => Area::factory()
+            'area_id' => Area::factory(),
+            'tema_original_id' => null
         ];
     }
 }
