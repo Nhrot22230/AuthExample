@@ -80,7 +80,6 @@ class TemaDeTesisController extends Controller
         return response()->json($temasDeTesis, 200);
     }
 
-
     public function show($id)
     {
         $temaDeTesis = TemaDeTesis::with([
@@ -122,11 +121,16 @@ class TemaDeTesisController extends Controller
     public function indexTemasEstudianteId($estudiante_id): JsonResponse
     {
         $estudiante = Estudiante::findOrFail($estudiante_id);
+        if(!$estudiante) {
+            return response()->json(['message' => 'Estudiante no encontrado'], 404);
+        }
         $temasDeTesis = $estudiante->temasDeTesis->map(function ($tema) {
             return [
                 'id' => $tema->id,
                 'titulo' => $tema->titulo,
                 'estado' => $tema->estado,
+                'fecha_enviado' => $tema->fecha_enviado,
+                'es_version_actual' => $tema->es_version_actual,
             ];
         });
         return response()->json($temasDeTesis, 200);
@@ -152,7 +156,6 @@ class TemaDeTesisController extends Controller
 
         return response()->json($temasPendientes, 200);
     }
-
 
     public function listarAreasEspecialidad($estudiante_id): JsonResponse
     {
@@ -580,33 +583,5 @@ class TemaDeTesisController extends Controller
         ];
 
         return response()->json($response);
-
-
-    }
-
-    public function descargarArchivo($tema_tesis_id)
-    {
-        try {
-            $temaTesis = TemaDeTesis::findOrFail($tema_tesis_id);
-
-            // Verificar si el tema de tesis tiene un archivo asociado
-            if (!$temaTesis->archivo_path || !Storage::disk('s3')->exists($temaTesis->archivo_path)) {
-                return response()->json(['message' => 'El archivo asociado al tema de tesis no se encuentra.'], 404);
-            }
-
-            // Obtener el archivo desde S3
-            $contenidoArchivo = Storage::disk('s3')->get($temaTesis->archivo_path);
-
-            // Obtener el nombre del archivo
-            $nombreArchivo = basename($temaTesis->archivo_path); // Extrae solo el nombre del archivo de la ruta completa
-
-            // Retornar el archivo para la descarga
-            return response($contenidoArchivo, 200)
-                ->header('Content-Type', Storage::disk('s3')->mimeType($temaTesis->archivo_path))
-                ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
-        } catch (\Exception $e) {
-            Log::error('Error al descargar archivo: ' . $e->getMessage());
-            return response()->json(['message' => 'Error al intentar descargar el archivo.', 'error' => $e->getMessage()], 500);
-        }
     }
 }
