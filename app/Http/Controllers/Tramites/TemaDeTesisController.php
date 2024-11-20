@@ -23,8 +23,8 @@ use App\Models\Storage\File;
 
 class TemaDeTesisController extends Controller
 {
-    // Método para listar temas de tesis con filtros y paginación
-    public function indexPaginated(Request $request)
+    // Metodo para listar temas de tesis con filtros y paginación
+    public function indexPaginated(Request $request) : JsonResponse
     {
         $search = $request->input('search', '');
         $per_page = $request->input('per_page', 10);
@@ -80,7 +80,7 @@ class TemaDeTesisController extends Controller
         return response()->json($temasDeTesis, 200);
     }
 
-    public function show($id)
+    public function show($id) : JsonResponse
     {
         $temaDeTesis = TemaDeTesis::with([
             'especialidad',
@@ -94,7 +94,7 @@ class TemaDeTesisController extends Controller
         return response()->json($temaDeTesis, 200);
     }
 
-    // Método para actualizar el estado y estado del jurado de un tema de tesis
+    // Metodo para actualizar el estado y estado del jurado de un tema de tesis
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -196,7 +196,7 @@ class TemaDeTesisController extends Controller
         return response()->json($docentesConNombre, 200);
     }
 
-    public function subirArchivo(Request $request)
+    public function subirArchivo(Request $request) : JsonResponse
     {
         try {
             $request->validate([
@@ -227,7 +227,7 @@ class TemaDeTesisController extends Controller
         }
     }
 
-
+    // Registrar tema de tesis
     public function registrarTema(Request $request): JsonResponse
     {
         $request->validate([
@@ -319,8 +319,8 @@ class TemaDeTesisController extends Controller
             ->usuario_id ?? null;
     }
 
-    public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
-    {
+    // El usuario evaluador(asesor, coordinador o director) aprueba el tema de tesis
+    public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse {
         $request->validate([
             'usuario_id' => 'required|exists:usuarios,id',
             'documento_firmado' => 'nullable|file|mimes:pdf,doc,docx|max:2048'
@@ -427,17 +427,16 @@ class TemaDeTesisController extends Controller
                     'file_id' => $fileId,
                 ]);
                 $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
-                if($usuarioId){
+                if ($usuarioId) {
                     EstadoAprobacionTema::create([
                         'proceso_aprobacion_id' => $procesoAprobacion->id,
                         'usuario_id' => $usuarioId,
                         'estado' => 'pendiente',
                         'responsable' => 'coordinador',
                     ]);
-                }
-                else{
+                } else {
                     return response()->json([
-                        'message'=> 'Esta area no tiene un coordinador'
+                        'message' => 'Esta area no tiene un coordinador'
                     ]);
                 }
                 DB::commit();
@@ -452,8 +451,10 @@ class TemaDeTesisController extends Controller
                 ], 500);
             }
         }
+        return response()->json(400, status: ['message' => 'Error al actualizar el tema, reintentelo .']);
     }
 
+    // El usuario evaluador(asesor, coordinador o director) observa el tema de tesis
     public function rechazarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
     {
         $request->validate([
@@ -492,7 +493,9 @@ class TemaDeTesisController extends Controller
         ]);
     }
 
-    public function verDetalleTema($tema_tesis_id): JsonResponse{
+    // Muestra el detalle de aprobaciones de un tema de tesis
+    public function verDetalleTema($tema_tesis_id): JsonResponse
+    {
         $tema = TemaDeTesis::with([
             'procesoAprobacion.estadoAprobacion.usuario',
         ])->find($tema_tesis_id);
