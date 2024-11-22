@@ -6,8 +6,7 @@ use App\Models\Universidad\Area;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('areas')->group(function () {
-    Route::get('/', [AreaController::class, 'indexAll']);
-    Route::get('/paginated', [AreaController::class, 'index']);
+    Route::get('/', [AreaController::class, 'index']);
 
     Route::middleware("can:unidades")->group(function () {
         Route::post('/', [AreaController::class, 'store']);

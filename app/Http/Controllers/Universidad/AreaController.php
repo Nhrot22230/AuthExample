@@ -11,18 +11,21 @@ class AreaController extends Controller
     //
     public function index()
     {
+        $paginated = filter_var(request('paginated', false), FILTER_VALIDATE_BOOLEAN);
         $per_page = request('per_page', 10);
-        $search = request('search', '');
-        $areas = Area::where('nombre', 'like', "%$search%")->paginate($per_page);
+        $search = request('search', null);
+        $especialidad_id = request('especialidad_id', null);
 
-        return response()->json($areas, 200);
-    }
+        $areas = Area::query()
+            ->when($search, function ($query) use ($search) {
+                return $query->where('nombre', 'like', "%$search%");
+            })
+            ->when($especialidad_id, function ($query) use ($especialidad_id) {
+                return $query->where('especialidad_id', $especialidad_id);
+            });
 
-    public function indexAll()
-    {
-        $areas = Area::all();
-
-        return response()->json($areas, 200);
+        $result = $paginated ? $areas->paginate($per_page) : $areas->get();
+        return response()->json($result, 200);
     }
 
     public function store(Request $request)

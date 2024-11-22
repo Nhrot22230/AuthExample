@@ -63,7 +63,7 @@ class AssignRoles extends Seeder
         $estudiante_role = Role::findByName('estudiante');
 
         // Obtenemos los permisos que correspondan a los estudiantes
-        $permisos_estudiante = [];
+        $permisos_estudiante = Permission::where('name', 'like', '%mis%');
     
         // Asignamos los permisos al rol de "estudiante"
         $estudiante_role->syncPermissions($permisos_estudiante);

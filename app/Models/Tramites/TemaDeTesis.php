@@ -54,15 +54,4 @@ class TemaDeTesis extends Model
     {
         return $this->belongsTo(Especialidad::class);
     }
-
-    // Relación con Observaciones (uno a muchos)
-    public function observaciones(): HasMany
-    {
-        return $this->hasMany(Observacion::class);
-    }
-
-    public function procesoAprobacion() : hasOne
-    {
-        return $this->hasOne(ProcesoAprobacionTema::class, 'tema_tesis_id');
-    }
 }

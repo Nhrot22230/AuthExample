@@ -16,51 +16,44 @@ class DocenteController extends Controller
 {
     public function index()
     {
-        $per_page = request('per_page', 10);
+        $perPage = request('per_page', 10);
         $search = request('search', '');
         $seccionId = request('seccion_id', null);
         $especialidadId = request('especialidad_id', null);
         $tipo = request('tipo', null);
+        $paginated = filter_var(request('paginated', true), FILTER_VALIDATE_BOOLEAN);
 
         try {
             $docentes = Docente::with(['usuario', 'seccion', 'especialidad'])
-                ->where(function ($query) use ($search) {
+                ->when($search, function ($query) use ($search) {
                     $query->whereHas('usuario', function ($q) use ($search) {
-                        $q->where('nombre', 'like', '%' . $search . '%')
-                            ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
-                            ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                            ->orWhere('email', 'like', '%' . $search . '%');
-                    })->orWhere('codigoDocente', 'like', '%' . $search . '%');
-                });
+                        $q->where('nombre', 'like', "%$search%")
+                            ->orWhere('apellido_paterno', 'like', "%$search%")
+                            ->orWhere('apellido_materno', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    })->orWhere('codigoDocente', 'like', "%$search%");
+                })
+                ->when($seccionId, fn($query) => $query->where('seccion_id', $seccionId))
+                ->when($especialidadId, fn($query) => $query->where('especialidad_id', $especialidadId))
+                ->when($tipo, fn($query) => $query->where('tipo', $tipo));
 
-            if ($seccionId) {
-                $docentes->where('seccion_id', $seccionId);
-            }
-            if ($especialidadId) {
-                $docentes->where('especialidad_id', $especialidadId);
-            }
-            if ($tipo) {
-                $docentes->where('tipo', $tipo);
-            }
-
-            $docentes = $docentes->paginate($per_page);
-
+            $result = $paginated ? $docentes->paginate($perPage) : $docentes->get();
             Log::channel('audit-log')->info('Lista de docentes obtenida', [
-                'per_page' => $per_page,
+                'per_page' => $perPage,
                 'search' => $search,
                 'seccion_id' => $seccionId,
                 'especialidad_id' => $especialidadId,
                 'tipo' => $tipo,
+                'paginated' => $paginated,
             ]);
 
-            return response()->json($docentes, 200);
+            return response()->json($result, 200);
         } catch (\Exception $e) {
-            Log::channel('errors')->error('Error al listar docentes', [
-                'error' => $e->getMessage(),
-            ]);
+            Log::channel('errors')->error('Error al listar docentes', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al listar docentes'], 500);
         }
     }
+
 
     public function show($codigo)
     {

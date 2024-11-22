@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Tramites;
 
 use App\Http\Controllers\Controller;
-use App\Models\Authorization\PermissionCategory;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Tramites\EstadoAprobacionTema;
@@ -11,7 +10,6 @@ use App\Models\Tramites\ProcesoAprobacionTema;
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Estudiante;
-use App\Models\Usuarios\Usuario;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

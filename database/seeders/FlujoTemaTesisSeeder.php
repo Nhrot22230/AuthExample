@@ -5,8 +5,6 @@ namespace Database\Seeders;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
-use App\Models\Tramites\EstadoAprobacionTema;
-use App\Models\Tramites\ProcesoAprobacionTema;
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Area;
 use App\Models\Universidad\Curso;
@@ -33,7 +31,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'facultad_id' => $facultad->id,
         ]);
 
-        $areas = Area::factory(1)->create([
+        $areas = Area::factory(5)->create([
             'especialidad_id' => $especialidad->id,
         ]);
 
@@ -154,21 +152,5 @@ class FlujoTemaTesisSeeder extends Seeder
             $tema->asesores()->attach($docente->id);
             $tema->estudiantes()->attach($estudiante->id);
         }
-
-        $procesoAprobacion = ProcesoAprobacionTema::factory()->create([
-            'tema_tesis_id' => $temasTesis->random()->id,
-            'fecha_inicio' => Now(),
-            'estado_proceso' => 'pendiente'
-        ]);
-
-        EstadoAprobacionTema::factory()->create([
-            'proceso_aprobacion_id' => $procesoAprobacion->id,
-            'usuario_id' => $usuarioDocente->id,
-            'estado' => 'pendiente',
-            'fecha_decision' => null,
-            'comentarios' => null,
-            'file_id' => null,
-            'responsable' => 'asesor'
-        ]);
     }
 }
