@@ -10,6 +10,10 @@ use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
+use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
+use App\Models\Universidad\Seccion;
 use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\Usuario;
@@ -23,24 +27,62 @@ class ProcesoConvocatoriaSeeder extends Seeder
      */
     public function run()
     {
+        $facultad = Facultad::inRandomOrder()->firstOrCreate();
+
+        $especialidad = Especialidad::factory()->create([
+            'nombre' => "Ingeniería informática y pruebas para convocatorias",
+            'descripcion' => "Especialidad enfocada en la Ingeniería para el desarrollo y pruebas de convocatorias.",
+            'facultad_id' => $facultad->id,
+        ]);
+
+        // creamos 1 departamentos para la facultad
+        $departamento = Departamento::factory()->create([
+            'nombre' => 'Departamento de Ingeniería Informática',
+            'descripcion' => 'Departamento de Ingeniería Informática',
+            'facultad_id' => $facultad->id,
+        ]);
+
+        // creamos 1 seccion para el departamento
+        $seccionFirst = Seccion::factory()->create([
+            'nombre' => 'Sección de Ingeniería de Software',
+            'departamento_id' => $departamento->id,
+        ]);
+
+
+        $seccionSecond = Seccion::factory()->create([
+            'nombre' => 'Sección de Pruebas de Software',
+            'departamento_id' => $departamento->id,
+        ]);
+
+
         // Crear 20 grupos de criterios
         $gruposCriterios = GrupoCriterios::factory(20)->create();
 
-        // Crear 15 convocatorias
+        // Crear 15 convocatorias para secciones aleatorias
         $convocatorias = Convocatoria::factory(15)->create();
 
-        $secciones = $convocatorias->pluck('seccion')->unique();
-        $seccionesAleatorias = $secciones->random(2);
-        $seccionFirst = $seccionesAleatorias->first();
-        $seccionSecond = $seccionesAleatorias->last();
+        $cant = 0;
+        foreach ($convocatorias as $convocatoria) {
+            if ($cant == 0) {
+                $convocatoria->seccion_id = $seccionSecond->id;
+                $convocatoria->save();
+                $cant = 1;
+            } else if ($cant == 1) {
+                $convocatoria->seccion_id = $seccionFirst->id;
+                $convocatoria->save();
+                $cant = 0;
+            }
+        }
+
+        // creamos un asistente
 
         $asistente = Administrativo::factory()->create([
             'usuario_id' => Usuario::factory()->create([
                 'nombre' => 'Fernando',
                 'apellido_paterno' => 'Candia',
                 'apellido_materno' => 'Aroni',
-                'email' => 'fernando.candia@gianluka.zzz',
-                'password' => Hash::make('12345678'),
+                'email' => 'asistente@gmail.com',
+                'password' => Hash::make('password'),
             ])
         ]);
 
@@ -65,28 +107,40 @@ class ProcesoConvocatoriaSeeder extends Seeder
             'entity_type' => $scope->entity_type,
         ]);
 
-        // el asisnte es tiene poder sobre dos secciones como miembro del comite
-        $role_comite = Role::findByName('comite');
-        $scope = Scope::where('name', 'Seccion')->first();
-        $asistente->usuario->assignRole('comite');
 
+        // creamos un docente
+
+        $docente = Docente::factory()->create([
+            'usuario_id' => Usuario::factory()->create([
+                'nombre' => 'Juan',
+                'apellido_paterno' => 'Perez',
+                'apellido_materno' => 'Garcia',
+                'email' => 'comite@gmail.com',
+                'password' => Hash::make('password'),
+            ]),
+            'especialidad_id' => $especialidad->id,
+            'seccion_id' => $seccionFirst->id,
+        ]);
+
+        $role_docente = Role::findByName('docente');
+        $docente->usuario->assignRole($role_docente);
+
+        
         RoleScopeUsuario::create([
-            'usuario_id' => $asistente->usuario_id,
-            'role_id' => $role_comite->id,
+            'usuario_id' => $docente->usuario_id,
+            'role_id' => $role_asistente->id,
             'scope_id' => $scope->id,
             'entity_id' => $seccionFirst->id,
             'entity_type' => $scope->entity_type,
         ]);
 
         RoleScopeUsuario::create([
-            'usuario_id' => $asistente->usuario_id,
-            'role_id' => $role_comite->id,
+            'usuario_id' => $docente->usuario_id,
+            'role_id' => $role_asistente->id,
             'scope_id' => $scope->id,
             'entity_id' => $seccionSecond->id,
             'entity_type' => $scope->entity_type,
         ]);
-
-
 
         // Asignar entre 1 y 3 grupos de criterios a cada convocatoria
         foreach ($convocatorias as $convocatoria) {
@@ -111,7 +165,6 @@ class ProcesoConvocatoriaSeeder extends Seeder
                     'convocatoria_id' => $convocatoria->id,
                     'candidato_id' => $asistente->id,
                     'estadoFinal' => 'pendiente cv',
-                    'urlCV' => 'http://example.com/cv.pdf',
                 ]);
             }
         }

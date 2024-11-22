@@ -9,6 +9,7 @@ use App\Models\Universidad\Semestre;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Universidad\Curso;
 
 // Asegúrate de importar tu modelo
 
@@ -302,7 +303,8 @@ public function getHorariosByCurso(Request $request, $cursoId)
         'nombreHorario' => $matricula->horario->nombre,
         'motivo' => $matricula->motivo,
         'justificacion' => $matricula->justificacion,
-        'claveCurso' => $matricula->curso->cod_curso,
+        'claveCurso' => $matricula->curso->id,
+        'xd'=>$matricula->curso->cod_curso,
         'motivoRechazo' => $matricula->motivo_rechazo,
         'estado' => $matricula->estado, // Agregar estado
     ];
@@ -365,4 +367,32 @@ public function aprobarPorSA($id)
     return response()->json(['message' => 'Matrícula aprobada.']);
 }
 
+public function buscarCursosMat(Request $request)
+    {
+        $query = $request->input('query'); // El texto que busca el usuario
+
+        // Buscar cursos por nombre o código que tengan horarios asociados a un semestre activo
+        $cursos = Curso::where(function ($q) use ($query) {
+                $q->where('cod_curso', 'like', '%' . $query . '%')
+                  ->orWhere('nombre', 'like', '%' . $query . '%');
+            })
+            ->whereHas('horarios', function ($query) {
+                // Aseguramos que los horarios pertenezcan al semestre activo
+                $query->whereHas('semestre', function ($query) {
+                    $query->where('estado', 'activo'); // Filtramos por semestre activo
+                });
+            })
+            ->get();
+
+        // Concatenar el código con el nombre del curso
+        $resultados = $cursos->map(function ($curso) {
+            return [
+                'id' => $curso->id,
+                'label' => $curso->cod_curso . ' - ' . $curso->nombre // Concatenamos código con nombre
+            ];
+        });
+
+        // Devolvemos los resultados como respuesta JSON
+        return response()->json($resultados);
+    }
 }

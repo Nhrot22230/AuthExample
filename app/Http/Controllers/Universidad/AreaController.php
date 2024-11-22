@@ -25,17 +25,6 @@ class AreaController extends Controller
         return response()->json($areas, 200);
     }
 
-    public function show($id)
-    {
-        $area = Area::find($id);
-
-        if (!$area) {
-            return response()->json(['message' => 'Area no encontrada'], 404);
-        }
-
-        return response()->json($area, 200);
-    }
-
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -46,16 +35,27 @@ class AreaController extends Controller
 
         $area = new Area();
         $area->nombre = $validatedData['nombre'];
-        $area->descripcion = $validatedData['descripcion'];
+        $area->descripcion = $validatedData['descripcion'] ?? '';
         $area->especialidad_id = $validatedData['especialidad_id'];
         $area->save();
 
         return response()->json($area, 201);
     }
 
-    public function update(Request $request, $id)
+    public function show($entity_id)
     {
-        $area = Area::find($id);
+        $area = Area::find($entity_id);
+
+        if (!$area) {
+            return response()->json(['message' => 'Area no encontrada'], 404);
+        }
+
+        return response()->json($area, 200);
+    }
+
+    public function update(Request $request, $entity_id)
+    {
+        $area = Area::find($entity_id);
         if (!$area) {
             return response()->json(['message' => 'Area no encontrada'], 404);
         }
@@ -73,9 +73,9 @@ class AreaController extends Controller
         return response()->json($area, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
-        $area = Area::find($id);
+        $area = Area::find($entity_id);
         if (!$area) {
             return response()->json(['message' => 'Area no encontrada'], 404);
         }

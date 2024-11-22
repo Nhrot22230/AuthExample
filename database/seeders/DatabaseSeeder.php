@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UsuariosSeeder::class);
         // Flujo para Sofia
         $this->call(FlujoEncuestasSeeder::class);
-        $this->call(AssignRoles::class);
         $this->call(CartaPresentacionSolicitudSeeder::class);
         // Pedido
         $this->call(PedidoCursosSeeder::class);
@@ -26,5 +25,8 @@ class DatabaseSeeder extends Seeder
         // Convocatorias
         $this->call(ProcesoConvocatoriaSeeder::class);
         $this->call(FlujoTemaTesisSeeder::class);
+
+        // ASIGNACION DE ROLES
+        $this->call(AssignRoles::class);
     }
 }

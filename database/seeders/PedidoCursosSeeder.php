@@ -23,21 +23,21 @@ class PedidoCursosSeeder extends Seeder
     public function run()
     {
         // Obtener la especialidad, facultad y semestre activos
-        $especialidad = Especialidad::first();
+        $especialidad = Especialidad::firstOrCreate();
         $facultad = $especialidad ? $especialidad->facultad : Facultad::first();
         $semestre = Semestre::where('estado', 'Activo')->latest('fecha_inicio')->first();
 
         // Crear o encontrar un plan de estudios
         $planEstudio = PlanEstudio::firstOrCreate([
             'cantidad_semestres' => 10,
-            'especialidad_id' => $especialidad ? $especialidad->id : null,
+            'especialidad_id' => $especialidad->id,
             'estado' => 'Activo',
         ]);
 
         // Verificar si existen suficientes cursos para la especialidad seleccionada
         $minCursos = 10;
         $cursosDisponibles = Curso::where('estado', 'Activo')
-            ->where('especialidad_id', $especialidad ? $especialidad->id : null)
+            ->where('especialidad_id', $especialidad->id)
             ->get();
 
         // Crear cursos adicionales si no hay suficientes
@@ -70,7 +70,7 @@ class PedidoCursosSeeder extends Seeder
         // Asignar cursos obligatorios al plan de estudios con niveles aleatorios
         foreach ($cursosObligatorios as $cursoObligatorio) {
             $nivelAleatorio = rand(1, $planEstudio->cantidad_semestres);
-            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => (string)($nivelAleatorio), 'creditosReq' => $cursoObligatorio->creditos]]);
+            $planEstudio->cursos()->syncWithoutDetaching([$cursoObligatorio->id => ['nivel' => $nivelAleatorio, 'creditosReq' => $cursoObligatorio->creditos]]);
         }
 
         // Asignar cursos electivos al plan de estudios con nivel 'E'
@@ -110,9 +110,9 @@ class PedidoCursosSeeder extends Seeder
             Horario::factory(rand(1, 3))->create([
                 'curso_id' => $curso->id,
                 'semestre_id' => $semestre->id,
-                'oculto' => random_int(0,1), // Puedes cambiar este valor según tus necesidades
+                'oculto' => random_int(0, 1), // Puedes cambiar este valor según tus necesidades
             ]);
-        }        
+        }
 
         // Crear el usuario "Daniel Rivas" como director de carrera
         $usuario = Usuario::create([
@@ -145,8 +145,8 @@ class PedidoCursosSeeder extends Seeder
             'usuario_id' => $usuario->id,
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad ? $especialidad->id : null,
-        ]);       
-        
+        ]);
+
         //Usuario secretario academico
         $usuario = Usuario::create([
             'nombre' => 'Daniel Secretario',
@@ -156,7 +156,7 @@ class PedidoCursosSeeder extends Seeder
             'picture' => 'https://random-d.uk/api/2.jpg',
             'estado' => 'activo',
             'password' => Hash::make('12345678'),  // Cambia la contraseña si es necesario
-        ]);        
+        ]);
 
         Administrativo::factory()->create([
             'usuario_id' => $usuario->id,

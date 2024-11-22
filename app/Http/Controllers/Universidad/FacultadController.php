@@ -25,9 +25,9 @@ class FacultadController extends Controller
         return response()->json($facultades, 200);
     }
 
-    public function show($id)
+    public function show($entity_id)
     {
-        $facultad = Facultad::find($id);
+        $facultad = Facultad::find($entity_id);
 
         if (!$facultad) {
             return response()->json(['message' => 'Facultad no encontrada'], 404);
@@ -64,7 +64,7 @@ class FacultadController extends Controller
         return response()->json($facultad, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $entity_id)
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -72,7 +72,7 @@ class FacultadController extends Controller
             'anexo' => 'nullable|string',
         ]);
 
-        $facultad = Facultad::find($id);
+        $facultad = Facultad::find($entity_id);
 
         if (!$facultad) {
             return response()->json(['message' => 'Facultad no encontrada'], 404);
@@ -86,10 +86,10 @@ class FacultadController extends Controller
         return response()->json($facultad, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
         try {
-            $facultad = Facultad::find($id);
+            $facultad = Facultad::find($entity_id);
             if (!$facultad) {
                 return response()->json(['message' => 'Facultad no encontrada'], 404);
             }

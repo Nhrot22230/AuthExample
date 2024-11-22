@@ -27,19 +27,19 @@ class FlujoEncuestasSeeder extends Seeder
      */
     public function run(): void
     {
-        $facultad = Facultad::inRandomOrder()->firstOrCreate();
+        $facultad = Facultad::factory()->create([
+            'nombre' => 'Facultad de Ciencias e Ingeniería',
+        ]);
         $especialidad = Especialidad::factory()->create([
             'nombre' => "Ingeniería Informática y de Sistemas Industriales",
             'descripcion' => "Especialidad enfocada en la Ingeniería para el desarrollo de competencias en Computacional y Experimental.",
             'facultad_id' => $facultad->id,
         ]);
         $cursos = Curso::factory(20)->create(['especialidad_id' => $especialidad->id]);
-
         $semestre = Semestre::updateOrCreate(
             ['anho' => 2024, 'periodo' => 2],
             ['estado' => 'activo']
         );
-
         $horarios = $cursos->flatMap(fn($curso) => Horario::factory(random_int(1, 3))->create([
             'curso_id' => $curso->id,
             'semestre_id' => $semestre->id,
@@ -57,12 +57,6 @@ class FlujoEncuestasSeeder extends Seeder
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
-
-        $gianlucaUsuario = Usuario::where('email', 'gian.luca@gianluka.zzz')->first();
-        if ($gianlucaUsuario) {
-            $estudianteRole = Role::findByName('estudiante');
-            $gianlucaUsuario->assignRole($estudianteRole);
-        }
 
         collect($horarios)->each(function ($horario) use ($estudiantes) {
             $estudiantesSeleccionados = $estudiantes->random(rand(5, 15));
@@ -89,8 +83,6 @@ class FlujoEncuestasSeeder extends Seeder
             $horario->docentes()->attach($docente);
             $horario->jefePracticas()->create(['usuario_id' => $docente->usuario_id]);
         });
-
-        # DIRECTOR DE CARRERA
 
         $usuario = Usuario::create([
             'nombre' => 'Sofia',
@@ -166,7 +158,7 @@ class FlujoEncuestasSeeder extends Seeder
             'password' => Hash::make('12345678'),
         ]);
 
-        $administrativo = Administrativo::create([
+        Administrativo::create([
             'usuario_id' => $usuarioAdministrativo->id,
             'codigoAdministrativo' => 'ADM123456',
             'lugarTrabajo' => 'Oficina administrativa',
@@ -244,6 +236,51 @@ class FlujoEncuestasSeeder extends Seeder
                 ]);
             }
         }
+        if ($gianluca) {
+            // Obtener el rol de 'estudiante'
+            $estudiante_role = Role::findByName('estudiante');  // Asegúrate de que este rol exista en tu base de datos
+        
+            // Asignar el rol al usuario
+            if ($estudiante_role) {
+                // Asignar el rol al estudiante
+                $gianluca->usuario->assignRole($estudiante_role);  // Asignar el rol al usuario relacionado con Gianluca
+            }
+        }
+        $usuarioSecretario = Usuario::create([
+            'nombre' => 'Roberto',
+            'apellido_paterno' => 'Palacios',
+            'apellido_materno' => 'Lara',
+            'email' => 'roberto.palacios@gianluca.zzz', // Puedes poner cualquier correo
+            'picture' => 'https://random-d.uk/api/5.jpg', // Puedes poner una foto aleatoria o una URL real
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'), // Puedes cambiar la contraseña si lo deseas
+        ]);
+
+        $administrativo = Administrativo::create([
+            'usuario_id' => $usuarioSecretario->id,
+            'codigoAdministrativo' => 'SEC123456',  // Código administrativo, puedes cambiarlo
+            'lugarTrabajo' => 'Oficina de Secretaría Académica',
+            'cargo' => 'Secretario Académico',
+            'facultad_id' => $facultad->id,  // Asociar a la facultad existente
+        ]);
+
+        // Asignar el rol "secretario-academico" al usuario
+        $role = Role::findByName('secretario-academico');  // Asegúrate de que el rol exista
+
+        // Asignar el rol al usuario
+        $usuarioSecretario->assignRole($role);
+
+        // Crear el alcance (scope) para este secretario, limitado solo a la facultad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Facultad',
+                'entity_type' => Facultad::class,
+            ])->id,
+            'usuario_id' => $usuarioSecretario->id,
+            'entity_type' => Facultad::class,
+            'entity_id' => $facultad->id,  // Asignar el ID de la facultad a la que pertenece
+        ]);
 
     }
 

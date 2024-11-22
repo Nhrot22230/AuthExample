@@ -7,14 +7,12 @@ use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;
 use App\Models\Tramites\TemaDeTesis;
 use App\Models\Universidad\Especialidad;
-use App\Models\Solicitudes\CartaPresentacion;
-use Database\Factories\Usuarios\EstudianteFactory;
+use App\Models\Matricula\CartaPresentacionSolicitud;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Estudiante extends Model
 {
@@ -54,7 +52,7 @@ class Estudiante extends Model
 
     public function cartasPresentacion(): HasMany
     {
-        return $this->hasMany(CartaPresentacion::class, 'idEstudiante');
+        return $this->hasMany(CartaPresentacionSolicitud::class, 'idEstudiante');
     }
 
     public function temasDeTesis() : BelongsToMany

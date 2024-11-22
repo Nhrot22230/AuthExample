@@ -51,7 +51,6 @@ class RolePermissionsController extends Controller
         return response()->json($response, 200);
     }
 
-
     public function indexScopes(): JsonResponse
     {
         $scopes = Scope::all();
@@ -180,6 +179,7 @@ class RolePermissionsController extends Controller
         }
 
         $role->delete();
+        RoleScopeUsuario::where('role_id', $role->id)->delete();
         return response()->json(['message' => 'Rol eliminado'], 200);
     }
 
@@ -229,24 +229,6 @@ class RolePermissionsController extends Controller
         }
     }
 
-    public function syncPermissions(Request $request, $id): JsonResponse
-    {
-        $request->validate([
-            'permissions' => 'required|array',
-            'permissions.*' => 'required|exists:permissions,id',
-        ]);
-
-        $usuario = Usuario::find($request->usuario_id);
-        if (!$usuario) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
-        $usuario->syncPermissions($request->permissions);
-
-        return response()->json([
-            'message' => 'Permisos correctamente asignados al usuario',
-        ], 200);
-    }
-
     public function authUserPermissions(Request $request): JsonResponse
     {
         $usuario = $request->authUser;
@@ -272,7 +254,33 @@ class RolePermissionsController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $roles = $usuario->roles;
+        $roleScopeUsuario = RoleScopeUsuario::with([
+            'role',
+            'scope',
+            'entity',
+        ])->where('usuario_id', $usuario->id)->get();
+        
+        $roles = $usuario->roles->map(function ($role) use ($roleScopeUsuario) {
+            $roleScopes = $roleScopeUsuario->where('role_id', $role->id);
+        
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'scopes' => $roleScopes->groupBy('scope_id')->map(function ($scopeGroup) {
+                    $scope = $scopeGroup->first()->scope;
+
+                    return [
+                        'id' => $scope->id,
+                        'name' => $scope->name,
+                        'entities' => $scopeGroup->map(function ($roleScope) {
+                            return $roleScope->entity;
+                        })->unique('id')->values(),
+                    ];
+                })->values(),
+            ];
+        });        
+
+
         return response()->json($roles, 200);
     }
 }
