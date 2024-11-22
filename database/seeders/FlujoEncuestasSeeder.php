@@ -236,6 +236,51 @@ class FlujoEncuestasSeeder extends Seeder
                 ]);
             }
         }
+        if ($gianluca) {
+            // Obtener el rol de 'estudiante'
+            $estudiante_role = Role::findByName('estudiante');  // Asegúrate de que este rol exista en tu base de datos
+        
+            // Asignar el rol al usuario
+            if ($estudiante_role) {
+                // Asignar el rol al estudiante
+                $gianluca->usuario->assignRole($estudiante_role);  // Asignar el rol al usuario relacionado con Gianluca
+            }
+        }
+        $usuarioSecretario = Usuario::create([
+            'nombre' => 'Roberto',
+            'apellido_paterno' => 'Palacios',
+            'apellido_materno' => 'Lara',
+            'email' => 'roberto.palacios@gianluca.zzz', // Puedes poner cualquier correo
+            'picture' => 'https://random-d.uk/api/5.jpg', // Puedes poner una foto aleatoria o una URL real
+            'estado' => 'activo',
+            'password' => Hash::make('12345678'), // Puedes cambiar la contraseña si lo deseas
+        ]);
+
+        $administrativo = Administrativo::create([
+            'usuario_id' => $usuarioSecretario->id,
+            'codigoAdministrativo' => 'SEC123456',  // Código administrativo, puedes cambiarlo
+            'lugarTrabajo' => 'Oficina de Secretaría Académica',
+            'cargo' => 'Secretario Académico',
+            'facultad_id' => $facultad->id,  // Asociar a la facultad existente
+        ]);
+
+        // Asignar el rol "secretario-academico" al usuario
+        $role = Role::findByName('secretario-academico');  // Asegúrate de que el rol exista
+
+        // Asignar el rol al usuario
+        $usuarioSecretario->assignRole($role);
+
+        // Crear el alcance (scope) para este secretario, limitado solo a la facultad
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Facultad',
+                'entity_type' => Facultad::class,
+            ])->id,
+            'usuario_id' => $usuarioSecretario->id,
+            'entity_type' => Facultad::class,
+            'entity_id' => $facultad->id,  // Asignar el ID de la facultad a la que pertenece
+        ]);
 
     }
 

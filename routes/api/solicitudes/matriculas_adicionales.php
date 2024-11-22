@@ -15,6 +15,7 @@ Route::get('matricula-adicional/{id}', [MatriculaAdicionalController::class, 'ge
 Route::patch('matricula-adicional/{id}/rechazar', [MatriculaAdicionalController::class, 'rechazar']);
 Route::patch('matricula-adicional/aprobar-dc/{id}', [MatriculaAdicionalController::class, 'aprobarPorDC']);
 Route::patch('matricula-adicional/aprobar-sa/{id}', [MatriculaAdicionalController::class, 'aprobarPorSA']);
+Route::get('/cursosM/buscar', [MatriculaAdicionalController::class, 'buscarCursosMat']);
 
 Route::get('solicitudes/carta/{estudianteId}', [CartaPresentacionController::class, 'getByEstudiante']);
 Route::get('solicitudes/{id}', [CartaPresentacionController::class, 'getSolicitudDetalle']);
