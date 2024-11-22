@@ -26,7 +26,6 @@ class FlujoTemaTesisSeeder extends Seeder
     public function run(): void
     {
         $facultad = Facultad::inRandomOrder()->firstOrCreate();
-
         $especialidad = Especialidad::factory()->create([
             'nombre' => "Ingeniería Informática y Prueba para Temas de Tesis",
             'descripcion' => "Especialidad enfocada en la Ingeniería para el desarrollo y pruebas de Temas de Tesis.",
