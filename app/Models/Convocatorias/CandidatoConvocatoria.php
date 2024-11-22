@@ -18,6 +18,7 @@ class CandidatoConvocatoria extends Model
         'candidato_id',
         'estadoFinal',
         'urlCV',
+        'file_id'
     ];
 
     public function convocatoria(): BelongsTo

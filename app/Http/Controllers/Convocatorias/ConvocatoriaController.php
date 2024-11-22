@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Convocatorias;
 use App\Http\Controllers\Controller;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
-use App\Models\Convocatorias\Convocatoria;  
+use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Models\Storage\File;
 
 class ConvocatoriaController extends Controller
 {
@@ -593,7 +596,7 @@ class ConvocatoriaController extends Controller
         $validatedData = $request->validate([
             'convocatoria_id' => 'required|exists:convocatoria,id', // Verifica que el ID de convocatoria exista
             'candidato_id' => 'required|exists:usuarios,id', // Verifica que el ID del candidato exista
-            'urlCV' => 'nullable|string|max:255', // La URL del CV es opcional
+            'documento' => 'required|file|mimes:jpeg,png,zip,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048',
         ]);
 
         try {
@@ -605,13 +608,33 @@ class ConvocatoriaController extends Controller
             if ($existingRelation) {
                 return response()->json(['message' => 'El candidato ya está relacionado con esta convocatoria.'], 400);
             }
+            // Guardar el archivo en el servidor
+            $file = $request->file('documento');
+            if (!$file || !$file->isValid()) {
+                return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
+            }
+
+            $uploadRequest = new Request([
+                'name' => $file->getClientOriginalName(),
+                'file_type' => 'document',
+                'file' => $file
+            ]);
+
+            $uploadRequest->files->set('file', $file);
+            $fileResponse = $this->subirArchivo($uploadRequest);
+
+            if ($fileResponse->status() !== 201) {
+                return response()->json(['message' => 'Error al subir el archivo.'], 500);
+            }
+
+            $fileId = $fileResponse->getData()->file->id;
 
             // Crea la relación
             $candidatoConvocatoria = CandidatoConvocatoria::create([
                 'convocatoria_id' => $validatedData['convocatoria_id'],
                 'candidato_id' => $validatedData['candidato_id'],
                 'estadoFinal' => 'pendiente cv', // Estado inicial automático
-                'urlCV' => $validatedData['urlCV'] ?? null, // Si no se envía, será null
+                'file_id' => $fileId,
             ]);
 
             $convocatoria = Convocatoria::find($validatedData['convocatoria_id']);
@@ -637,6 +660,42 @@ class ConvocatoriaController extends Controller
             ]);
 
             return response()->json(['error' => 'Ocurrió un error al agregar el candidato a la convocatoria.'], 500);
+        }
+    }
+
+    public function subirArchivo(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'file_type' => ['required', Rule::in(['document'])],
+                'file' => 'required|file|mimes:pdf,doc,docx,zip|max:2048',
+            ]);
+
+            $file = $request->file('file');
+            $uniqueName = time() . '_' . $file->getClientOriginalName();
+            $path = 'files/convocatorias/' . $uniqueName;
+
+            Log::info('Intentando subir el archivo a S3: ' . $path);
+
+            if (!Storage::disk('s3')->putFileAs('files/convocatorias', $file, $uniqueName)) {
+                Log::error("Error al subir el archivo: {$uniqueName}");
+                return response()->json(['message' => 'Error al subir el archivo a S3.'], 500);
+            }
+
+            $fileRecord = File::create([
+                'name' => $request->name,
+                'file_type' => $request->file_type,
+                'mime_type' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+                'path' => $path,
+                'url' => Storage::url($path),
+            ]);
+
+            return response()->json(['url' => $fileRecord->url, 'file' => $fileRecord], 201);
+        } catch (\Exception $e) {
+            Log::error('File Upload Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Error uploading convocatorias file: ' . $e->getMessage()], 500);
         }
     }
 
