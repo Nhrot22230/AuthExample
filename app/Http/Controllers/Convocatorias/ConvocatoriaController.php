@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Convocatorias;
 use App\Http\Controllers\Controller;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
-use App\Models\Convocatorias\Convocatoria;
+use App\Models\Convocatorias\Convocatoria;  
 use App\Models\Convocatorias\GrupoCriterios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,28 +16,70 @@ class ConvocatoriaController extends Controller
     /**
      * Display a listing of the resource.
      */
+    /**
+     * Display a listing of the resource.
+     */
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $perPage = request('per_page', 10); // Número de resultados por página
-        $search = request('search', '');   // Término de búsqueda
-        $secciones = request('secciones', []); // Array de IDs de secciones
-        $filters = request('filters', []);  // Array de estados (por ejemplo, ['abierta', 'cerrada'])
+        try {
+            $perPage = (int) request('per_page', 10); // Número de resultados por página
+            $search = request('search', '');   // Término de búsqueda
+            $secciones = request('secciones', []); // Array de IDs de secciones
+            $filters = request('filters', []);  // Array de estados (por ejemplo, ['abierta', 'cerrada'])
+            $miembroId = request('miembro_id', null); // ID del miembro (opcional)
+            $postulanteId = request('postulante_id', null); // ID del postulante (opcional)
+            $noInscrito = filter_var(request('no_inscrito', false), FILTER_VALIDATE_BOOLEAN); // Filtro de no inscripción
 
-        $convocatorias = Convocatoria::with('gruposCriterios', 'comite')
-            ->withCount('candidatos') // Agrega la cantidad de candidatos
-            ->when($search, function ($query, $search) {
-                $query->where('nombre', 'like', "%$search%");
-            })
-            ->when(!empty($secciones), function ($query) use ($secciones) {
-                $query->whereIn('seccion_id', $secciones); // Filtra por secciones
-            })
-            ->when($filters, function ($query, $filters) {
-                $query->whereIn('estado', $filters); // Filtra por estados
-            })
-            ->paginate($perPage);
+            $convocatorias = Convocatoria::with(['gruposCriterios', 'comite', 'seccion'])
+                ->withCount('candidatos') // Contar los candidatos
+                ->when($search, function ($query, $search) {
+                    $query->where('nombre', 'like', "%$search%");
+                })
+                ->when(!empty($secciones), function ($query) use ($secciones) {
+                    $query->whereIn('seccion_id', $secciones); // Filtrar por secciones
+                })
+                ->when(!empty($filters), function ($query) use ($filters) {
+                    $query->whereIn('estado', $filters); // Filtrar por estados
+                })
+                ->when($miembroId, function ($query) use ($miembroId) {
+                    $query->whereHas('comite', function ($subQuery) use ($miembroId) {
+                        $subQuery->whereHas('usuario', function ($userQuery) use ($miembroId) {
+                            $userQuery->where('usuarios.id', $miembroId);
+                        });
+                    });
+                })
+                ->when($postulanteId && !$noInscrito, function ($query) use ($postulanteId) {
+                    // Filtrar convocatorias donde el usuario es postulante
+                    $query->whereHas('candidatos', function ($subQuery) use ($postulanteId) {
+                        $subQuery->where('usuarios.id', $postulanteId);
+                    });
+                })
+                ->when($postulanteId && $noInscrito, function ($query) use ($postulanteId) {
+                    // Filtrar convocatorias donde el usuario NO es postulante
+                    $query->whereDoesntHave('candidatos', function ($subQuery) use ($postulanteId) {
+                        $subQuery->where('usuarios.id', $postulanteId);
+                    });
+                })
 
-        return response()->json($convocatorias, 200);
+                ->paginate($perPage);
+
+            return response()->json($convocatorias, 200);
+        } catch (\Exception $e) {
+            // Registrar error
+            Log::error('Error al listar convocatorias:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Ocurrió un error al listar convocatorias'], 500);
+        }
     }
+
+
+
 
 
     public function indexCriterios($entity_id)
@@ -100,6 +142,7 @@ class ConvocatoriaController extends Controller
 
             // Obtener candidatos con paginación y filtro de búsqueda
             $candidatos = $convocatoria->candidatos()
+                ->select('usuarios.*', 'candidato_convocatoria.estadoFinal')
                 ->when($search, function ($query, $search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('nombre', 'like', "%$search%")
@@ -190,6 +233,18 @@ class ConvocatoriaController extends Controller
 
             $convocatoria->comite()->attach($validatedData['miembros']);
 
+            // Crear registros en la tabla comite_candidato_convocatoria
+            foreach ($validatedData['miembros'] as $miembroId) {
+                foreach ($convocatoria->candidatos as $candidato) {
+                    ComiteCandidatoConvocatoria::create([
+                        'docente_id' => $miembroId,
+                        'candidato_id' => $candidato->id,
+                        'convocatoria_id' => $convocatoria->id,
+                        'estado' => 'pendiente cv',
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return response()->json([
@@ -229,6 +284,8 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'seccion_id' => 'required|integer|exists:secciones,id',
+            'miembros' => 'nullable|array', // Miembros es opcional
+            'miembros.*' => 'integer|exists:docentes,id',
         ]);
 
         DB::beginTransaction();
@@ -239,6 +296,7 @@ class ConvocatoriaController extends Controller
                 return response()->json(['message' => 'Convocatoria no encontrada'], 404);
             }
 
+            // Actualizar convocatoria
             $convocatoria->update([
                 'nombre' => $validatedData['nombreConvocatoria'],
                 'descripcion' => $validatedData['descripcion'] ?? null,
@@ -248,12 +306,11 @@ class ConvocatoriaController extends Controller
                 'seccion_id' => $validatedData['seccion_id'],
             ]);
 
+            // Actualizar criterios
             $convocatoria->gruposCriterios()->detach();
-
             if (!empty($validatedData['criteriosAntiguos'])) {
                 $convocatoria->gruposCriterios()->attach($validatedData['criteriosAntiguos']);
             }
-
             if (!empty($validatedData['criteriosNuevos'])) {
                 foreach ($validatedData['criteriosNuevos'] as $criterioNuevo) {
                     $nuevoCriterio = GrupoCriterios::create($criterioNuevo);
@@ -261,11 +318,32 @@ class ConvocatoriaController extends Controller
                 }
             }
 
+            // Actualizar comités y candidatos
+            if (!empty($validatedData['miembros'])) {
+                $convocatoria->comite()->detach();
+                $convocatoria->comite()->attach($validatedData['miembros']);
+
+                // Eliminar registros existentes en la tabla comite_candidato_convocatoria
+                ComiteCandidatoConvocatoria::where('convocatoria_id', $convocatoria->id)->delete();
+
+                // Crear nuevos registros
+                foreach ($validatedData['miembros'] as $miembroId) {
+                    foreach ($convocatoria->candidatos as $candidato) {
+                        ComiteCandidatoConvocatoria::create([
+                            'docente_id' => $miembroId,
+                            'candidato_id' => $candidato->id,
+                            'convocatoria_id' => $convocatoria->id,
+                            'estado' => 'pendiente cv',
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([
                 'message' => 'Convocatoria actualizada exitosamente.',
-                'convocatoria' => $convocatoria->load('gruposCriterios'),
+                'convocatoria' => $convocatoria->load('gruposCriterios', 'comite'),
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -278,6 +356,7 @@ class ConvocatoriaController extends Controller
             return response()->json(['message' => 'Error al actualizar la convocatoria.'], 500);
         }
     }
+
 
 
 
@@ -535,6 +614,18 @@ class ConvocatoriaController extends Controller
                 'urlCV' => $validatedData['urlCV'] ?? null, // Si no se envía, será null
             ]);
 
+            $convocatoria = Convocatoria::find($validatedData['convocatoria_id']);
+            $miembros = $convocatoria->comite->pluck('id');
+
+            foreach ($miembros as $miembro) {
+                ComiteCandidatoConvocatoria::create([
+                    'docente_id' => $miembro,
+                    'candidato_id' => $validatedData['candidato_id'],
+                    'convocatoria_id' => $validatedData['convocatoria_id'],
+                    'estado' => 'pendiente cv',
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Candidato agregado a la convocatoria exitosamente.',
                 'data' => $candidatoConvocatoria,
@@ -586,64 +677,44 @@ class ConvocatoriaController extends Controller
         return 'pendiente cv';
     }
 
-    public function postularConvocatoria(Request $request, $id)
+    /**
+     * Fetch all candidates for a given committee member and a specific call.
+     */
+    public function fetchCandidatesByCommitteeMember(Request $request)
     {
-        $validatedData = $request->validate([
-            'candidato_id' => 'integer|exists:usuarios,id',
-            'urlCV' => 'required|string|max:255'
-        ]);
+        $perPage = $request->input('per_page', 10); // Número de resultados por página
+        $search = $request->input('search', '');   // Término de búsqueda
+        $miembroId = $request->input('miembro_id'); // ID del miembro del comité
+        $convocatoriaId = $request->input('convocatoria_id'); // ID de la convocatoria
 
-        if (!is_numeric($id)) {
-            return response()->json(['error' => 'Invalid ID.'], 400);
+        // Validar los parámetros requeridos
+        if (!$miembroId || !$convocatoriaId) {
+            return response()->json(['message' => 'El ID del miembro del comité y el ID de la convocatoria son obligatorios.'], 400);
         }
 
-        // Verificar que la convocatoria exista en la base de datos
-        $convocatoria = Convocatoria::find($id);
-        if (!$convocatoria) {
-            return response()->json(['error' => 'Convocatoria no encontrada.'], 404);
-        }
-
-        DB::beginTransaction();
         try {
-            $candidato_convocatoria = CandidatoConvocatoria::create([
-                'convocatoria_id' => $id,
-                'candidato_id' => $validatedData['candidato_id'],
-                'estadoFinal' => 'pendiente cv',
-                'urlCV' => $validatedData['urlCV']
+            // Consultar candidatos con filtros
+            $candidatos = ComiteCandidatoConvocatoria::with(['candidato', 'miembroComite', 'convocatoria'])
+                ->where('docente_id', $miembroId) // Filtrar por miembro del comité
+                ->where('convocatoria_id', $convocatoriaId) // Filtrar por convocatoria
+                ->when($search, function ($query, $search) {
+                    // Filtrar por término de búsqueda en los datos del candidato
+                    $query->whereHas('candidato', function ($subQuery) use ($search) {
+                        $subQuery->where('nombre', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    });
+                })
+                ->paginate($perPage);
+
+            return response()->json($candidatos, 200);
+        } catch (\Exception $e) {
+            // Registrar el error para depuración
+            Log::error('Error al obtener los candidatos:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            // Obtener todos los docentes asociados a la convocatoria
-            $docentes = $convocatoria->comite;
-
-            // Crear un registro en comite_candidato_convocatoria para cada docente
-            $comiteCandidatoConvocatoriaData = [];
-            foreach ($docentes as $docente) {
-                $comiteCandidatoConvocatoriaData[] = [
-                    'convocatoria_id' => $id,
-                    'candidato_id' => $validatedData['candidato_id'],
-                    'docente_id' => $docente->id,  // Usamos el ID del docente
-                    'estado' => 'pendiente cv',  // Estado inicial
-                    'created_at' => now(), // Fecha de creación
-                    'updated_at' => now()  // Fecha de actualización
-                ];
-            }
-
-            // Insertar todos los registros de una sola vez en la tabla comite_candidato_convocatoria
-            ComiteCandidatoConvocatoria::insert($comiteCandidatoConvocatoriaData);
-
-            DB::commit();
-            return response()->json([
-                'message' => 'Postulación realizada correctamente.',
-                'candidato_convocatoria' => $candidato_convocatoria,
-            ], 201);
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-                'message' => 'Error al postular a la convocatoria.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return response()->json(['message' => 'Error al obtener los candidatos.'], 500);
         }
     }
 }

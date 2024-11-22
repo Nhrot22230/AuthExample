@@ -17,33 +17,48 @@ class EstudianteController extends Controller
     {
         $perPage = request('per_page', 10);
         $search = request('search', '');
-        $especialidadId = request('especialidad_id', null); // Obtener el ID de la especialidad
-        $facultadId = request('facultad_id', null); // Obtener el ID de la facultad
+        $especialidadId = request('especialidad_id', null);
+        $facultadId = request('facultad_id', null);
 
-        $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
-            ->where(function ($query) use ($search) {
-                $query->whereHas('usuario', function ($subQuery) use ($search) {
-                    $subQuery->where('nombre', 'like', '%' . $search . '%')
-                        ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
-                        ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%');
-                })
-                    ->orWhere('codigoEstudiante', 'like', '%' . $search . '%');
-            });
+        try {
+            $estudiantes = Estudiante::with(['usuario', 'especialidad.facultad'])
+                ->where(function ($query) use ($search) {
+                    $query->whereHas('usuario', function ($subQuery) use ($search) {
+                        $subQuery->where('nombre', 'like', "%{$search}%")
+                            ->orWhere('apellido_paterno', 'like', "%{$search}%")
+                            ->orWhere('apellido_materno', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', '%' . "%{$search}%");
+                    })
+                        ->orWhere('codigoEstudiante', 'like', "%{$search}%");
+                });
 
-        if (!empty($especialidadId)) {
-            $estudiantes->where('especialidad_id', $especialidadId);
+            if (!empty($especialidadId)) {
+                $estudiantes->where('especialidad_id', $especialidadId);
+            }
+
+            if (!empty($facultadId)) {
+                $estudiantes->whereHas('especialidad.facultad', function ($query) use ($facultadId) {
+                    $query->where('id', $facultadId);
+                });
+            }
+
+            $estudiantes = $estudiantes->paginate($perPage);
+
+            Log::channel('audit-log')->info('Estudiantes listados', [
+                'per_page' => $perPage,
+                'search' => $search,
+                'especialidad_id' => $especialidadId,
+                'facultad_id' => $facultadId,
+            ]);
+
+            return response()->json($estudiantes, 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al listar estudiantes', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Error al listar estudiantes'], 500);
         }
-
-        if (!empty($facultadId)) {
-            $estudiantes->whereHas('especialidad.facultad', function ($query) use ($facultadId) {
-                $query->where('id', $facultadId);
-            });
-        }
-
-        $estudiantes = $estudiantes->paginate($perPage);
-
-        return response()->json($estudiantes, 200);
     }
 
     public function store(Request $request)
@@ -57,43 +72,75 @@ class EstudianteController extends Controller
             'especialidad_id' => 'required|exists:especialidades,id',
         ]);
 
-        DB::transaction(function () use ($validatedData) {
-            $usuario = Usuario::firstOrCreate(
-                ['email' => $validatedData['email']],
-                [
-                    'nombre' => $validatedData['nombre'],
-                    'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
-                    'apellido_materno' => $validatedData['apellido_materno'] ?? '',
-                    'password' => Hash::make($validatedData['codigoEstudiante']),
-                ]
-            );
+        try {
+            DB::transaction(function () use ($validatedData) {
+                $usuario = Usuario::firstOrCreate(
+                    ['email' => $validatedData['email']],
+                    [
+                        'nombre' => $validatedData['nombre'],
+                        'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
+                        'apellido_materno' => $validatedData['apellido_materno'] ?? '',
+                        'password' => Hash::make($validatedData['codigoEstudiante']),
+                    ]
+                );
 
-            Estudiante::create([
-                'usuario_id' => $usuario->id,
-                'especialidad_id' => $validatedData['especialidad_id'],
-                'codigoEstudiante' => $validatedData['codigoEstudiante'],
+                Estudiante::create([
+                    'usuario_id' => $usuario->id,
+                    'especialidad_id' => $validatedData['especialidad_id'],
+                    'codigoEstudiante' => $validatedData['codigoEstudiante'],
+                ]);
+            });
+
+            Log::channel('audit-log')->info('Estudiante creado exitosamente', [
+                'data' => $validatedData,
             ]);
-        });
 
-        return response()->json(['message' => 'Estudiante creado exitosamente'], 201);
+            return response()->json(['message' => 'Estudiante creado exitosamente'], 201);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al crear estudiante', [
+                'data' => $validatedData,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Error al crear estudiante'], 500);
+        }
     }
 
     public function show($codigo)
     {
-        $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])
-            ->where('codigoEstudiante', $codigo)
-            ->first();
-        if (!$estudiante) {
-            return response()->json(['message' => 'Estudiante no encontrado'], 404);
-        }
+        try {
+            $estudiante = Estudiante::with(['usuario', 'especialidad.facultad'])
+                ->where('codigoEstudiante', $codigo)
+                ->first();
 
-        return response()->json($estudiante, 200);
+            if (!$estudiante) {
+                Log::channel('errors')->error('Estudiante no encontrado', [
+                    'codigoEstudiante' => $codigo,
+                ]);
+                return response()->json(['message' => 'Estudiante no encontrado'], 404);
+            }
+
+            Log::channel('audit-log')->info('Estudiante consultado', [
+                'codigoEstudiante' => $codigo,
+            ]);
+
+            return response()->json($estudiante, 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al consultar estudiante', [
+                'codigoEstudiante' => $codigo,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al consultar estudiante'], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
         $estudiante = Estudiante::with('usuario')->find($id);
         if (!$estudiante) {
+            Log::channel('errors')->error('Estudiante no encontrado para actualización', [
+                'estudiante_id' => $id,
+            ]);
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
 
@@ -106,31 +153,62 @@ class EstudianteController extends Controller
             'especialidad_id' => 'required|exists:especialidades,id',
         ]);
 
-        DB::transaction(function () use ($validatedData, $estudiante) {
-            $estudiante->usuario->fill([
-                'nombre' => $validatedData['nombre'],
-                'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
-                'apellido_materno' => $validatedData['apellido_materno'] ?? '',
-                'email' => $validatedData['email'],
-            ])->save();
-            $estudiante->fill([
-                'especialidad_id' => $validatedData['especialidad_id'],
-                'codigoEstudiante' => $validatedData['codigoEstudiante'],
-            ])->save();
-        });
+        try {
+            DB::transaction(function () use ($validatedData, $estudiante) {
+                $estudiante->usuario->fill([
+                    'nombre' => $validatedData['nombre'],
+                    'apellido_paterno' => $validatedData['apellido_paterno'] ?? '',
+                    'apellido_materno' => $validatedData['apellido_materno'] ?? '',
+                    'email' => $validatedData['email'],
+                ])->save();
+                $estudiante->fill([
+                    'especialidad_id' => $validatedData['especialidad_id'],
+                    'codigoEstudiante' => $validatedData['codigoEstudiante'],
+                ])->save();
+            });
 
-        return response()->json(['message' => 'Estudiante actualizado exitosamente'], 200);
+            Log::channel('audit-log')->info('Estudiante actualizado', [
+                'estudiante_id' => $id,
+                'data' => $validatedData,
+            ]);
+
+            return response()->json(['message' => 'Estudiante actualizado exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al actualizar estudiante', [
+                'estudiante_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Error al actualizar estudiante'], 500);
+        }
     }
-
 
     public function destroy($id)
     {
-        $estudiante = Estudiante::find($id);
-        if (!$estudiante) {
-            return response()->json(['message' => 'Estudiante no encontrado'], 404);
+        try {
+            $estudiante = Estudiante::find($id);
+            if (!$estudiante) {
+                Log::channel('errors')->error('Estudiante no encontrado para eliminación', [
+                    'estudiante_id' => $id,
+                ]);
+                return response()->json(['message' => 'Estudiante no encontrado'], 404);
+            }
+
+            $estudiante->delete();
+
+            Log::channel('audit-log')->info('Estudiante eliminado', [
+                'estudiante_id' => $id,
+            ]);
+
+            return response()->json(['message' => 'Estudiante eliminado exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al eliminar estudiante', [
+                'estudiante_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Error al eliminar estudiante'], 500);
         }
-        $estudiante->delete();
-        return response()->json(['message' => 'Estudiante eliminado exitosamente'], 200);
     }
 
     public function storeMultiple(Request $request)

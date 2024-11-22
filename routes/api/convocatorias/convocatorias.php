@@ -13,6 +13,6 @@ Route::post('/convocatorias/criterios', [ConvocatoriaController::class, 'storeGr
 Route::put('/convocatorias/criterios/{id}', [ConvocatoriaController::class, 'updateGrupoCriterios']);
 Route::get('/convocatorias/{id}/candidatos', [ConvocatoriaController::class, 'getCandidatosByConvocatoria']);
 Route::post('/convocatorias/candidatos', [ConvocatoriaController::class, 'addCandidatoToConvocatoria']);
-Route::post('/convocatorias/{id}/postular', [ConvocatoriaController::class, 'postularConvocatoria']);
 Route::get('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'obtenerEstadoCandidato']);
 Route::put('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'actualizarEstado']);
+Route::get('/comite/candidatos', [ConvocatoriaController::class, 'fetchCandidatesByCommitteeMember']);
