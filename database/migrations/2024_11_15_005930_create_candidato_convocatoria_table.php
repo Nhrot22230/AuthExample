@@ -14,10 +14,16 @@ return new class extends Migration
         Schema::create('candidato_convocatoria', function (Blueprint $table) {
             $table->id();
             $table->foreignId('convocatoria_id')->constrained('convocatoria')->onDelete('cascade'); // Relación con convocatoria
-            $table->foreignId('candidato_id')->constrained('usuarios')->onDelete('cascade'); // Relación con usuario (candidato)
-            $table->enum('estadoFinal', ['pendiente cv', 'desaprobado cv', 'aprobado cv', 'culminado entrevista', 
-                         'desaprobado entrevista', 'aprobado entrevista'])->default('pendiente cv');
-            $table->string('urlCV');
+            $table->foreignId('candidato_id')->constrained('usuarios')->onDelete('cascade');
+            $table->enum('estadoFinal', [
+                'pendiente cv',
+                'desaprobado cv',
+                'aprobado cv',
+                'culminado entrevista',
+                'desaprobado entrevista',
+                'aprobado entrevista'
+            ])->default('pendiente cv');
+            $table->unsignedBigInteger('file_id')->nullable();
             $table->timestamps();
         });
     }

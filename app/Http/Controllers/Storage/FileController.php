@@ -20,7 +20,7 @@ class FileController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'file_type' => ['required', Rule::in(['image', 'video', 'audio', 'document'])],
-                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,docx,webp|max:2048', // tamaño máximo en KB
+                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,zip,docx,webp|max:2048', // tamaño máximo en KB
             ]);
 
             $file = $request->file('file');

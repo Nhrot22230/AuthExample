@@ -165,7 +165,6 @@ class ProcesoConvocatoriaSeeder extends Seeder
                     'convocatoria_id' => $convocatoria->id,
                     'candidato_id' => $asistente->id,
                     'estadoFinal' => 'pendiente cv',
-                    'urlCV' => 'http://example.com/cv.pdf',
                 ]);
             }
         }

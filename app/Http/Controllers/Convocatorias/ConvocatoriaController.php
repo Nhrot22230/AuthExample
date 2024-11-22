@@ -13,15 +13,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\Storage\File;
+// importamos el file controller
+use App\Http\Controllers\Storage\FileController;
 
 class ConvocatoriaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    /**
-     * Display a listing of the resource.
-     */
+
     /**
      * Display a listing of the resource.
      */
@@ -600,7 +597,6 @@ class ConvocatoriaController extends Controller
         ]);
 
         try {
-            // Verifica si la relación ya existe
             $existingRelation = CandidatoConvocatoria::where('convocatoria_id', $validatedData['convocatoria_id'])
                 ->where('candidato_id', $validatedData['candidato_id'])
                 ->first();
@@ -608,7 +604,6 @@ class ConvocatoriaController extends Controller
             if ($existingRelation) {
                 return response()->json(['message' => 'El candidato ya está relacionado con esta convocatoria.'], 400);
             }
-            // Guardar el archivo en el servidor
             $file = $request->file('documento');
             if (!$file || !$file->isValid()) {
                 return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
@@ -663,28 +658,24 @@ class ConvocatoriaController extends Controller
         }
     }
 
-    public function subirArchivo(Request $request)
+    private function subirArchivo(Request $request)
     {
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
-                'file_type' => ['required', Rule::in(['document'])],
-                'file' => 'required|file|mimes:pdf,doc,docx,zip|max:2048',
+                'file_type' => ['required', Rule::in(['image', 'video', 'audio', 'document'])],
+                'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mkv,mp3,wav,pdf,doc,zip,docx,webp|max:2048', // tamaño máximo en KB
             ]);
 
             $file = $request->file('file');
             $uniqueName = time() . '_' . $file->getClientOriginalName();
-            $path = 'files/convocatorias/' . $uniqueName;
+            $path = 'files/' . $request->file_type . '/' . $uniqueName . '.' . $file->getClientOriginalExtension();
 
-            Log::info('Intentando subir el archivo a S3: ' . $path);
-
-            if (!Storage::disk('s3')->putFileAs('files/convocatorias', $file, $uniqueName)) {
-                Log::error("Error al subir el archivo: {$uniqueName}");
-                return response()->json(['message' => 'Error al subir el archivo a S3.'], 500);
-            }
+            Storage::disk('s3')->put($path, file_get_contents($file));
+            // $url = 'https://' . env('AWS_BUCKET') . '.s3.' . env('AWS_DEFAULT_REGION') . '.amazonaws.com/' . $path;
 
             $fileRecord = File::create([
-                'name' => $request->name,
+                'name' => $uniqueName,
                 'file_type' => $request->file_type,
                 'mime_type' => $file->getClientMimeType(),
                 'size' => $file->getSize(),
@@ -695,10 +686,9 @@ class ConvocatoriaController extends Controller
             return response()->json(['url' => $fileRecord->url, 'file' => $fileRecord], 201);
         } catch (\Exception $e) {
             Log::error('File Upload Error: ' . $e->getMessage());
-            return response()->json(['message' => 'Error uploading convocatorias file: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error uploading file: ' . $e->getMessage()], 500);
         }
     }
-
 
     private function determinarEstadoFinal($estados)
     {
