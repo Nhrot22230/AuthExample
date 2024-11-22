@@ -16,54 +16,136 @@ class DocenteController extends Controller
 {
     public function index()
     {
-        // Recibimos los parámetros
         $per_page = request('per_page', 10);
         $search = request('search', '');
         $seccionId = request('seccion_id', null);
         $especialidadId = request('especialidad_id', null);
         $tipo = request('tipo', null);
 
-        $docentes = Docente::with(['usuario', 'seccion', 'especialidad'])
-            ->where(function ($query) use ($search) {
-                $query->whereHas('usuario', function ($q) use ($search) {
-                    $q->where('nombre', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
-                    ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
-                })
-                ->orWhere('codigoDocente', 'like', '%' . $search . '%');
-            });
-        if ($seccionId) {
-            $docentes->where('seccion_id', $seccionId);
-        }
-        if ($especialidadId) {
-            $docentes->where('especialidad_id', $especialidadId);
-        }
-        if ($tipo) {
-            $docentes->where('tipo', $tipo);
-        }
-        $docentes = $docentes->paginate($per_page);
-        return response()->json($docentes, 200);
-    }
+        try {
+            $docentes = Docente::with(['usuario', 'seccion', 'especialidad'])
+                ->where(function ($query) use ($search) {
+                    $query->whereHas('usuario', function ($q) use ($search) {
+                        $q->where('nombre', 'like', '%' . $search . '%')
+                            ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                            ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                            ->orWhere('email', 'like', '%' . $search . '%');
+                    })->orWhere('codigoDocente', 'like', '%' . $search . '%');
+                });
 
+            if ($seccionId) {
+                $docentes->where('seccion_id', $seccionId);
+            }
+            if ($especialidadId) {
+                $docentes->where('especialidad_id', $especialidadId);
+            }
+            if ($tipo) {
+                $docentes->where('tipo', $tipo);
+            }
+
+            $docentes = $docentes->paginate($per_page);
+
+            Log::channel('audit-log')->info('Lista de docentes obtenida', [
+                'per_page' => $per_page,
+                'search' => $search,
+                'seccion_id' => $seccionId,
+                'especialidad_id' => $especialidadId,
+                'tipo' => $tipo,
+            ]);
+
+            return response()->json($docentes, 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al listar docentes', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al listar docentes'], 500);
+        }
+    }
 
     public function show($codigo)
     {
-        $docente = Docente::with(['usuario', 'seccion', 'especialidad'])
-            ->where('codigoDocente', $codigo)
-            ->first();
+        try {
+            $docente = Docente::with(['usuario', 'seccion', 'especialidad'])
+                ->where('codigoDocente', $codigo)
+                ->first();
 
-        if (!$docente) {
-            return response()->json(['message' => 'Docente no encontrado'], 404);
+            if (!$docente) {
+                Log::channel('errors')->warning('Docente no encontrado', [
+                    'codigoDocente' => $codigo,
+                ]);
+                return response()->json(['message' => 'Docente no encontrado'], 404);
+            }
+
+            Log::channel('audit-log')->info('Docente consultado', [
+                'codigoDocente' => $codigo,
+            ]);
+
+            return response()->json($docente, 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al consultar docente', [
+                'codigoDocente' => $codigo,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al consultar docente'], 500);
         }
+    }
 
-        return response()->json($docente, 200);
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido_paterno' => 'nullable|string|max:255',
+            'apellido_materno' => 'nullable|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente',
+            'tipo' => 'required|string',
+            'especialidad_id' => 'required|integer|exists:especialidades,id',
+            'seccion_id' => 'required|integer|exists:secciones,id',
+            'area_id' => 'nullable|integer|exists:areas,id',
+        ]);
+
+        try {
+            $usuario = Usuario::firstOrCreate(
+                ['email' => $validatedData['email']],
+                [
+                    'nombre' => $validatedData['nombre'],
+                    'apellido_paterno' => $validatedData['apellido_paterno'],
+                    'apellido_materno' => $validatedData['apellido_materno'],
+                    'password' => Hash::make($validatedData['codigoDocente']),
+                ]
+            );
+
+            $docente = new Docente();
+            $docente->usuario_id = $usuario->id;
+            $docente->codigoDocente = $validatedData['codigoDocente'];
+            $docente->tipo = $validatedData['tipo'];
+            $docente->especialidad_id = $validatedData['especialidad_id'];
+            $docente->seccion_id = $validatedData['seccion_id'];
+            $docente->area_id = $validatedData['area_id'] ?? null;
+
+            $usuario->docente()->save($docente);
+
+            Log::channel('audit-log')->info('Docente creado exitosamente', [
+                'docente' => $docente->toArray(),
+            ]);
+
+            return response()->json(['message' => 'Docente creado exitosamente', 'docente' => $docente], 201);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al crear docente', [
+                'data' => $validatedData,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al crear docente'], 500);
+        }
     }
 
     public function update(Request $request, $codigo)
     {
         $docente = Docente::with('usuario')->where('codigoDocente', $codigo)->first();
         if (!$docente) {
+            Log::channel('errors')->warning('Docente no encontrado para actualización', [
+                'codigoDocente' => $codigo,
+            ]);
             return response()->json(['message' => 'Docente no encontrado'], 404);
         }
 
@@ -80,79 +162,67 @@ class DocenteController extends Controller
             'area_id' => 'nullable|integer|exists:areas,id',
         ]);
 
-        DB::transaction(function () use ($validatedData, $docente) {
-            $usuarioData = [
-                'nombre' => $validatedData['nombre'],
-                'apellido_paterno' => $validatedData['apellido_paterno'],
-                'apellido_materno' => $validatedData['apellido_materno'],
-                'email' => $validatedData['email'],
-            ];
-            if (!empty($validatedData['password'])) {
-                $usuarioData['password'] = Hash::make($validatedData['password']);
-            }
-            $docente->usuario->update($usuarioData);
-            $docenteData = [
-                'codigoDocente' => $validatedData['codigoDocente'],
-                'tipo' => $validatedData['tipo'],
-                'especialidad_id' => $validatedData['especialidad_id'],
-                'seccion_id' => $validatedData['seccion_id'],
-            ];
-            if (!empty($validatedData['area_id'])) {
-                $docenteData['area_id'] = $validatedData['area_id'];
-            }
-            $docente->update($docenteData);
-        });
+        try {
+            DB::transaction(function () use ($validatedData, $docente) {
+                $usuarioData = [
+                    'nombre' => $validatedData['nombre'],
+                    'apellido_paterno' => $validatedData['apellido_paterno'],
+                    'apellido_materno' => $validatedData['apellido_materno'],
+                    'email' => $validatedData['email'],
+                ];
+                if (!empty($validatedData['password'])) {
+                    $usuarioData['password'] = Hash::make($validatedData['password']);
+                }
+                $docente->usuario->update($usuarioData);
 
-        return response()->json(['message' => 'Docente actualizado exitosamente'], 200);
-    }
+                $docenteData = [
+                    'codigoDocente' => $validatedData['codigoDocente'],
+                    'tipo' => $validatedData['tipo'],
+                    'especialidad_id' => $validatedData['especialidad_id'],
+                    'seccion_id' => $validatedData['seccion_id'],
+                ];
+                if (!empty($validatedData['area_id'])) {
+                    $docenteData['area_id'] = $validatedData['area_id'];
+                }
+                $docente->update($docenteData);
+            });
 
+            Log::channel('audit-log')->info('Docente actualizado exitosamente', [
+                'codigoDocente' => $codigo,
+                'data' => $validatedData,
+            ]);
 
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido_paterno' => 'nullable|string|max:255',
-            'apellido_materno' => 'nullable|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'codigoDocente' => 'required|string|max:50|unique:docentes,codigoDocente',
-            'tipo' => 'required|string',
-            'especialidad_id' => 'required|integer|exists:especialidades,id',
-            'seccion_id' => 'required|integer|exists:secciones,id',
-            'area_id' => 'nullable|integer|exists:areas,id',
-        ]);
-
-        $usuario = Usuario::firstOrCreate(
-            ['email' => $validatedData['email']],
-            [
-                'nombre' => $validatedData['nombre'],
-                'apellido_paterno' => $validatedData['apellido_paterno'],
-                'apellido_materno' => $validatedData['apellido_materno'],
-                'password' => Hash::make($validatedData['codigoDocente']),
-            ]
-        );
-
-        $docente = new Docente();
-        $docente->usuario_id = $usuario->id;
-        $docente->codigoDocente = $validatedData['codigoDocente'];
-        $docente->tipo = $validatedData['tipo'];
-        $docente->especialidad_id = $validatedData['especialidad_id'];
-        $docente->seccion_id = $validatedData['seccion_id'];
-        $docente->area_id = $validatedData['area_id'] ?? null;
-
-        $usuario->docente()->save($docente);
-        return response()->json(['message' => 'Docente creado exitosamente', 'docente' => $docente], 201);
+            return response()->json(['message' => 'Docente actualizado exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::channel('errors')->error('Error al actualizar docente', [
+                'codigoDocente' => $codigo,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Error al actualizar docente'], 500);
+        }
     }
 
     public function destroy($codigo)
     {
         $docente = Docente::where('codigoDocente', $codigo)->first();
         if (!$docente) {
+            Log::channel('errors')->warning('Docente no encontrado para eliminación', [
+                'codigoDocente' => $codigo,
+            ]);
             return response()->json(['message' => 'Docente no encontrado'], 404);
         }
 
-        $docente->delete();
+        try {
+            $docente->delete();
+        } catch (\Exception $e) {
+            Log::channel('errors')->warning('Docente no encontrado para eliminación', [
+                'codigoDocente' => $codigo,
+            ]);
+        }
+
         return response()->json(['message' => 'Docente eliminado exitosamente'], 200);
     }
+
 
     public function storeMultiple(Request $request)
     {
@@ -260,5 +330,5 @@ class DocenteController extends Controller
 
         return response()->json($cursos);
     }
-    
+
 }
