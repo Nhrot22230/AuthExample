@@ -81,8 +81,8 @@ class ProcesoConvocatoriaSeeder extends Seeder
                 'nombre' => 'Fernando',
                 'apellido_paterno' => 'Candia',
                 'apellido_materno' => 'Aroni',
-                'email' => 'fernando.candia@gianluka.zzz',
-                'password' => Hash::make('12345678'),
+                'email' => 'asistente@gmail.com',
+                'password' => Hash::make('password'),
             ])
         ]);
 
@@ -115,8 +115,8 @@ class ProcesoConvocatoriaSeeder extends Seeder
                 'nombre' => 'Juan',
                 'apellido_paterno' => 'Perez',
                 'apellido_materno' => 'Garcia',
-                'email' => 'docenteComite@gmail.com',
-                'password' => Hash::make('12345678'),
+                'email' => 'comite@gmail.com',
+                'password' => Hash::make('password'),
             ]),
             'especialidad_id' => $especialidad->id,
             'seccion_id' => $seccionFirst->id,

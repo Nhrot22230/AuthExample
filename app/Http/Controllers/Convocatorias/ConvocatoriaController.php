@@ -232,7 +232,8 @@ class ConvocatoriaController extends Controller
             }
 
             $convocatoria->comite()->attach($validatedData['miembros']);
-
+            Log::info('Miembros asignados al comité');
+            Log::info($validatedData['miembros']);
             // Crear registros en la tabla comite_candidato_convocatoria
             foreach ($validatedData['miembros'] as $miembroId) {
                 foreach ($convocatoria->candidatos as $candidato) {
@@ -244,7 +245,7 @@ class ConvocatoriaController extends Controller
                     ]);
                 }
             }
-
+            Log::info('Miembros asignados a los candidatos');
             DB::commit();
 
             return response()->json([
@@ -317,16 +318,15 @@ class ConvocatoriaController extends Controller
                     $convocatoria->gruposCriterios()->attach($nuevoCriterio->id);
                 }
             }
-
-            // Actualizar comités y candidatos
+            Log::info('Criterios actualizados');
+            Log:: info($validatedData['miembros']);
             if (!empty($validatedData['miembros'])) {
-                $convocatoria->comite()->detach();
-                $convocatoria->comite()->attach($validatedData['miembros']);
+                $convocatoria->comite()->sync($validatedData['miembros']);
 
-                // Eliminar registros existentes en la tabla comite_candidato_convocatoria
+                // Eliminar registros existentes en comite_candidato_convocatoria
                 ComiteCandidatoConvocatoria::where('convocatoria_id', $convocatoria->id)->delete();
 
-                // Crear nuevos registros
+                // Crear nuevos registros en comite_candidato_convocatoria
                 foreach ($validatedData['miembros'] as $miembroId) {
                     foreach ($convocatoria->candidatos as $candidato) {
                         ComiteCandidatoConvocatoria::create([
@@ -339,6 +339,7 @@ class ConvocatoriaController extends Controller
                 }
             }
 
+            Log :: info('Miembros actualizados');
             DB::commit();
 
             return response()->json([
@@ -357,6 +358,23 @@ class ConvocatoriaController extends Controller
         }
     }
 
+    private function sincronizarComiteCandidatos(Convocatoria $convocatoria, array $miembros)
+    {
+        // Eliminar registros existentes
+        ComiteCandidatoConvocatoria::where('convocatoria_id', $convocatoria->id)->delete();
+
+        // Crear nuevos registros
+        foreach ($miembros as $miembroId) {
+            foreach ($convocatoria->candidatos as $candidato) {
+                ComiteCandidatoConvocatoria::create([
+                    'docente_id' => $miembroId,
+                    'candidato_id' => $candidato->id,
+                    'convocatoria_id' => $convocatoria->id,
+                    'estado' => 'pendiente cv',
+                ]);
+            }
+        }
+    }
 
 
 
