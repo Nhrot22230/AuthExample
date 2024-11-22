@@ -22,6 +22,8 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%encuestas%')
             ->orWhere('name', 'like', '%temas%')
             ->orWhere('name', 'like', '%unidades%')
+            ->orWhere('name', 'like', '%evaluar-candidatos%')
+            ->orWhere('name', 'like', '%postulante%')
             ->get();
         $director_role->syncPermissions($permisos_director);
 
@@ -56,6 +58,7 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%horarios%')
             ->orWhere('name', 'like', '%solicitudes%')
             ->orWhere('name', 'like', '%evaluar-candidatos%')
+            ->orWhere('name', 'like', '%postulante%')
             ->get();
 
         // Asignamos los permisos al rol de "docente"
@@ -63,7 +66,11 @@ class AssignRoles extends Seeder
         $estudiante_role = Role::findByName('estudiante');
 
         // Obtenemos los permisos que correspondan a los estudiantes
-        $permisos_estudiante = [];
+        $permisos_estudiante = Permission::where('name', 'like', '%cursos%')
+            ->orWhere('name', 'like', '%mis cursos%')
+            ->orWhere('name', 'like', '%mis-solicitudes%')
+            ->orWhere('name', 'like', '%postulante%')
+            ->get();
     
         // Asignamos los permisos al rol de "estudiante"
         $estudiante_role->syncPermissions($permisos_estudiante);
