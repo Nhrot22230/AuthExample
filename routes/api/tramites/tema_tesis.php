@@ -6,12 +6,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('temas-de-tesis')->group(function () {
     Route::get('autor', [TemaTesisController::class, 'index']);
-    Route::get('{id}', [TemaTesisController::class, 'show']);
+    Route::get('asesor', [ProcesoAprobacionController::class,'indexByAsesor']);
     Route::post('registro', [TemaTesisController::class, 'store']);
+    Route::get('{id}', [TemaTesisController::class, 'show']);
     Route::get('{idTesis}/procesos-aprobacion', [ProcesoAprobacionController::class, 'indexByTema']);
 });
 
 Route::get('procesos-aprobacion/{idProceso}', [ProcesoAprobacionController::class, 'show']);
+Route::get('procesos-aprobacion/areas/{idArea}', [ProcesoAprobacionController::class, 'indexByArea']);
 
 //Route::put('temas-de-tesis/{id}', [TemaTesisController::class, 'update']);
 //Route::get('temas-de-tesis/estudiante/{estudiante_id}', [TemaTesisController::class, 'indexTemasEstudianteId']);

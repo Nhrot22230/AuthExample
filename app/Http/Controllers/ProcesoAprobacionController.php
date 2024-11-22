@@ -26,6 +26,56 @@ class ProcesoAprobacionController extends Controller
             ], 500);
         }
     }
+
+    public function indexByArea($idArea)
+    {
+        try {
+            $procesos = ProcesoAprobacion::with([
+                'temaTesis' => function ($query) use ($idArea) {
+                    $query->where('area_id', $idArea);
+                }
+            ])->where('fases_aprobadas', '=', 1)
+                ->get();
+
+            return response()->json($procesos, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener los procesos de aprobación' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function indexByEspecialidad($idEspecialidad)
+    {
+        try {
+            $procesos = ProcesoAprobacion::with([
+                'temaTesis.area' => function ($query) use ($idEspecialidad) {
+                    $query->where('especialidad_id', $idEspecialidad);
+                }
+            ])->where('fases_aprobadas', '=', 2)
+                ->get();
+
+            return response()->json($procesos, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener los procesos de aprobación',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function indexByAsesor(Request $request) {
+        $asesor = $request->authUser;
+    
+        $procesos = ProcesoAprobacion::whereHas('temaTesis.asesores', function ($query) use ($asesor) {
+            $query->where('usuario_id', $asesor->id);
+        })
+        ->with(['temaTesis.asesores', 'temaTesis.autores', 'temaTesis.area'])
+        ->get();
+    
+        return response()->json($procesos, 200);
+    }
+
     public function show($idProceso)
     {
         $proceso = ProcesoAprobacion::with('fases')->findOrFail($idProceso);
