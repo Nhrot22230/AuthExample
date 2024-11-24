@@ -54,6 +54,7 @@ class FlujoEncuestasSeeder extends Seeder
                 'apellido_materno' => 'Barrionuevo',
                 'email' => 'gian.luca@gianluka.zzz',
                 'picture' => 'https://random-d.uk/api/27.jpg',
+                'password' => Hash::make('12345678'),
             ])->id,
             'especialidad_id' => $especialidad->id,
         ]);
