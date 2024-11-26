@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Universidad\PlanEstudioController;
 use App\Http\Middleware\AuthzMiddleware;
 
-Route::prefix('especialidad/{entity_id}/plan-estudio')
+Route::prefix('especialidades/{entity_id}/plan-estudio')
     ->middleware(AuthzMiddleware::class . ':especialidades,' . Especialidad::class)
     ->group(function () {
         Route::get('/', [PlanEstudioController::class, 'index']);
