@@ -27,16 +27,16 @@ COPY . .
 # Copia el archivo .env o crea uno a partir del archivo de ejemplo
 RUN cp .env.example .env
 
-# Elimina el directorio vendor si existe
+# Elimina el directorio vendor si existe y vuelve a instalar las dependencias con Composer
 RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoloader
 
 # Ejecuta `composer install` para instalar las dependencias de Laravel
 RUN composer install --no-dev --optimize-autoloader
 
+# Genera la clave de la aplicación Laravel
 RUN php artisan key:generate
 
-# Expone el puerto 8000
+# Exponer el puerto 8000 para la aplicación Laravel
 EXPOSE 8000
 
-# Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "serve"]
