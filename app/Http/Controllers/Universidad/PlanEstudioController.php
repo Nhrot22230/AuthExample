@@ -60,7 +60,7 @@ class PlanEstudioController extends Controller
 
     public function show($entity_id, $plan_id)
     {
-        $planEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
+        $planEstudio = PlanEstudio::with(['semestres', 'cursos.requisitos'])
             ->where('especialidad_id', $entity_id)
             ->find($plan_id);
 
@@ -124,9 +124,8 @@ class PlanEstudioController extends Controller
             }
 
             return response()->json(['message' => 'Plan de estudio creado exitosamente', 'plan_estudio' => $planEstudio], 201);
-
         } catch (\Exception $e) {
-            Log::error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
+            Log::channel('errors')->error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al crear el plan de estudio: ' . $e->getMessage()], 500);
         }
     }
