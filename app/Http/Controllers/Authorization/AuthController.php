@@ -95,7 +95,6 @@ class AuthController extends Controller
                 [
                     'usuario' => $usuario,
                     'access_token' => JWTAuth::fromUser($usuario),
-                    'refresh_token' => JWTAuth::refresh(JWTAuth::fromUser($usuario)),
                     'token_type' => 'bearer',
                     'expires_in' => JWTAuth::factory()->getTTL() * 60,
                     'message' => 'Inicio de sesión exitoso',
