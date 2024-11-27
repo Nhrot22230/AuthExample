@@ -251,6 +251,8 @@ class TemaDeTesisController extends Controller
                 'file_type' => 'document',
                 'file' => $file
             ]);
+
+            
             $uploadRequest->files->set('file', $file);
             $fileResponse = $this->subirArchivo($uploadRequest);
             $fileId = $fileResponse->getData()->file->id;

@@ -28,9 +28,9 @@ class DepartamentoController extends Controller
         return response()->json($departamentos, 200);
     }
 
-    public function show($id)
+    public function show($entity_id)
     {
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::find($entity_id);
 
         if (!$departamento) {
             return response()->json(['message' => 'Departamento no encontrado'], 404);
@@ -66,9 +66,9 @@ class DepartamentoController extends Controller
         return response()->json($departamento, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $entity_id)
     {
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::find($entity_id);
         if (!$departamento) {
             return response()->json(['message' => 'Departamento no encontrado'], 404);
         }
@@ -86,9 +86,9 @@ class DepartamentoController extends Controller
         return response()->json($departamento, 200);
     }
 
-    public function destroy($id)
+    public function destroy($entity_id)
     {
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::find($entity_id);
 
         if (!$departamento) {
             return response()->json(['message' => 'Departamento no encontrado'], 404);

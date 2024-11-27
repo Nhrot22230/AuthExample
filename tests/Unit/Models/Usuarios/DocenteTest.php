@@ -16,7 +16,7 @@ class DocenteTest extends TestCase
     use RefreshDatabase;
 
     #[Test]
-    public function docente_pertenece_a_un_usuario()
+    public function test_docente_pertenece_a_un_usuario()
     {
         $usuario = Usuario::factory()->create();
         $docente = Docente::factory()->create(['usuario_id' => $usuario->id]);
@@ -25,7 +25,7 @@ class DocenteTest extends TestCase
     }
 
     #[Test]
-    public function docente_pertenece_a_una_especialidad()
+    public function test_docente_pertenece_a_una_especialidad()
     {
         $especialidad = Especialidad::factory()->create();
         $docente = Docente::factory()->create(['especialidad_id' => $especialidad->id]);
@@ -34,7 +34,7 @@ class DocenteTest extends TestCase
     }
 
     #[Test]
-    public function docente_pertenece_a_un_area()
+    public function test_docente_pertenece_a_un_area()
     {
         $area = Area::factory()->create();
         $docente = Docente::factory()->create(['area_id' => $area->id]);
@@ -43,7 +43,7 @@ class DocenteTest extends TestCase
     }
 
     #[Test]
-    public function docente_pertenece_a_una_seccion()
+    public function test_docente_pertenece_a_una_seccion()
     {
         $seccion = Seccion::factory()->create();
         $docente = Docente::factory()->create(['seccion_id' => $seccion->id]);

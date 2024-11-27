@@ -150,6 +150,7 @@ class EncuestaController extends Controller
                 ->where('especialidad_id', $especialidad_id)
                 ->latest()
                 ->first();
+            Log::info('Última encuesta encontrada: ' . ($ultimaEncuesta ? $ultimaEncuesta->toJson() : 'No hay encuestas previas.'));
 
             // Creamos la nueva encuesta
             $encuesta = Encuesta::create([
@@ -160,20 +161,31 @@ class EncuestaController extends Controller
                 'fecha_fin' => $validated['fecha_fin'],
                 'disponible' => $validated['disponible']
             ]);
+            Log::info('Encuesta creada: ' . $encuesta->toJson());
 
             // Asociamos los cursos con la encuesta
-            $semestre_id = Semestre::where('estado', 'activo')->first()->id;
+            $semestre = Semestre::where('estado', 'activo')->first();
+            if (!$semestre) {
+                return response()->json(['message' => 'No hay semestre activo.'], 404);
+            }
+            $semestre_id = $semestre->id;
+            Log::info('Semestre activo encontrado: ' . $semestre->toJson());
+
             foreach ($validated['cursos'] as $curso_id) {
                 $horarios = Horario::where('curso_id', $curso_id)
                     ->where('semestre_id', $semestre_id)
                     ->get();
+                    Log::info('Horarios encontrados para curso ' . $curso_id . ': ' . $horarios->toJson());
+
                 foreach ($horarios as $horario) {
                     $encuesta->horario()->attach($horario->id);
+                    Log::info('Horario asociado: ' . $horario->id);
                 }
             }
 
             if (!empty($validated['preguntas_nuevas'])) {
                 foreach ($validated['preguntas_nuevas'] as $pregunta_data) {
+                    Log::info('Creando pregunta: ' . json_encode($pregunta_data));
                     $nuevaPregunta = Pregunta::create([
                         'texto_pregunta' => $pregunta_data['texto_pregunta'],
                         'tipo_respuesta' => $pregunta_data['tipo_respuesta'],
@@ -181,10 +193,12 @@ class EncuestaController extends Controller
                     ]);
 
                     $encuesta->pregunta()->attach($nuevaPregunta->id);
+                    Log::info('Pregunta asociada: ' . $nuevaPregunta->id);
                 }
             }
             if ($ultimaEncuesta) {
                 if (!empty($validated['preguntas_modificadas'])) {
+                    Log::info('Preguntas modificadas: ' . json_encode($validated['preguntas_modificadas']));
                     foreach ($validated['preguntas_modificadas'] as $pregunta_data) {
                         $nuevaPregunta = Pregunta::create([
                             'texto_pregunta' => $pregunta_data['texto_pregunta'],
@@ -210,6 +224,7 @@ class EncuestaController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error al registrar encuesta: ' . $e->getMessage());
             return response()->json(['message' => 'Error al realizar el registro.'], 500);
         }
     }

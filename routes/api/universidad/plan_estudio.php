@@ -1,15 +1,18 @@
 <?php
 
-use App\Http\Controllers\Universidad\PlanEstudioController;
-use App\Http\Middleware\AuthzMiddleware;
 use App\Models\Universidad\Especialidad;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Universidad\PlanEstudioController;
+use App\Http\Middleware\AuthzMiddleware;
 
-
-Route::get('plan-estudio', [PlanEstudioController::class, 'index'])->middleware('can:ver planes de estudio');
-Route::get('plan-estudio/paginated', [PlanEstudioController::class, 'indexPaginated'])->middleware('can:ver planes de estudio');
-Route::get('plan-estudio/current/{id}', [PlanEstudioController::class, 'currentByEspecialidad'])->middleware([AuthzMiddleware::class . ':ver planes de estudio,' . Especialidad::class]);
-Route::post('plan-estudio', [PlanEstudioController::class, 'store'])->middleware('can:manage planes de estudio');
-Route::put('plan-estudio/{id}', [PlanEstudioController::class, 'update'])->middleware('can:manage planes de estudio');
-Route::get('plan-estudio/{id}', [PlanEstudioController::class, 'show'])->middleware('can:ver planes de estudio');
-Route::delete('plan-estudio/{id}', [PlanEstudioController::class, 'destroy'])->middleware('can:manage planes de estudio');
+Route::prefix('especialidades/{entity_id}/plan-estudio')
+    ->middleware(AuthzMiddleware::class . ':especialidades,' . Especialidad::class)
+    ->group(function () {
+        Route::get('/', [PlanEstudioController::class, 'index']);
+        Route::post('/', [PlanEstudioController::class, 'store']);
+        Route::get('/paginated', [PlanEstudioController::class, 'indexPaginated']);
+        Route::get('/current', [PlanEstudioController::class, 'currentByEspecialidad']);
+        Route::put('/{plan_id}', [PlanEstudioController::class, 'update']);
+        Route::get('/{plan_id}', [PlanEstudioController::class, 'show']);
+        Route::delete('/{plan_id}', [PlanEstudioController::class, 'destroy']);
+    });

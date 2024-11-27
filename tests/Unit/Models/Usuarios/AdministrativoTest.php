@@ -14,7 +14,7 @@ class AdministrativoTest extends TestCase
     use RefreshDatabase;
 
     #[Test]
-    public function administrativo_pertenece_a_un_usuario()
+    public function test_administrativo_pertenece_a_un_usuario()
     {
         $usuario = Usuario::factory()->create();
         $administrativo = Administrativo::factory()->create(['usuario_id' => $usuario->id]);
@@ -23,7 +23,7 @@ class AdministrativoTest extends TestCase
     }
 
     #[Test]
-    public function administrativo_pertenece_a_una_facultad()
+    public function test_administrativo_pertenece_a_una_facultad()
     {
         $facultad = Facultad::factory()->create();
         $administrativo = Administrativo::factory()->create(['facultad_id' => $facultad->id]);

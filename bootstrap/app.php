@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         commands: __DIR__ . '/../routes/console.php',
         using: function () {
+            Route::prefix('api')
+                ->group(base_path('routes/auth/authentication.php'));
+
             $dir = new RecursiveDirectoryIterator(base_path('routes/api'));
             $iterator = new RecursiveIteratorIterator($dir);
             $files = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
@@ -20,9 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->prefix('api/v1')
                     ->group($file[0]);
             }
-
-            Route::prefix('api')
-                ->group(base_path('routes/auth/authentication.php'));
 
             Route::middleware(LogMiddleware::class)
                 ->group(base_path('routes/web.php'));

@@ -26,7 +26,6 @@ class FlujoTemaTesisSeeder extends Seeder
     public function run(): void
     {
         $facultad = Facultad::inRandomOrder()->firstOrCreate();
-
         $especialidad = Especialidad::factory()->create([
             'nombre' => "Ingeniería Informática y Prueba para Temas de Tesis",
             'descripcion' => "Especialidad enfocada en la Ingeniería para el desarrollo y pruebas de Temas de Tesis.",
@@ -96,7 +95,8 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        $docenteCoordinador = Docente::factory()->create([
+        
+        Docente::factory()->create([
             'usuario_id' => $usuarioCoordinador->id,
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
@@ -123,7 +123,8 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        $docenteDirector= Docente::factory()->create([
+        
+        Docente::factory()->create([
             'usuario_id' => $usuarioDirector->id,
             'especialidad_id' => $especialidad->id,
             'area_id' => $areas->first()->id
@@ -139,6 +140,30 @@ class FlujoTemaTesisSeeder extends Seeder
             'usuario_id' => $usuarioDirector->id,
             'entity_type' => Especialidad::class,
             'entity_id' => $especialidad->id,
+        ]);
+
+        // SECRETARIO ACADEMICO
+        $usuarioSecretario = Usuario::create([
+            'nombre' => 'Secretario',
+            'apellido_paterno' => 'Creado',
+            'apellido_materno' => 'Recien',
+            'email' => 'secretario@gmail.com',
+            'picture' => 'https://random-d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('password'),
+        ]);
+
+        $role = Role::findByName('secretario-academico');
+        $usuarioSecretario->assignRole($role);
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Facultad',
+                'entity_type' => Facultad::class,
+            ])->id,
+            'usuario_id' => $usuarioSecretario->id,
+            'entity_type' => Facultad::class,
+            'entity_id' => $facultad->id,
         ]);
 
         $temasTesis = TemaDeTesis::factory(1)->create([
@@ -159,7 +184,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado_proceso' => 'pendiente'
         ]);
 
-        $estadoAprobacion = EstadoAprobacionTema::factory()->create([
+        EstadoAprobacionTema::factory()->create([
             'proceso_aprobacion_id' => $procesoAprobacion->id,
             'usuario_id' => $usuarioDocente->id,
             'estado' => 'pendiente',
