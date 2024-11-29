@@ -58,4 +58,17 @@ class Especialidad extends Model
     public function docentes() : HasMany {
         return $this->hasMany(Docente::class);
     }
+
+    public function planEstudios(): HasMany
+    {
+        return $this->hasMany(PlanEstudio::class);
+    }
+
+    /**
+     * Obtiene el plan de estudios activo para esta especialidad.
+     */
+    public function planEstudioActivo(): ?PlanEstudio
+    {
+        return $this->planEstudios()->where('estado', 'activo')->first();
+    }
 }

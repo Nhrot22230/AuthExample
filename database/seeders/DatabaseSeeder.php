@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ProcesoConvocatoriaSeeder::class);
         $this->call(FlujoTemaTesisSeeder::class);
 
+        // Plan de estudios todas las especialidades
+        $this->call(PlanesEspecialidadSeeder::class);
+
         // ASIGNACION DE ROLES
         $this->call(AssignRoles::class);
     }
