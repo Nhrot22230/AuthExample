@@ -12,6 +12,7 @@ use App\Models\Usuarios\Usuario;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Matricula\Horario;
 use Illuminate\Validation\ValidationException;
 use App\Models\Usuarios\Docente;
 use Illuminate\Support\Facades\DB;
@@ -89,90 +90,97 @@ class EstudianteRiesgoController extends Controller
         return response()->json($semanas);
     }
 
-    public function listar_por_especialidad_director(Request $request){
-        try {
-            $request->validate([
-                'IdEspecialidad' => 'required|integer',
-                'search' => 'nullable|string',
-                'semana' => 'nullable|integer',
-                'riesgo' => 'nullable|string',
-            ]);
-        } catch (ValidationException $e) {
-            Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);
-            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
-        }
-    
-        $especialidadId = $request->IdEspecialidad;
-        $search = $request->search;
-        $semana = $request->semana;
-        $riesgo = $request->riesgo;
-    
-        // Obtener el ciclo activo
-        $ciclo = Semestre::where('estado', 'activo')->first();
-        if (!$ciclo) {
-            return response()->json(['message' => 'No se encontró un semestre activo.'], 404);
-        }
-    
-        $periodo = $ciclo->anho . "-" . $ciclo->periodo;
-    
-        // Obtener estudiantes en riesgo de la especialidad y ciclo especificados
-        $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidadId)
-            ->where('ciclo', $periodo);
-    
-        // Aplicar filtro por riesgo
-        if (!empty($riesgo) && $riesgo !== 'Todos') {
-            $estudiantesRiesgo->where('riesgo', $riesgo);
-        }
-    
-        // Filtrar por búsqueda (nombre o código del estudiante)
-        if (!empty($search)) {
-            $estudiantesRiesgo->where(function ($query) use ($search) {
-                $query->where('codigo_estudiante', 'like', '%' . $search . '%')
-                    ->orWhereHas('usuario', function ($query) use ($search) {
-                        $query->where('nombre', 'like', '%' . $search . '%');
-                    });
-            });
-        }
-    
-        $estudiantesRiesgo = $estudiantesRiesgo->get();
-    
-        if ($estudiantesRiesgo->isEmpty()) {
-            return response()->json([]);
-        }
-    
-        $resultado = [];
-        foreach ($estudiantesRiesgo as $estudiante) {
-            $usuario = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
-    
-            // Filtrar informes por estado "Respondida" y semana (si se proporciona)
-            $informesFiltrados = $estudiante->informes
-                ->where('estado', 'Respondida')
-                ->when(!is_null($semana), function ($query) use ($semana) {
-                    return $query->where('semana', $semana);
-                });
-    
-            foreach ($informesFiltrados as $informe) {
-                $resultado[] = [
-                    'Id' => $estudiante->id,
-                    'Estudiante' => $usuario->nombre . " " . $usuario->apellido_paterno,
-                    'Codigo' => $estudiante->codigo_estudiante,
-                    'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
-                    'CodigoCurso' => $estudiante->codigo_curso,
-                    'Horario' => $estudiante->horario,
-                    'Riesgo' => $estudiante->riesgo,
-                    'IdInforme' => $informe->id,
-                    'Estado' => $informe->estado,
-                    'Semana' => $informe->semana,
-                    'Fecha' => $informe->fecha,
-                    'Desempeño' => $informe->desempenho,
-                    'Observaciones' => $informe->observaciones,
-                    'Docente' => $informe->nombre_profesor
-                ];
-            }
-        }
-    
-        return response()->json($resultado);
+    public function listar_por_especialidad_director(Request $request)
+{
+    try {
+        $request->validate([
+            'IdEspecialidad' => 'required|integer',
+            'search' => 'nullable|string',
+            'semana' => 'nullable|integer',
+            'riesgo' => 'nullable|string',
+        ]);
+    } catch (ValidationException $e) {
+        Log::channel('usuarios')->info('Error al validar los datos del listado de alumnos en riesgo', ['error' => $e->errors()]);
+        return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
     }
+
+    $especialidadId = $request->IdEspecialidad;
+    $search = $request->search;
+    $semana = $request->semana;
+    $riesgo = $request->riesgo;
+
+    // Obtener el ciclo activo
+    $ciclo = Semestre::where('estado', 'activo')->first();
+    if (!$ciclo) {
+        return response()->json(['message' => 'No se encontró un semestre activo.'], 404);
+    }
+
+    $periodo = $ciclo->anho . "-" . $ciclo->periodo;
+
+    // Obtener estudiantes en riesgo de la especialidad y ciclo especificados
+    $estudiantesRiesgo = EstudianteRiesgo::where('codigo_especialidad', $especialidadId)
+        ->where('ciclo', $periodo);
+
+    // Aplicar filtro por riesgo
+    if (!empty($riesgo) && $riesgo !== 'Todos') {
+        $estudiantesRiesgo->where('riesgo', $riesgo);
+    }
+
+    // Filtrar por búsqueda (nombre o código del estudiante)
+    if (!empty($search)) {
+        $estudiantesRiesgo->where(function ($query) use ($search) {
+            $query->where('codigo_estudiante', 'like', '%' . $search . '%')
+                ->orWhereHas('usuario', function ($query) use ($search) {
+                    $query->where('nombre', 'like', '%' . $search . '%');
+                });
+        });
+    }
+
+    $estudiantesRiesgo = $estudiantesRiesgo->get();
+
+    if ($estudiantesRiesgo->isEmpty()) {
+        return response()->json([]);
+    }
+
+    $resultado = [];
+    foreach ($estudiantesRiesgo as $estudiante) {
+        $usuario = Usuario::find(Estudiante::where('codigoEstudiante', $estudiante->codigo_estudiante)->first()->usuario_id);
+
+        // Buscar el IdHorario correspondiente al nombre del horario
+        $horario = Horario::where('nombre', $estudiante->horario)->first();
+        $idHorario = $horario ? $horario->id : null;
+
+        // Filtrar informes por estado "Respondida" y semana (si se proporciona)
+        $informesFiltrados = $estudiante->informes
+            ->where('estado', 'Respondida')
+            ->when(!is_null($semana), function ($query) use ($semana) {
+                return $query->where('semana', $semana);
+            });
+
+        foreach ($informesFiltrados as $informe) {
+            $resultado[] = [
+                'Id' => $estudiante->id,
+                'Estudiante' => $usuario->nombre . " " . $usuario->apellido_paterno,
+                'Codigo' => $estudiante->codigo_estudiante,
+                'Curso' => Curso::find($estudiante->codigo_curso)->nombre,
+                'CodigoCurso' => $estudiante->codigo_curso,
+                'Horario' => $estudiante->horario,
+                'IdHorario' => $idHorario, // Nuevo campo agregado
+                'Riesgo' => $estudiante->riesgo,
+                'IdInforme' => $informe->id,
+                'Estado' => $informe->estado,
+                'Semana' => $informe->semana,
+                'Fecha' => $informe->fecha,
+                'Desempeño' => $informe->desempenho,
+                'Observaciones' => $informe->observaciones,
+                'Docente' => $informe->nombre_profesor,
+            ];
+        }
+    }
+
+    return response()->json($resultado);
+}
+
 
 
     public function listar_informes_director(Request $request)
@@ -240,49 +248,59 @@ class EstudianteRiesgoController extends Controller
         return response()->json($resultado);
     }
 
-    public function listar_informes_estudiante(Request $request){
-        try {
-            $request->validate([
-                'codigo_estudiante' => 'required|string',
-                'id_horario' => 'required|integer',
-                'id_curso' => 'required|integer',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
-        }
-
-        $codigoEstudiante = $request->codigo_estudiante;
-        $idHorario = $request->id_horario;
-        $idCurso = $request->id_curso;
-
-        // Obtener el estudiante en riesgo correspondiente
-        $estudianteRiesgo = EstudianteRiesgo::where('codigo_estudiante', $codigoEstudiante)
-            ->where('horario', $idHorario)
-            ->where('codigo_curso', $idCurso)
-            ->first();
-
-        if (!$estudianteRiesgo) {
-            return response()->json(['message' => 'No se encontraron informes para el estudiante en el curso y horario proporcionados.'], 404);
-        }
-
-        // Obtener los informes asociados al estudiante en riesgo
-        $informes = InformeRiesgo::where('codigo_alumno_riesgo', $estudianteRiesgo->id)->get();
-
-        // Construir la respuesta
-        $resultado = [];
-        foreach ($informes as $informe) {
-            $resultado[] = [
-                'IdInforme' => $informe->id,
-                'Estado' => $informe->estado,
-                'Fecha' => $informe->fecha,
-                'Desempeño' => $informe->desempenho,
-                'Observaciones' => $informe->observaciones,
-                'Docente' => $informe->nombre_profesor,
-            ];
-        }
-
-        return response()->json($resultado);
+    public function listar_informes_estudiante(Request $request)
+{
+    try {
+        $request->validate([
+            'codigo_estudiante' => 'required|string',
+            'id_horario' => 'required|integer',
+            'id_curso' => 'required|integer',
+        ]);
+    } catch (ValidationException $e) {
+        return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
     }
+
+    $codigoEstudiante = $request->codigo_estudiante;
+    $idHorario = $request->id_horario;
+    $idCurso = $request->id_curso;
+
+    // Verificar si el horario existe
+    $horario = Horario::find($idHorario);
+
+    if (!$horario) {
+        return response()->json(['message' => 'No se encontró un horario con el ID proporcionado.'], 404);
+    }
+
+    // Obtener el estudiante en riesgo correspondiente
+    $estudianteRiesgo = EstudianteRiesgo::where('codigo_estudiante', $codigoEstudiante)
+        ->where('horario', $horario->nombre) // Usamos el nombre del horario de la tabla horarios
+        ->where('codigo_curso', $idCurso)
+        ->first();
+
+    if (!$estudianteRiesgo) {
+        return response()->json(['message' => 'No se encontraron informes para el estudiante en el curso y horario proporcionados.'], 404);
+    }
+
+    // Obtener los informes asociados al estudiante en riesgo
+    $informes = InformeRiesgo::where('codigo_alumno_riesgo', $estudianteRiesgo->id)->get();
+
+    // Construir la respuesta
+    $resultado = [];
+    foreach ($informes as $informe) {
+        $resultado[] = [
+            'IdInforme' => $informe->id,
+            'Estado' => $informe->estado,
+            'Fecha' => $informe->fecha,
+            'Desempeño' => $informe->desempenho,
+            'Observaciones' => $informe->observaciones,
+            'Docente' => $informe->nombre_profesor,
+        ];
+    }
+
+    return response()->json($resultado);
+}
+
+
 
 
 
