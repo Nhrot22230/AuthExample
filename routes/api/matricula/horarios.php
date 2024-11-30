@@ -10,5 +10,5 @@ Route::get('estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::
 Route::post('horarios/delegado', [HorarioController::class, 'obtenerDelegado']);
 Route::post('horarios/horarios-jps', [HorarioController::class, 'obtenerHorariosConJefes']);
 Route::post('horarios/jefe-practica/eliminar', [HorarioController::class, 'eliminarJefePractica']);
-Route::get('usuarios/estudiantes-docentes', [HorarioController::class, 'listarUsuariosEstudiantesYDocentes']);
+Route::get('usuariosDA/estudiantes-docentes/GAAA', [HorarioController::class, 'listarUsuariosEstudiantesYDocentes']);
 Route::post('horarios/jefe-practica/agregar', [HorarioController::class, 'agregarJefePracticaAHorario']);
