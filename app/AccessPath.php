@@ -12,6 +12,8 @@ enum AccessPath: string
     CASE GESTION_CONVOCATORIAS = "gestion_convocatorias";
     CASE EVALUAR_CANDIDATOS = "evaluar_candidatos";
     case CONFIGURACION_SISTEMA = "configuracion_sistema";
+    case GESTION_ALUMNOS = "gestion_alumnos";
+    case GESTION_PROFESORES_JPS = "gestion_profesores_jps";
 
     public static function toArray(): array
     {

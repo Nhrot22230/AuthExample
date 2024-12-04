@@ -10,5 +10,6 @@ Route::middleware("can:usuarios")->group(function () {
     Route::get('estudiantes/{codEstudiante}', [EstudianteController::class, 'show']);
     Route::put('estudiantes/{id}', [EstudianteController::class, 'update']);
     Route::delete('estudiantes/{codEstudiante}', [EstudianteController::class, 'destroy']);
+
 });
 

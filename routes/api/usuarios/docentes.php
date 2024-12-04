@@ -9,5 +9,5 @@ Route::middleware("can:usuarios")->group(function () {
     Route::post('docentes/multiple', [DocenteController::class, 'storeMultiple']);
     Route::get('docentes/{codDocente}', [DocenteController::class, 'show']);
     Route::put('docentes/{codDocente}', [DocenteController::class, 'update']);
-    Route::delete('docentes/{codDocente}', [DocenteController::class, 'destroy']);
+    Route::delete('docentes/{codDocente}', [DocenteController::class, 'destroy']); 
 });

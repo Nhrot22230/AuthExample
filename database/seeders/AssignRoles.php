@@ -24,6 +24,8 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%unidades%')
             ->orWhere('name', 'like', '%evaluar-candidatos%')
             ->orWhere('name', 'like', '%mis_convocatorias%')
+            ->orWhere('name', 'like', '%gestion-alumnos%')
+            ->orWhere('name', 'like', '%gestion-profesores-jps%')
             ->get();
         $director_role->syncPermissions($permisos_director);
 
@@ -46,6 +48,7 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%mis unidades%')
             ->orWhere('name', 'like', '%matricula%')
             ->orWhere('name', 'like', '%mis_convocatorias%')
+            ->orWhere('name', 'like', '%facultades%')
             ->get();
         $secretario_role->syncPermissions($permisos_secretario);
         // Encontramos el rol de "docente"
