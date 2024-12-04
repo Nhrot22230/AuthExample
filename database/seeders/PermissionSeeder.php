@@ -84,6 +84,20 @@ class PermissionSeeder extends Seeder
                     'mis-cursos',
                     'mis-horarios',
                 ]
+            ],
+            [
+                'name' => 'gestion_alumnos',
+                'access_path' => AccessPath::GESTION_ALUMNOS,
+                'sub_permissions' => [
+                    'gestion-alumnos',
+                ]
+            ],
+            [
+                'name' => 'gestion-profesores-jps',
+                'access_path' => AccessPath::GESTION_PROFESORES_JPS,
+                'sub_permissions' => [
+                    'gestion-profesores-jps',
+                ]
             ]
         ];
 
