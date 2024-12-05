@@ -15,11 +15,15 @@ Route::prefix('especialidades')->group(function () {
         Route::get('/{entity_id}', [EspecialidadController::class, 'show']);
         Route::put('/{entity_id}', [EspecialidadController::class, 'update']);
         Route::delete('/{entity_id}', [EspecialidadController::class, 'destroy']);
+        Route::post('/multiple', [EspecialidadController::class, 'storeMultiple']);
+
     });
 
     Route::middleware(AuthzMiddleware::class . ":especialidades," . Especialidad::class)->group(function () {
         Route::get('/{entity_id}', [EspecialidadController::class, 'show']);
         Route::put('/{entity_id}', [EspecialidadController::class, 'update']);
         Route::delete('/{entity_id}', [EspecialidadController::class, 'destroy']);
+        Route::post('/multiple', [EspecialidadController::class, 'storeMultiple']);
+
     });
 });

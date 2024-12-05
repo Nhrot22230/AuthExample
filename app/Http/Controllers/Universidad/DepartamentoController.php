@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
 use App\Models\Universidad\Departamento;
+use App\Models\Universidad\Facultad;
 use Illuminate\Http\Request;
 
 class DepartamentoController extends Controller
@@ -97,5 +98,47 @@ class DepartamentoController extends Controller
         $departamento->delete();
 
         return response()->json($departamento, 200);
+    }
+
+    public function storeMultiple(Request $request)
+    {
+        // Validar el arreglo de departamentos
+        $validatedData = $request->validate([
+            'departamentos' => 'required|array|min:1',
+            'departamentos.*.nombre' => 'required|string|max:255|unique:departamentos,nombre',
+            'departamentos.*.descripcion' => 'nullable|string',
+            'departamentos.*.facultad_nombre' => 'required|string|exists:facultades,nombre',
+        ]);
+
+        $nuevosDepartamentos = [];
+        $errores = [];
+
+        foreach ($validatedData['departamentos'] as $departamentoData) {
+            // Buscar la facultad por su nombre
+            $facultad = Facultad::where('nombre', $departamentoData['facultad_nombre'])->first();
+
+            if (!$facultad) {
+                $errores[] = [
+                    'nombre_departamento' => $departamentoData['nombre'],
+                    'error' => "Facultad '{$departamentoData['facultad_nombre']}' no encontrada.",
+                ];
+                continue;
+            }
+
+            // Crear el nuevo departamento
+            $departamento = new Departamento();
+            $departamento->nombre = $departamentoData['nombre'];
+            $departamento->descripcion = $departamentoData['descripcion'] ?? null;
+            $departamento->facultad_id = $facultad->id;
+            $departamento->save();
+
+            $nuevosDepartamentos[] = $departamento;
+        }
+
+        return response()->json([
+            'message' => 'Proceso completado.',
+            'departamentos' => $nuevosDepartamentos,
+            'errores' => $errores,
+        ], 201);
     }
 }

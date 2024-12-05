@@ -15,11 +15,13 @@ Route::prefix('departamentos')->group(function () {
         Route::get('/{entity_id}', [DepartamentoController::class, 'show']);
         Route::put('/{entity_id}', [DepartamentoController::class, 'update']);
         Route::delete('/{entity_id}', [DepartamentoController::class, 'destroy']);
+        Route::post('/multiple', [DepartamentoController::class, 'storeMultiple']);
     });
 
     Route::middleware(AuthzMiddleware::class . ":departamentos," . Departamento::class)->group(function () {
         Route::get('/{entity_id}', [DepartamentoController::class, 'show']);
         Route::put('/{entity_id}', [DepartamentoController::class, 'update']);
         Route::delete('/{entity_id}', [DepartamentoController::class, 'destroy']);
+        Route::post('/multiple', [DepartamentoController::class, 'storeMultiple']);
     });
 });

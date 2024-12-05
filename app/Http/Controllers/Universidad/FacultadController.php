@@ -99,4 +99,32 @@ class FacultadController extends Controller
             return response()->json(['message' => 'No se puede eliminar la facultad, ya que tiene especialidades o departamentos asociados'], 400);
         }
     }
+
+    public function storeMultiple(Request $request)
+    {
+        // Validar el arreglo de facultades
+        $validatedData = $request->validate([
+            'facultades' => 'required|array',
+            'facultades.*.nombre' => 'required|string|max:255|unique:facultades,nombre',
+            'facultades.*.abreviatura' => 'required|string|max:255',
+            'facultades.*.anexo' => 'nullable|string',
+        ]);
+
+        $nuevasFacultades = [];
+
+        foreach ($validatedData['facultades'] as $facultadData) {
+            $facultad = new Facultad();
+            $facultad->nombre = $facultadData['nombre'];
+            $facultad->abreviatura = $facultadData['abreviatura'];
+            $facultad->anexo = $facultadData['anexo'] ?? null;
+            $facultad->save();
+
+            $nuevasFacultades[] = $facultad;
+        }
+
+        return response()->json([
+            'message' => 'Facultades creadas exitosamente',
+            'facultades' => $nuevasFacultades,
+        ], 201);
+    }
 }
