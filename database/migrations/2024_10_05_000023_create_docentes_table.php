@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('usuario_id')->constrained()->unique();
             $table->string('codigoDocente')->unique();
             $table->enum('tipo', ['TPA', 'TC', 'TCP']);
-            $table->foreignId('area_id')->nullable()->constrained('areas');
-            $table->foreignId('seccion_id')->nullable()->constrained('secciones');
-            $table->foreignId('especialidad_id')->nullable()->constrained('especialidades');
+            $table->foreignId('area_id')->nullable()->constrained('areas')->onDelete('cascade');
+            $table->foreignId('seccion_id')->nullable()->constrained('secciones')->onDelete('cascade');
+            $table->foreignId('especialidad_id')->nullable()->constrained('especialidades')->onDelete('cascade');
             $table->timestamps();
         });
     }
