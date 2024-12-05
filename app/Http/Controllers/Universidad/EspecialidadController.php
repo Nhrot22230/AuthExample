@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
 use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Facultad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -105,5 +106,47 @@ class EspecialidadController extends Controller
 
         $especialidad->delete();
         return response()->json(['message' => 'Especialidad eliminada exitosamente'], 200);
+    }
+
+    public function storeMultiple(Request $request)
+    {
+        // Validar el arreglo de especialidades
+        $validatedData = $request->validate([
+            'especialidades' => 'required|array|min:1',
+            'especialidades.*.nombre' => 'required|string|max:255|unique:especialidades,nombre',
+            'especialidades.*.descripcion' => 'nullable|string',
+            'especialidades.*.facultad_nombre' => 'required|string|exists:facultades,nombre',
+        ]);
+
+        $nuevasEspecialidades = [];
+        $errores = [];
+
+        foreach ($validatedData['especialidades'] as $especialidadData) {
+            // Buscar la facultad por su nombre
+            $facultad = Facultad::where('nombre', $especialidadData['facultad_nombre'])->first();
+
+            if (!$facultad) {
+                $errores[] = [
+                    'nombre_especialidad' => $especialidadData['nombre'],
+                    'error' => "Facultad '{$especialidadData['facultad_nombre']}' no encontrada.",
+                ];
+                continue;
+            }
+
+            // Crear la nueva especialidad
+            $especialidad = new Especialidad();
+            $especialidad->nombre = $especialidadData['nombre'];
+            $especialidad->descripcion = $especialidadData['descripcion'] ?? null;
+            $especialidad->facultad_id = $facultad->id;
+            $especialidad->save();
+
+            $nuevasEspecialidades[] = $especialidad;
+        }
+
+        return response()->json([
+            'message' => 'Proceso completado.',
+            'especialidades' => $nuevasEspecialidades,
+            'errores' => $errores,
+        ], 201);
     }
 }
