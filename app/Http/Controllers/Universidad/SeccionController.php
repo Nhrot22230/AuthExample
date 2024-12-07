@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Universidad\Departamento;
 use App\Models\Universidad\Seccion;
 use Illuminate\Http\Request;
 
@@ -81,5 +82,45 @@ class SeccionController extends Controller
         }
         $seccion->delete();
         return response()->json(['message' => 'Seccion eliminada'], 200);
+    }
+
+    public function storeMultiple(Request $request)
+    {
+        // Validar el arreglo de secciones
+        $validatedData = $request->validate([
+            'secciones' => 'required|array|min:1',
+            'secciones.*.nombre' => 'required|string|max:255|unique:secciones,nombre',
+            'secciones.*.departamento_nombre' => 'required|string|exists:departamentos,nombre',
+        ]);
+    
+        $nuevasSecciones = [];
+        $errores = [];
+    
+        foreach ($validatedData['secciones'] as $seccionData) {
+            // Buscar el departamento por su nombre
+            $departamento = Departamento::where('nombre', $seccionData['departamento_nombre'])->first();
+    
+            if (!$departamento) {
+                $errores[] = [
+                    'nombre_seccion' => $seccionData['nombre'],
+                    'error' => "Departamento '{$seccionData['departamento_nombre']}' no encontrado.",
+                ];
+                continue;
+            }
+    
+            // Crear la nueva seccion
+            $seccion = new Seccion();
+            $seccion->nombre = $seccionData['nombre'];
+            $seccion->departamento_id = $departamento->id;
+            $seccion->save();
+    
+            $nuevasSecciones[] = $seccion;
+        }
+    
+        return response()->json([
+            'message' => 'Proceso completado.',
+            'secciones' => $nuevasSecciones,
+            'errores' => $errores,
+        ], 201);
     }
 }

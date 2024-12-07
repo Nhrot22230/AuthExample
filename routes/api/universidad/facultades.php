@@ -15,11 +15,14 @@ Route::prefix('facultades')->group(function () {
         Route::get('/{entity_id}', [FacultadController::class, 'show']);
         Route::put('/{entity_id}', [FacultadController::class, 'update']);
         Route::delete('/{entity_id}', [FacultadController::class, 'destroy']);
+        Route::post('/multiple',[FacultadController::class, 'storeMultiple']);
     });
 
     Route::middleware(AuthzMiddleware::class . ":facultades," . Facultad::class)->group(function () {
+        
         Route::get('/{entity_id}', [FacultadController::class, 'show']);
         Route::put('/{entity_id}', [FacultadController::class, 'update']);
         Route::delete('/{entity_id}', [FacultadController::class, 'destroy']);
+        Route::post('/multiple',[FacultadController::class, 'storeMultiple']);
     });
 });
