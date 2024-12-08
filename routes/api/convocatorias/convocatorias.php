@@ -17,4 +17,3 @@ Route::get('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaControl
 Route::put('/convocatorias/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'actualizarEstado']);
 Route::get('/convocatorias/file/{idConvocatoria}/{idCandidato}', [ConvocatoriaController::class, 'descargarDocumentosPostulante']);
 Route::get('/comite/candidatos', [ConvocatoriaController::class, 'fetchCandidatesByCommitteeMember']);
-

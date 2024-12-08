@@ -21,4 +21,3 @@ Route::get('estudiantesRiesgoDA/estadisticas', [EstudianteRiesgoController::clas
 Route::get('estudiantesRiesgo/cursos', [EstudianteRiesgoController::class, 'obtenerCursos']);
 Route::post('estudiantesRiesgo/comparacion-cursos', [EstudianteRiesgoController::class, 'compararCursos']);
 Route::get('estudiantesRiesgoDA/ultimos-informes', [EstudianteRiesgoController::class, 'obtenerUltimosInformes']);
-
