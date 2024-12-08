@@ -8,7 +8,7 @@ Route::get('estudiantes/{estudianteId}/cursos-encuestas', [HorarioController::cl
 Route::get('horarios/{horarioId}/jps', [HorarioController::class, 'obtenerJps']);
 Route::get('estudiantes/{estudianteId}/encuestas-docentes', [HorarioController::class, 'obtenerEncuestasDocentesEstudiante']);
 Route::post('horarios/delegado', [HorarioController::class, 'obtenerDelegado']);
-Route::post('horarios/horarios-jps', [HorarioController::class, 'obtenerHorariosConJefes']);
-Route::post('horarios/jefe-practica/eliminar', [HorarioController::class, 'eliminarJefePractica']);
+Route::post('horariosDA/horarios-jps/GO', [HorarioController::class, 'obtenerHorariosConJefes']);
+Route::post('horariosDA/jefe-practica/eliminar/GO', [HorarioController::class, 'eliminarJefePractica']);
 Route::get('usuariosDA/estudiantes-docentes/GAAA', [HorarioController::class, 'listarUsuariosEstudiantesYDocentes']);
-Route::post('horarios/jefe-practica/agregar', [HorarioController::class, 'agregarJefePracticaAHorario']);
+Route::post('horariosDA/jefe-practica/agregar/GO', [HorarioController::class, 'agregarJefePracticaAHorario']);
