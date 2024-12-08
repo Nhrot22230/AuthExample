@@ -142,7 +142,7 @@ class HorarioActividadController extends Controller
     if ($actividades->isEmpty()) {
         return response()->json([
             'message' => 'Este horario no tiene actividades asignadas. Solicite al profesor que las ingrese.'
-        ], 404);
+        ], 202);
     }
 
     // Si hay actividades

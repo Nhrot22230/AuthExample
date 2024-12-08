@@ -24,7 +24,7 @@ class FileController extends Controller
             ]);
 
             $file = $request->file('file');
-            $path = 'files/' . $request->file_type . '/' . $file->getClientOriginalName() . '.'. $file->getClientOriginalExtension();
+            $path = 'files/' . $request->file_type . '/' . $file->getClientOriginalName() . '.' . $file->getClientOriginalExtension();
 
             Storage::disk('s3')->put($path, file_get_contents($file));
             // $url = 'https://' . env('AWS_BUCKET') . '.s3.' . env('AWS_DEFAULT_REGION') . '.amazonaws.com/' . $path;
@@ -39,7 +39,6 @@ class FileController extends Controller
             ]);
 
             return response()->json(['url' => $fileRecord->url, 'file' => $fileRecord], 201);
-
         } catch (\Exception $e) {
             Log::error('File Upload Error: ' . $e->getMessage());
             return response()->json(['message' => 'Error uploading file: ' . $e->getMessage()], 500);
@@ -63,15 +62,28 @@ class FileController extends Controller
 
     public function downloadById($id)
     {
-        $fileRecord = File::where('id', $id)->first();
+        try {
+            $fileRecord = File::find($id);
 
-        if ($fileRecord && Storage::disk('s3')->exists($fileRecord->path)) {
+            if (!$fileRecord) {
+                return response()->json(['message' => 'El archivo no existe en la base de datos.'], 404);
+            }
+
+            if (!Storage::disk('s3')->exists($fileRecord->path)) {
+                return response()->json(['message' => 'El archivo no se encuentra en S3.'], 404);
+            }
+
             $file = Storage::disk('s3')->get($fileRecord->path);
-            return response($file, 200)->header('Content-Type', $fileRecord->mime_type);
+            return response($file, 200)
+                ->header('Content-Type', $fileRecord->mime_type);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Ocurrió un error al intentar descargar el archivo.',
+                'error' => $e->getMessage() // Puedes omitirlo en producción
+            ], 500);
         }
-
-        return response()->json(['message' => 'File not found'], 404);
     }
+
 
     /**
      * Delete a file by its name.
