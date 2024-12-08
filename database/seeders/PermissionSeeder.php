@@ -107,6 +107,7 @@ class PermissionSeeder extends Seeder
             // Crear un nuevo scope
             $scope = Scope::create([
                 'name' => $scopeData['name'],
+                'access_path' => '/' . $scopeData['access_path'],
             ]);
 
             // Crear los permisos asociados a este scope

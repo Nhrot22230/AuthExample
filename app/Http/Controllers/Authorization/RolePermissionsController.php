@@ -24,28 +24,23 @@ class RolePermissionsController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $rolesScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id)->get();
+        // Obtener roles del usuario utilizando la relación definida en el modelo Usuario
         $roles = $usuario->roles;
 
-        $response = $roles->map(function ($role) use ($rolesScopeUsuario) {
-            $roleScopesUsuario = $rolesScopeUsuario->where('role_id', $role->id);
-
+        $response = $roles->map(function ($role) {
             return [
                 'id' => $role->id,
                 'name' => $role->name,
-                'scope' => $role->scope->map(function ($scope) use ($roleScopesUsuario) {
+                'scope' => $role->scope ? [
+                    'id' => $role->scope->id,
+                    'name' => $role->scope->name,
+                ] : null,
+                'permissions' => $role->permissions->map(function ($permission) {
                     return [
-                        'id' => $scope->id,
-                        'name' => $scope->name,
-                        'entities' => $roleScopesUsuario->where('scope_id', $scope->id)->map(function ($roleScopeUsuario) {
-                            return [
-                                'entity_id' => $roleScopeUsuario->entity_id,
-                                'entity_type' => $roleScopeUsuario->entity_type,
-                                'entity' => $roleScopeUsuario->entity,
-                            ];
-                        })->values()->toArray(),
+                        'id' => $permission->id,
+                        'name' => $permission->name,
                     ];
-                })->toArray()
+                })
             ];
         });
 
@@ -229,10 +224,8 @@ class RolePermissionsController extends Controller
         $request->validate([
             'roles' => 'required|array',
             'roles.*.role_id' => 'required|exists:roles,id',
-            'roles.*.scopes' => 'nullable|array',
-            'roles.scope_id' => 'required|exists:scopes,id',
-            'roles.*.scopes.*.entities' => 'nullable|array',
-            'roles.*.scopes.*.entities.*' => 'required|integer|min:1',
+            'roles.*.permissions' => 'nullable|array',
+            'roles.*.permissions.*' => 'exists:permissions,id',
         ]);
 
         $usuario = Usuario::find($id);
@@ -242,24 +235,22 @@ class RolePermissionsController extends Controller
 
         DB::beginTransaction();
         try {
+            // Eliminar roles previos asignados al usuario
+            $usuario->roles()->detach();
 
-            RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
             foreach ($request->roles as $roleData) {
                 $role = Role::find($roleData['role_id']);
-                $usuario->assignRole($role);
-                foreach ($roleData['scopes'] as $scopeData) {
-                    $scope = Scope::find($scopeData['scope_id']);
-                    foreach ($scopeData['entities'] as $entityData) {
-                        RoleScopeUsuario::create([
-                            'role_id' => $role->id,
-                            'scope_id' => $scope->id,
-                            'usuario_id' => $usuario->id,
-                            'entity_id' => $entityData,
-                            'entity_type' => $scope->entity_type,
-                        ]);
-                    }
+                // Asignar el rol al usuario, asegurando el campo `model_type`
+                $usuario->roles()->attach($role, [
+                    'model_type' => Usuario::class, // Especificar la clase completa del modelo
+                ]);
+
+                // Sincronizar los permisos de ese rol si se proporcionan
+                if (isset($roleData['permissions']) && count($roleData['permissions']) > 0) {
+                    $role->syncPermissions($roleData['permissions']);
                 }
             }
+
             DB::commit();
             return response()->json([
                 'message' => 'Roles correctamente asignados al usuario',
@@ -269,6 +260,7 @@ class RolePermissionsController extends Controller
             return response()->json(['message' => "Error al asignar roles al usuario: {$e->getMessage()}"], 500);
         }
     }
+
 
     public function authUserPermissions(Request $request): JsonResponse
     {
