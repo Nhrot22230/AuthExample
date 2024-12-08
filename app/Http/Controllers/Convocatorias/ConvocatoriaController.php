@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\Storage\File;
+
 // importamos el file controller
 use App\Http\Controllers\Storage\FileController;
+use App\Models\Usuarios\Usuario;
 
 class ConvocatoriaController extends Controller
 {
@@ -63,7 +65,7 @@ class ConvocatoriaController extends Controller
                         $subQuery->where('usuarios.id', $postulanteId);
                     });
                 })
-
+                ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
             return response()->json($convocatorias, 200);
@@ -77,9 +79,6 @@ class ConvocatoriaController extends Controller
             return response()->json(['error' => 'Ocurrió un error al listar convocatorias'], 500);
         }
     }
-
-
-
 
 
     public function indexCriterios($entity_id)
@@ -205,7 +204,28 @@ class ConvocatoriaController extends Controller
             'criteriosAntiguos' => 'array',
             'criteriosAntiguos.*' => 'integer|exists:grupos_criterios,id',
             'seccion_id' => 'required|integer|exists:secciones,id',
+        ], [
+            'nombreConvocatoria.required' => 'El nombre de la convocatoria es obligatorio.',
+            'fechaInicio.required' => 'La fecha de inicio es obligatoria.',
+            'fechaFin.required' => 'La fecha de fin es obligatoria.',
+            'fechaInicio.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha de fin.',
+            'fechaFin.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',
+            'miembros.required' => 'Debe agregar al menos un miembro en el campo "miembros".',
+            'miembros.min' => 'Debe agregar al menos un miembro.',
+            'criteriosNuevos.*.nombre.required' => 'Cada criterio nuevo debe tener un nombre.',
+            'criteriosNuevos.*.obligatorio.required' => 'Debe indicar si el criterio es obligatorio.',
         ]);
+
+        $criteriosAntiguosCount = count($validatedData['criteriosAntiguos'] ?? []);
+        $criteriosNuevosCount = count($validatedData['criteriosNuevos'] ?? []);
+        $totalCriterios = $criteriosAntiguosCount + $criteriosNuevosCount;
+
+        if ($totalCriterios === 0) {
+            return response()->json([
+                'message' => 'Debe agregar al menos un criterio (nuevo o antiguo).'
+            ], 422);
+        }
+
 
         Log::info('Datos validados recibidos:', $validatedData);
 
@@ -267,9 +287,6 @@ class ConvocatoriaController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
@@ -285,9 +302,28 @@ class ConvocatoriaController extends Controller
             'criteriosNuevos.*.obligatorio' => 'required|boolean',
             'criteriosNuevos.*.descripcion' => 'nullable|string|max:1000',
             'seccion_id' => 'required|integer|exists:secciones,id',
-            'miembros' => 'nullable|array', // Miembros es opcional
+            'miembros' => 'nullable|array',
             'miembros.*' => 'integer|exists:docentes,id',
+        ], [
+            'nombreConvocatoria.required' => 'El nombre de la convocatoria es obligatorio.',
+            'fechaInicio.required' => 'La fecha de inicio es obligatoria.',
+            'fechaFin.required' => 'La fecha de fin es obligatoria.',
+            'fechaInicio.before_or_equal' => 'La fecha de inicio debe ser anterior o igual a la fecha de fin.',
+            'fechaFin.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',
+            'criteriosNuevos.*.nombre.required' => 'Cada criterio nuevo debe tener un nombre.',
+            'criteriosNuevos.*.obligatorio.required' => 'Debe indicar si el criterio es obligatorio.',
         ]);
+
+
+        $criteriosAntiguosCount = count($validatedData['criteriosAntiguos'] ?? []);
+        $criteriosNuevosCount = count($validatedData['criteriosNuevos'] ?? []);
+        $totalCriterios = $criteriosAntiguosCount + $criteriosNuevosCount;
+
+        if ($totalCriterios === 0) {
+            return response()->json([
+                'message' => 'Debe agregar al menos un criterio (nuevo o antiguo).'
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -319,7 +355,7 @@ class ConvocatoriaController extends Controller
                 }
             }
             Log::info('Criterios actualizados');
-            Log:: info($validatedData['miembros']);
+            Log::info($validatedData['miembros']);
             if (!empty($validatedData['miembros'])) {
                 $convocatoria->comite()->sync($validatedData['miembros']);
 
@@ -339,7 +375,7 @@ class ConvocatoriaController extends Controller
                 }
             }
 
-            Log :: info('Miembros actualizados');
+            Log::info('Miembros actualizados');
             DB::commit();
 
             return response()->json([
@@ -707,6 +743,32 @@ class ConvocatoriaController extends Controller
             return response()->json(['message' => 'Error uploading file: ' . $e->getMessage()], 500);
         }
     }
+
+    public function descargarDocumentosPostulante($idConvocatoria, $idCandidato)
+    {
+        $convocatoriaExists = Convocatoria::where('id', $idConvocatoria)->exists();
+        $candidatoExists = Usuario::where('id', $idCandidato)->exists();
+
+        if (!$convocatoriaExists) {
+            return response()->json(['message' => 'La convocatoria no existe.'], 404);
+        }
+    
+        if (!$candidatoExists) {
+            return response()->json(['message' => 'El candidato no existe.'], 404);
+        }
+
+        $file = CandidatoConvocatoria::where('convocatoria_id', $idConvocatoria)
+            ->where('candidato_id', $idCandidato)
+            ->value('file_id');
+
+        if (!$file) {
+            return response()->json(['message' => 'No se encontró el archivo.'], 404);
+        }
+
+        $fileController = new FileController();
+        return $fileController->downloadById($file);
+    }
+
 
     private function determinarEstadoFinal($estados)
     {
