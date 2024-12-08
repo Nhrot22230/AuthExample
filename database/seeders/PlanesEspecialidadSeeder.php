@@ -22,7 +22,7 @@ class PlanesEspecialidadSeeder extends Seeder
         }
 
         foreach ($especialidades as $especialidad) {
-            $this->command->info("Creando plan de estudios para la especialidad: {$especialidad->nombre}");
+            // $this->command->info("Creando plan de estudios para la especialidad: {$especialidad->nombre}");
 
             // Crear un plan de estudios para la especialidad
             $planEstudio = PlanEstudio::factory()->create([
@@ -64,7 +64,7 @@ class PlanesEspecialidadSeeder extends Seeder
             }
             $planEstudio->semestres()->attach($semestres);
 
-            $this->command->info("Plan de estudios creado para la especialidad: {$especialidad->nombre}");
+            // $this->command->info("Plan de estudios creado para la especialidad: {$especialidad->nombre}");
         }
     }
 }
