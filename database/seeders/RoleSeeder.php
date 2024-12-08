@@ -18,12 +18,12 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $scopes = [
-            ['name' => 'Departamento', 'entity_type' => Departamento::class],
-            ['name' => 'Facultad', 'entity_type' => Facultad::class],
-            ['name' => 'Especialidad', 'entity_type' => Especialidad::class],
-            ['name' => 'Seccion', 'entity_type' => Seccion::class],
-            ['name' => 'Curso', 'entity_type' => Curso::class],
-            ['name' => 'Area', 'entity_type' => Area::class],
+            ['name' => 'Departamento'],
+            ['name' => 'Facultad'],
+            ['name' => 'Especialidad'],
+            ['name' => 'Seccion'],
+            ['name' => 'Curso'],
+            ['name' => 'Area'],
         ];
 
         $roles = [
