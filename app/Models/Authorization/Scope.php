@@ -9,7 +9,12 @@ class Scope extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'entity_type'];
+    protected $fillable = ['name', 'entity_type', 'category_id'];
+
+    public function category()
+    {
+        return $this->belongsTo(PermissionCategory::class, 'category_id');
+    }
 
     public function roles()
     {

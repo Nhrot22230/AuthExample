@@ -77,21 +77,7 @@ class PermissionSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'gestion_alumnos',
-                'access_path' => AccessPath::GESTION_ALUMNOS,
-                'sub_permissions' => [
-                    'gestion-alumnos',
-                ]
-            ],
-            [
-                'name' => 'gestion-profesores-jps',
-                'access_path' => AccessPath::GESTION_PROFESORES_JPS,
-                'sub_permissions' => [
-                    'gestion-profesores-jps',
-                ]
-                ],
-            [
-                'name' => 'permisos_facultad',
+                'name' => 'facultad',
                 'access_path' => AccessPath::FACULTAD,
                 'sub_permissions' => [
                     'proceso pedido de cursos',
@@ -99,6 +85,25 @@ class PermissionSeeder extends Seeder
                     'proceso matricula adicional',
                 ]
             ],
+            [
+                'name' => 'especialidad',
+                'access_path' => AccessPath::ESPECIALIDAD,
+                'sub_permissions' => [
+                    'plan de estudio',
+                    'pedidos de cursos',
+                    'matricula adicional',
+                    'alumno en riesgo',
+                    'jurado tesis',
+                    'tema de tesis',
+                    'listar y firmar carta de presentacion',
+                    'delegados',
+                    'encuestas-jps',
+                    'encuestas-docentes',
+                    'gestion-alumnos',
+                    'gestion-profesores-jps',
+                ]
+            ]
+
         ];
 
         foreach ($permission_categories as $category) {

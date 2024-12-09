@@ -168,6 +168,32 @@ class FlujoTemaTesisSeeder extends Seeder
             'entity_id' => $facultad->id,
         ]);
 
+        // ASISTENTE DE SECCION
+        $usuarioAsistente = Usuario::create([
+            'nombre' => 'Asistente',
+            'apellido_paterno' => 'Creado',
+            'apellido_materno' => 'Recien',
+            'email' => 'asistenteSeccion@gmail.com',
+            'picture' => 'https://random
+            -d.uk/api/2.jpg',
+            'estado' => 'activo',
+            'password' => Hash::make('password'),
+        ]);
+
+        $role = Role::findByName('asistente-seccion');
+        $usuarioAsistente->assignRole($role);
+
+        RoleScopeUsuario::create([
+            'role_id' => $role->id,
+            'scope_id' => Scope::firstOrCreate([
+                'name' => 'Especialidad',
+                'entity_type' => Especialidad::class,
+            ])->id,
+            'usuario_id' => $usuarioAsistente->id,
+            'entity_type' => Especialidad::class,
+            'entity_id' => $especialidad->id,
+        ]);
+
         $temasTesis = TemaDeTesis::factory(1)->create([
             'area_id' => $areas->random()->id,
             'especialidad_id' => $especialidad->id,

@@ -16,18 +16,17 @@ class AssignRoles extends Seeder
         Usuario::find(1)->assignRole('administrador');
 
 
+        // DIRECTOR DE CARRERA
         $director_role = Role::findByName('director');
-        $permisos_director = Permission::where('name', 'like', '%especialidades%')
-            ->orWhere('name', 'like', '%solicitudes%')
-            ->orWhere('name', 'like', '%encuestas%')
-            ->orWhere('name', 'like', '%temas%')
-            ->orWhere('name', 'like', '%unidades%')
-            ->orWhere('name', 'like', '%evaluar-candidatos%')
-            ->orWhere('name', 'like', '%mis_convocatorias%')
-            ->orWhere('name', 'like', '%gestion-alumnos%')
-            ->orWhere('name', 'like', '%gestion-profesores-jps%')
-            ->get();
+        $permisos_director = Permission::whereIn('permission_category_id', function ($query) {
+            $query->select('id')
+                ->from('permission_categories')
+                ->whereIn('name', ['especialidad', 'mis_unidades', 'mis_convocatorias', 'evaluar_candidatos', 'gestion-alumnos', 'gestion-profesores-jps']);
+        })->get();
+
         $director_role->syncPermissions($permisos_director);
+
+        // COORDINADOR
 
         $coordinador_role = Role::findByName('coordinador');
         $permisos_coordinador = Permission::where('name', 'like', '%especialidades%')
@@ -43,13 +42,24 @@ class AssignRoles extends Seeder
         $permisos_secretario = Permission::whereIn('permission_category_id', function ($query) {
             $query->select('id')
                 ->from('permission_categories')
-                ->whereIn('name', ['permisos_facultad', 'mis_unidades', 'mis_convocatorias']);
+                ->whereIn('name', ['facultad', 'mis_unidades', 'mis_convocatorias']);
         })->get();
         $secretario_role->syncPermissions($permisos_secretario);
 
-       // DOCENTE
-        $docente_role = Role::findByName('docente');
+        // ASISTENTE DE SECCION
+        $asistenteSeccionRole = Role::findByName('asistente-seccion');
+        $permisosAsistenteSeccion = Permission::whereIn('permission_category_id', function ($query) {
+            $query->select('id')
+                ->from('permission_categories')
+                ->whereIn('name', ['mis_convocatorias', 'evaluar_candidatos', 'gestion_convocatorias']);
+        })->get();
+        $permisosAdicionales = Permission::where('name', 'like', '%gestion-convocatorias%')->get(); // Corrección del error
+        $permisosTotales = $permisosAsistenteSeccion->merge($permisosAdicionales);
+        $asistenteSeccionRole->syncPermissions($permisosTotales);
 
+
+        // DOCENTE
+        $docente_role = Role::findByName('docente');
         // Obtenemos los permisos que correspondan a los docentes
         $permisos_docente = Permission::where('name', 'like', '%cursos%')
             ->orWhere('name', 'like', '%encuestas%')
@@ -77,7 +87,7 @@ class AssignRoles extends Seeder
             'mis-tema-tesis',
             'mis-convocatorias'
         ])->get();
-        
+
 
         // Asignamos los permisos al rol de "estudiante"
         $estudiante_role->syncPermissions($permisos_estudiante);

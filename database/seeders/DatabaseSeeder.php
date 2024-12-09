@@ -17,14 +17,14 @@ class DatabaseSeeder extends Seeder
         $this->call(UniversidadSeeder::class);
         $this->call(UsuariosSeeder::class);
         // Flujo para Sofia
-        /*$this->call(FlujoEncuestasSeeder::class);
-        $this->call(CartaPresentacionSolicitudSeeder::class);*/
+        $this->call(FlujoEncuestasSeeder::class);
+        $this->call(CartaPresentacionSolicitudSeeder::class);
         // Pedido
         $this->call(PedidoCursosSeeder::class);
 
         // Convocatorias
-        /*$this->call(ProcesoConvocatoriaSeeder::class);
-        $this->call(FlujoTemaTesisSeeder::class);*/
+        $this->call(ProcesoConvocatoriaSeeder::class);
+        $this->call(FlujoTemaTesisSeeder::class);
 
         // Plan de estudios todas las especialidades
         $this->call(PlanesEspecialidadSeeder::class);

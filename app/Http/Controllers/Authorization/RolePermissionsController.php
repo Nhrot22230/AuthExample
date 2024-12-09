@@ -53,7 +53,7 @@ class RolePermissionsController extends Controller
 
     public function indexScopes(): JsonResponse
     {
-        $scopes = Scope::all();
+        $scopes = Scope::with('category.permissions')->get();
         return response()->json($scopes, 200);
     }
 

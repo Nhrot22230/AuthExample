@@ -14,7 +14,7 @@ enum AccessPath: string
     case GESTION_ALUMNOS = "gestion_alumnos";
     case GESTION_PROFESORES_JPS = "gestion_profesores_jps";
     case FACULTAD = "permisos_facultad";
-
+    case ESPECIALIDAD = "permisos_especialidades";
     public static function toArray(): array
     {
         $array = [];
