@@ -374,6 +374,7 @@ class TemaDeTesisController extends Controller
                 'resumen' => $request->resumen ?? $temaTesis->resumen, // Solo actualizar si se envía un nuevo resumen
                 'area_id' => $request->area_id ?? $temaTesis->area_id, // Solo actualizar si se envía una nueva área
                 'estado' => 'pendiente',
+                'file_firmado_id' => null,
             ]));
 
             // Actualizar los asesores del tema
