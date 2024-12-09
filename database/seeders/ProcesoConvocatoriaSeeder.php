@@ -56,7 +56,7 @@ class ProcesoConvocatoriaSeeder extends Seeder
 
 
         // Crear 10 grupos de criterios
-        $gruposCriterios = GrupoCriterios::factory(10)->create();
+        $gruposCriterios = GrupoCriterios::factory(5)->create();
 
         // Crear 10 convocatorias para secciones aleatorias
         $convocatorias = Convocatoria::factory(10)->create();
