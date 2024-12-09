@@ -17,43 +17,51 @@ class RoleSeeder extends Seeder
 
     public function run(): void
     {
-        $scopes = [
-            ['name' => 'Departamento', 'entity_type' => Departamento::class],
-            ['name' => 'Facultad', 'entity_type' => Facultad::class],
-            ['name' => 'Especialidad', 'entity_type' => Especialidad::class],
-            ['name' => 'Seccion', 'entity_type' => Seccion::class],
-            ['name' => 'Curso', 'entity_type' => Curso::class],
-            ['name' => 'Area', 'entity_type' => Area::class],
-        ];
+        /*$scopes = [
+            ['name' => 'Departamento'],
+            ['name' => 'Facultad'],
+            ['name' => 'Especialidad'],
+            ['name' => 'Seccion'],
+            ['name' => 'Curso'],
+            ['name' => 'Area'],
+        ];*/
 
         $roles = [
-            'administrador',
-            'secretario-academico',
-            'asistente',
-            'director',
-            'coordinador',
-            'docente',
-            'jefe-practica',
-            'estudiante',
-            'coordinador',
-            'comite',
+            'administrador' => 'configuracion_sistema',
+            'secretario-academico' => 'Facultad',
+            'asistente' => 'Especialidad',
+            'director' => 'Especialidad',
+            'coordinador' => 'Area',
+            'docente' => 'Curso',
+            'jefe-practica' => 'Curso',
+            'estudiante' => 'Curso',
+            'comite' => 'Seccion',
         ];
 
-        foreach ($scopes as $scope) Scope::firstOrCreate($scope);
-        foreach ($roles as $role) Role::firstOrCreate(['name' => $role]);
+        /*foreach ($scopes as $scope) Scope::firstOrCreate($scope);*/
+        foreach ($roles as $roleName => $scopeName) {
+            $scope = Scope::where('name', $scopeName)->first(); // Busca el scope correspondiente
+            Role::firstOrCreate(
+                ['name' => $roleName],
+                ['scope_id' => $scope->id] // Asocia el scope al rol
+            );
+        }
 
-        Role::findByName('asistente')->scopes([])->attach(Scope::all());
-        Role::findByName('secretario-academico')->scopes([])->attach(Scope::where('name', 'Facultad')->first());
-        Role::findByName('director')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
-        Role::findByName('coordinador')->scopes([])->attach(Scope::where('name', 'Area')->first());
-        Role::findByName('docente')->scopes([])->attach(
-            Scope::orWhere('name', 'Curso')
-            ->orWhere('name', 'Seccion')
-            ->orWhere('name', 'Area')
-            ->get()
-        );
-        Role::findByName('jefe-practica')->scopes([])->attach(Scope::where('name', 'Curso')->first());
-        Role::findByName('estudiante')->scopes([])->attach(Scope::where('name', 'Curso')->first());
-        Role::findByName('comite')->scopes([])->attach(Scope::where('name', 'Curso')->first());
+        #Role::findByName('administrador')->scope()->associate(Scope::where('name', 'configuracion_sistema')->first());
+        Role::findByName('asistente')->scope()->attach(Scope::all());
+        #Role::findByName('secretario-academico')->scope()->attach(Scope::where('name', 'Facultad')->first());
+        #Role::findByName('director')->scope()->attach(Scope::where('name', 'Especialidad')->first());
+        #Role::findByName('coordinador')->scopes()->attach(Scope::where('name', 'Area')->first());
+        #Role::findByName('docente')->scope()->attach(
+        #    Scope::orWhere('name', 'Curso')
+        #    ->orWhere('name', 'Seccion')
+        #    ->orWhere('name', 'Area')
+        #    ->get()
+        #);
+        #Role::findByName('jefe-practica')->scope()->attach(Scope::where('name', 'Curso')->first());
+        #Role::findByName('estudiante')->scope()->attach(Scope::where('name', 'Curso')->first());
+        #Role::findByName('comite')->scope()->attach(Scope::where('name', 'Curso')->first());
+
+        Role::findByName('administrador')->save();
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
 use App\Models\Usuarios\Usuario;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,28 +24,23 @@ class RolePermissionsController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $rolesScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id)->get();
+        // Obtener roles del usuario utilizando la relación definida en el modelo Usuario
         $roles = $usuario->roles;
 
-        $response = $roles->map(function ($role) use ($rolesScopeUsuario) {
-            $roleScopesUsuario = $rolesScopeUsuario->where('role_id', $role->id);
-
+        $response = $roles->map(function ($role) {
             return [
                 'id' => $role->id,
                 'name' => $role->name,
-                'scopes' => $role->scopes->map(function ($scope) use ($roleScopesUsuario) {
+                'scope' => $role->scope ? [
+                    'id' => $role->scope->id,
+                    'name' => $role->scope->name,
+                ] : null,
+                'permissions' => $role->permissions->map(function ($permission) {
                     return [
-                        'id' => $scope->id,
-                        'name' => $scope->name,
-                        'entities' => $roleScopesUsuario->where('scope_id', $scope->id)->map(function ($roleScopeUsuario) {
-                            return [
-                                'entity_id' => $roleScopeUsuario->entity_id,
-                                'entity_type' => $roleScopeUsuario->entity_type,
-                                'entity' => $roleScopeUsuario->entity,
-                            ];
-                        })->values()->toArray(),
+                        'id' => $permission->id,
+                        'name' => $permission->name,
                     ];
-                })->toArray()
+                })
             ];
         });
 
@@ -71,39 +67,67 @@ class RolePermissionsController extends Controller
 
     public function indexRolesScopes(): JsonResponse
     {
-        $roles = Role::with('scopes')->get();
+        $roles = Role::with('scope')->get();
         return response()->json($roles, 200);
     }
 
-    public function indexPermissions(): JsonResponse
+    public function indexPermissions(Request $request): JsonResponse
     {
-        $search = request('search', '');
-        $permissions = Permission::with('permission_category')
-            ->where('name', 'like', "%$search%")
-            ->orderBy('permission_category_id')
-            ->get();
+        $search = $request->input('search', '');
+        $scopeId = $request->input('scope_id', null);
 
-        $simpleResp = $permissions->map(function ($permission) {
+        $permissionsQuery = Permission::with(['permission_category', 'scope'])
+            ->where('name', 'like', "%$search%");
+
+        // Si se proporciona un `scope_id`, filtrar por ese `scope_id`
+        if ($scopeId) {
+            $permissionsQuery->where('scope_id', $scopeId);
+        }
+
+        $permissions = $permissionsQuery->orderBy('scope_id')->get();
+
+        $response = $permissions->map(function ($permission) {
             return [
                 'id' => $permission->id,
                 'name' => $permission->name,
                 'permission_category' => $permission->permission_category?->name ?? "Sin categoría",
+                'scope' => $permission->scope ? [
+                    'id' => $permission->scope->id,
+                    'name' => $permission->scope->name,
+                ] : null,
             ];
         });
 
-        return response()->json($simpleResp, 200);
+        return response()->json($response, 200);
     }
+
 
     public function showRole($id): JsonResponse
     {
-        $role = Role::with(['permissions', 'scopes'])->find($id);
+        $role = Role::with(['permissions', 'scope'])->find($id);
 
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
 
-        return response()->json($role, 200);
+        $response = [
+            'id' => $role->id,
+            'name' => $role->name,
+            'permissions' => $role->permissions->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                ];
+            }),
+            'scope' => $role->scope ? [ // Aquí accedemos directamente al scope
+                'id' => $role->scope->id,
+                'name' => $role->scope->name,
+            ] : null, // Verificamos si existe un scope relacionado
+        ];
+
+        return response()->json($response, 200);
     }
+
 
     public function storeRole(Request $request): JsonResponse
     {
@@ -111,20 +135,25 @@ class RolePermissionsController extends Controller
             'name' => 'required|string|unique:roles,name',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,name',
-            'scopes' => 'nullable|array',
-            'scopes.*' => 'exists:scopes,id',
+            'scope_id' => 'nullable|exists:scopes,id', // Relación con scope
         ]);
 
         DB::beginTransaction();
         try {
-            $role = Role::create($request->only('name'));
+            $role = Role::create($request->only('name') + ['scope_id' => $request->scope_id]);
+
+            // Sincronizar permisos si se han proporcionado
             if ($request->has('permissions')) {
                 $role->syncPermissions($request->permissions);
             }
 
-            if ($request->has('scopes')) {
-                $role->scopes([])->sync($request->scopes);
+            // Asignar el scope al rol (uno a uno)
+            if ($request->has('scope_id')) {
+                $role->scope()->associate($request->scope_id);
             }
+
+            $role->save(); // Guardamos el rol después de asociar el scope
+
             DB::commit();
             return response()->json([
                 'message' => 'Rol creado correctamente',
@@ -147,28 +176,36 @@ class RolePermissionsController extends Controller
             'name' => "required|string|unique:roles,name,{$role->id}",
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,name',
-            'scopes' => 'nullable|array',
-            'scopes.*' => 'exists:scopes,id',
+            // No permitimos modificar el scope_id
+            'scope_id' => 'nullable|exists:scopes,id',
         ]);
 
-        $role->update($request->only('name'));
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        }
+        DB::beginTransaction();
+        try {
+            // Solo actualizamos el nombre del rol
+            $role->update($request->only('name'));
 
-        if ($request->has('scopes')) {
-            $newScopes = $request->scopes;
-            $role->scopes([])->sync($newScopes);
-            RoleScopeUsuario::where('role_id', $role->id)
-                ->whereNotIn('scope_id', $newScopes)
-                ->delete();
-        }
+            // Sincronizar permisos si se han proporcionado
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->permissions);
+            }
 
-        return response()->json([
-            'message' => 'Rol actualizado correctamente',
-            'role' => $role
-        ], 200);
+            // No actualizamos el scope del rol
+            // Si se pasa un scope_id, no se hace nada. El scope original sigue siendo el mismo.
+
+            $role->save(); // Guardamos los cambios
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Rol actualizado correctamente',
+                'role' => $role
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => "Error al actualizar el rol: {$e->getMessage()}"], 500);
+        }
     }
+
 
     public function destroyRole($id): JsonResponse
     {
@@ -179,7 +216,6 @@ class RolePermissionsController extends Controller
         }
 
         $role->delete();
-        RoleScopeUsuario::where('role_id', $role->id)->delete();
         return response()->json(['message' => 'Rol eliminado'], 200);
     }
 
@@ -188,10 +224,8 @@ class RolePermissionsController extends Controller
         $request->validate([
             'roles' => 'required|array',
             'roles.*.role_id' => 'required|exists:roles,id',
-            'roles.*.scopes' => 'nullable|array',
-            'roles.*.scopes.*.scope_id' => 'required|exists:scopes,id',
-            'roles.*.scopes.*.entities' => 'nullable|array',
-            'roles.*.scopes.*.entities.*' => 'required|integer|min:1',
+            'roles.*.permissions' => 'nullable|array',
+            'roles.*.permissions.*' => 'exists:permissions,id',
         ]);
 
         $usuario = Usuario::find($id);
@@ -201,24 +235,22 @@ class RolePermissionsController extends Controller
 
         DB::beginTransaction();
         try {
+            // Eliminar roles previos asignados al usuario
+            $usuario->roles()->detach();
 
-            RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
             foreach ($request->roles as $roleData) {
                 $role = Role::find($roleData['role_id']);
-                $usuario->assignRole($role);
-                foreach ($roleData['scopes'] as $scopeData) {
-                    $scope = Scope::find($scopeData['scope_id']);
-                    foreach ($scopeData['entities'] as $entityData) {
-                        RoleScopeUsuario::create([
-                            'role_id' => $role->id,
-                            'scope_id' => $scope->id,
-                            'usuario_id' => $usuario->id,
-                            'entity_id' => $entityData,
-                            'entity_type' => $scope->entity_type,
-                        ]);
-                    }
+                // Asignar el rol al usuario, asegurando el campo `model_type`
+                $usuario->roles()->attach($role, [
+                    'model_type' => Usuario::class, // Especificar la clase completa del modelo
+                ]);
+
+                // Sincronizar los permisos de ese rol si se proporcionan
+                if (isset($roleData['permissions']) && count($roleData['permissions']) > 0) {
+                    $role->syncPermissions($roleData['permissions']);
                 }
             }
+
             DB::commit();
             return response()->json([
                 'message' => 'Roles correctamente asignados al usuario',
@@ -229,58 +261,80 @@ class RolePermissionsController extends Controller
         }
     }
 
+
     public function authUserPermissions(Request $request): JsonResponse
     {
         $usuario = $request->authUser;
-        $permissions = $usuario->getAllPermissions();
-        $response = $permissions->map(function ($permission) {
-            return [
-                'id' => $permission->id,
-                'name' => $permission->name,
-                'permission_category' => PermissionCategory::find($permission->permission_category_id),
-            ];
-        });
-        $uniqueCategories = $response->pluck('permission_category')->unique('access_path')->values()->pluck('access_path');
-        return response()->json([
-            'permissions' => $response,
-            'access_paths' => $uniqueCategories,
-        ], 200);
-    }
 
-    public function authUserRoles(Request $request): JsonResponse
-    {
-        $usuario = $request->authUser;
         if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $roleScopeUsuario = RoleScopeUsuario::with([
-            'role',
-            'scope',
-            'entity',
-        ])->where('usuario_id', $usuario->id)->get();
-        
-        $roles = $usuario->roles->map(function ($role) use ($roleScopeUsuario) {
-            $roleScopes = $roleScopeUsuario->where('role_id', $role->id);
-        
+        $permissions = $usuario->getPermissionsAttribute();
+
+        $formattedPermissions = $permissions->map(function ($permission) {
+            $scope = $permission->scope;
+
+            return [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'scope' => [
+                    'id' => $scope->id,
+                    'name' => $scope->name,
+                    'access_path' => $scope->access_path,
+                ],
+            ];
+        });
+
+        $accessPaths = $permissions->pluck('scope.access_path')->unique()->values();
+
+        return response()->json([
+            'permissions' => $formattedPermissions,
+            'access_paths' => $accessPaths,
+        ], 200);
+    }
+
+
+    public function authUserRoles(Request $request): JsonResponse
+    {
+        $usuario = $request->authUser;
+
+        if (!$usuario) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Obtener los roles del usuario
+        $roles = $usuario->roles;
+
+        // Formatear los roles y sus scopes con permisos
+        $formattedRoles = $roles->map(function ($role) {
+            // Obtener los permisos asociados al rol
+            $permissions = $role->permissions;
+
+            // Obtener las rutas de acceso únicas asociadas a los permisos de los roles
+            $accessPaths = $permissions->pluck('scope.access_path')->unique()->values();
+
             return [
                 'id' => $role->id,
                 'name' => $role->name,
-                'scopes' => $roleScopes->groupBy('scope_id')->map(function ($scopeGroup) {
-                    $scope = $scopeGroup->first()->scope;
+                'permissions' => $permissions->map(function ($permission) {
+                    // Obtener el scope asociado a cada permiso
+                    $scope = $permission->scope;
 
                     return [
-                        'id' => $scope->id,
-                        'name' => $scope->name,
-                        'entities' => $scopeGroup->map(function ($roleScope) {
-                            return $roleScope->entity;
-                        })->unique('id')->values(),
+                        'id' => $permission->id,
+                        'name' => $permission->name,
+                        'scope' => [
+                            'id' => $scope->id,
+                            'name' => $scope->name,
+                            'access_path' => $scope->access_path,  // Añadir el access_path
+                        ],
                     ];
-                })->values(),
+                }),
+                'access_paths' => $accessPaths,  // Incluir las rutas de acceso
             ];
-        });        
+        });
 
-
-        return response()->json($roles, 200);
+        return response()->json($formattedRoles, 200);
     }
 }

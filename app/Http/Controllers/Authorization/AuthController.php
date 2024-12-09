@@ -114,23 +114,33 @@ class AuthController extends Controller
     {
         try {
             $usuario = JWTAuth::user();
+
             if (!$usuario) {
                 return response()->json(['message' => 'No se pudo encontrar el usuario. Inicie sesión nuevamente.'], 401);
             }
 
-            $roleScopeUsuario = RoleScopeUsuario::where('usuario_id', $usuario->id)->orderBy('entity_type')->orderBy('entity_id');
+            // Cargar roles y permisos asociados al usuario
+            $usuario->load('roles.permissions');  // Cargar los roles y permisos del usuario
 
-            if (!$roleScopeUsuario) {
-                return response()->json(['message' => 'No se encontraron unidades para el usuario.'], 404);
+            // Obtener las rutas a las que el usuario tiene acceso a través de los permisos
+            $accessPaths = [];
+            $permissions = $usuario->roles->flatMap(function ($role) {
+                return $role->permissions;
+            });
+
+            // Iterar sobre los permisos del usuario y extraer las rutas a las que tiene acceso
+            foreach ($permissions as $permission) {
+                // Supongamos que cada permiso tiene un campo 'scopePath' que contiene la ruta
+                if ($permission->scopePath) {
+                    $accessPaths[] = $permission->scopePath;
+                }
             }
 
-            $unidades = $roleScopeUsuario->get()->map(function ($roleScopeUsuario) {
-                return [
-                    'entity_type' => $roleScopeUsuario->entity_type,
-                    'entity' => $roleScopeUsuario->entity
-                ];
-            });
+            // Filtrar las unidades por las rutas accesibles para el usuario
+            $unidades = $this->getUnidadesByAccessPaths($accessPaths);
+
             return response()->json($unidades, 200);
+
         } catch (TokenExpiredException $e) {
             return response()->json(['message' => 'El token ha expirado. Por favor, inicie sesión nuevamente.'], 401);
         } catch (TokenInvalidException $e) {
@@ -141,6 +151,23 @@ class AuthController extends Controller
             return response()->json(['message' => 'Ocurrió un error inesperado al obtener las unidades del usuario: ' . $e->getMessage()], 500);
         }
     }
+
+    private function getUnidadesByAccessPaths(array $accessPaths)
+    {
+        // Este es solo un ejemplo de cómo podrías manejar las unidades basadas en las rutas.
+        // Podrías tener una relación en la base de datos que vincule las rutas a las unidades directamente.
+        $unidades = [
+            '/mis-solicitudes' => ['entity_type' => 'unidad', 'entity' => 'Unidad 1'],
+            '/mis-unidades' => ['entity_type' => 'unidad', 'entity' => 'Unidad 2'],
+            '/mis-cursos' => ['entity_type' => 'curso', 'entity' => 'Curso 1'],
+            // Agrega más según tu lógica
+        ];
+
+        return array_filter($unidades, function ($route) use ($accessPaths) {
+            return in_array($route, $accessPaths);
+        });
+    }
+
 
     public function me(): JsonResponse
     {
