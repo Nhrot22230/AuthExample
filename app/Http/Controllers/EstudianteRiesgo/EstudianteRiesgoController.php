@@ -521,42 +521,86 @@ class EstudianteRiesgoController extends Controller
     }
 
     public function carga_alumnos_riesgo(Request $request)
-    {
-        try{
-            $request->validate([
-                'alumnos'=> 'required|array',
-                'Especialidad' => 'required',
-                'alumnos.*.Codigo' => 'required',
-                'alumnos.*.CodigoCurso' => 'required|exists:cursos,cod_curso',
-                'alumnos.*.Horario' => 'required',
-                'alumnos.*.Riesgo' => 'required',
-                'alumnos.*.Fecha' => 'required',
+{
+    try {
+        $request->validate([
+            'alumnos' => 'required|array',
+            'Especialidad' => 'required',
+            'alumnos.*.Codigo' => 'required',
+            'alumnos.*.CodigoCurso' => 'required|exists:cursos,cod_curso',
+            'alumnos.*.Horario' => 'required',
+            'alumnos.*.Riesgo' => 'required',
+            'alumnos.*.Fecha' => 'required',
+        ]);
+    } catch (ValidationException $e) {
+        Log::channel('usuarios')->info('Error al validar los datos de subida de alumnos en riesgo', ['error' => $e->errors()]);
+        return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+    }
+
+    $ciclo = Semestre::where('estado', 'activo')->first();
+
+    foreach ($request->alumnos as $alumno) {
+        try {
+            $nuevoEstudiante = EstudianteRiesgo::create([
+                'codigo_estudiante' => $alumno['Codigo'],
+                'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
+                'codigo_especialidad' => $request->Especialidad,
+                'horario' => $alumno['Horario'],
+                'riesgo' => $alumno['Riesgo'],
+                'fecha' => $alumno['Fecha'],
+                'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
             ]);
-        } catch(ValidationException $e){
-            Log::channel('usuarios')->info('Error al validar los datos de subida de alumnos en riesgo', ['error' => $e->errors()]);
-            return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+
+            $this->crear_informes_estudiante($nuevoEstudiante->id, $request->Especialidad);
+        } catch (ValidationException $e) {
+            Log::channel('usuarios')->info('Error al cargar el alumno', ['error' => $e->errors()]);
+            continue;
         }
-        $ciclo = Semestre::where('estado', 'activo')->first();
-        foreach ($request->alumnos as $alumno){
-            try {
-                $nuevoEstudiante = EstudianteRiesgo::create([
-                    'codigo_estudiante' => $alumno['Codigo'],
-                    'codigo_curso' => Curso::where('cod_curso', $alumno['CodigoCurso'])->first()->id,
-                    'codigo_especialidad' => $request->Especialidad,
-                    'horario' => $alumno['Horario'],
-                    'riesgo' => $alumno['Riesgo'],
-                    'fecha' => $alumno['Fecha'],
-                    'ciclo' => $ciclo->anho . "-" . $ciclo->periodo,
-                ]);
-                $this->crear_informes_estudiante($nuevoEstudiante->id, $request->Especialidad);
-            }catch (ValidationException $e){
-                Log::channel('usuarios')->info('Error al cargar el alumno', ['error' => $e->errors()]);
-                //return response()->json(['message' => 'Datos inválidos: ' . $e->getMessage()], 400);
+    }
+
+    // Nueva funcionalidad: Actualizar código_docente en la tabla estudiante_riesgo
+    $estudiantes = EstudianteRiesgo::whereNull('codigo_docente')->get();
+
+    foreach ($estudiantes as $estudiante) {
+        try {
+            // Buscar el docente asignado al curso en la tabla docente_curso
+            $docenteCurso = DB::table('docente_curso')
+            ->where('curso_id', $estudiante->codigo_curso)
+            ->first();
+
+            if (!$docenteCurso) {
+                Log::channel('usuarios')->info('No se encontró un docente asignado al curso', ['curso_id' => $estudiante->codigo_curso]);
                 continue;
             }
+
+            // Obtener el código del docente
+            $codigoDocente = Docente::where('id', $docenteCurso->docente_id)->first()->codigoDocente ?? null;
+
+            if (!$codigoDocente) {
+                Log::channel('usuarios')->info('No se encontró el código del docente para el curso', ['curso_id' => $estudiante->codigo_curso]);
+                continue;
+            }
+
+            // Actualizar el registro del estudiante con el código_docente
+            $estudiante->update([
+                'codigo_docente' => $codigoDocente,
+            ]);
+
+            Log::channel('usuarios')->info('Estudiante actualizado con código_docente', [
+                'estudiante_id' => $estudiante->id,
+                'codigo_docente' => $codigoDocente,
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('usuarios')->info('Error al actualizar el código_docente', [
+                'estudiante_id' => $estudiante->id,
+                'error' => $e->getMessage(),
+            ]);
+            continue;
         }
-        return response()->json("",201);
     }
+
+    return response()->json("", 201);
+}
 
     public function listar_semanas_existentes($idEspecialidad)
     {
