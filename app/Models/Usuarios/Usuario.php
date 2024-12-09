@@ -2,7 +2,6 @@
 
 namespace App\Models\Usuarios;
 
-use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Matricula\Horario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +26,7 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasMany(RoleScopeUsuario::class, 'usuario_id')->with('entity');
     }
 
-    public function getScope()
+    public function scopes()
     {
         return $this->roles()->with('scopes')->get()->flatMap->scopes->unique();
     }
@@ -35,19 +34,6 @@ class Usuario extends Authenticatable implements JWTSubject
     public function notifications(): HasMany
     {
         return $this->hasMany(Notifications::class);
-    }
-
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'model_has_roles', 'model_id', 'role_id')
-            ->where('model_type', self::class);
-    }
-
-    public function getPermissionsAttribute()
-    {
-        return $this->roles->flatMap(function ($role) {
-            return $role->permissions;
-        })->unique('id');
     }
 
     protected $fillable = [

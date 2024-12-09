@@ -6,7 +6,6 @@ use App\AccessPath;
 use App\Models\Authorization\PermissionCategory;
 use Illuminate\Database\Seeder;
 use App\Models\Authorization\Permission;
-use App\Models\Authorization\Scope;
 
 class PermissionSeeder extends Seeder
 {
@@ -15,10 +14,10 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $scopes = [
+        $permission_categories = [
             [
                 'name' => 'configuracion_sistema',
-                'access_path' => AccessPath::CONFIGURACION_SISTEMA->value,
+                'access_path' => AccessPath::CONFIGURACION_SISTEMA,
                 'sub_permissions' => [
                     'usuarios',
                     'unidades',
@@ -28,7 +27,7 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'tramites_academicos',
-                'access_path' => AccessPath::TRAMITES_ACADEMICOS->value,
+                'access_path' => AccessPath::TRAMITES_ACADEMICOS,
                 'sub_permissions' => [
                     'pedido-cursos',
                     'jurado-tesis',
@@ -37,7 +36,7 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'mis_solicitudes',
-                'access_path' => AccessPath::MIS_SOLICITUDES->value,
+                'access_path' => AccessPath::MIS_SOLICITUDES,
                 'sub_permissions' => [
                     'mis-encuestas',
                     'mis-matriculas-adicionales',
@@ -46,7 +45,7 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'mis_unidades',
-                'access_path' => AccessPath::MIS_UNIDADES->value,
+                'access_path' => AccessPath::MIS_UNIDADES,
                 'sub_permissions' => [
                     'mis-unidades',
                     'facultades',
@@ -59,28 +58,28 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'gestion_convocatorias',
-                'access_path' => AccessPath::GESTION_CONVOCATORIAS->value,
+                'access_path' => AccessPath::GESTION_CONVOCATORIAS,
                 'sub_permissions' => [
                     'gestion-convocatorias',
                 ]
             ],
             [
                 'name' => 'evaluar_candidatos',
-                'access_path' => AccessPath::EVALUAR_CANDIDATOS->value,
+                'access_path' => AccessPath::EVALUAR_CANDIDATOS,
                 'sub_permissions' => [
                     'evaluar-candidatos',
                 ]
             ],
             [
                 'name' => 'mis_convocatorias',
-                'access_path' => AccessPath::MIS_CONVOCATORIAS->value,
+                'access_path' => AccessPath::MIS_CONVOCATORIAS,
                 'sub_permissions' => [
                     'mis-convocatorias',
                 ]
             ],
             [
                 'name' => 'mis_cursos',
-                'access_path' => AccessPath::MIS_CURSOS->value,
+                'access_path' => AccessPath::MIS_CURSOS,
                 'sub_permissions' => [
                     'mis-cursos',
                     'mis-horarios',
@@ -88,33 +87,30 @@ class PermissionSeeder extends Seeder
             ],
             [
                 'name' => 'gestion_alumnos',
-                'access_path' => AccessPath::GESTION_ALUMNOS->value,
+                'access_path' => AccessPath::GESTION_ALUMNOS,
                 'sub_permissions' => [
                     'gestion-alumnos',
                 ]
             ],
             [
                 'name' => 'gestion-profesores-jps',
-                'access_path' => AccessPath::GESTION_PROFESORES_JPS->value,
+                'access_path' => AccessPath::GESTION_PROFESORES_JPS,
                 'sub_permissions' => [
                     'gestion-profesores-jps',
                 ]
             ]
         ];
 
-        // Crear los scopes y permisos
-        foreach ($scopes as $scopeData) {
-            // Crear un nuevo scope
-            $scope = Scope::create([
-                'name' => $scopeData['name'],
-                'access_path' => '/' . $scopeData['access_path'],
+        foreach ($permission_categories as $category) {
+            $permission_category = PermissionCategory::create([
+                'name' => $category['name'],
+                'access_path' => $category['access_path'],
             ]);
 
-            // Crear los permisos asociados a este scope
-            foreach ($scopeData['sub_permissions'] as $permissionName) {
+            foreach ($category['sub_permissions'] as $permission_name) {
                 Permission::create([
-                    'name' => $permissionName,
-                    'scope_id' => $scope->id // Asociar el permiso al scope recién creado
+                    'name' => $permission_name,
+                    'permission_category_id' => $permission_category->id
                 ]);
             }
         }

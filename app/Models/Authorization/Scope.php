@@ -4,22 +4,15 @@ namespace App\Models\Authorization;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Scope extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'access_path'];
+    protected $fillable = ['name', 'entity_type'];
 
-    public function roles(): HasMany
+    public function roles()
     {
-        return $this->hasMany(Role::class);
-    }
-
-    public function permissions(): HasMany
-    {
-        return $this->hasMany(Permission::class);
+        return $this->belongsToMany(Role::class, 'role_scopes', 'scope_id', 'role_id');
     }
 }

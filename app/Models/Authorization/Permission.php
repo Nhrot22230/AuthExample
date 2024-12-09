@@ -4,7 +4,6 @@ namespace App\Models\Authorization;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 class Permission extends SpatiePermission
@@ -23,10 +22,5 @@ class Permission extends SpatiePermission
     public function permission_category(): BelongsTo
     {
         return $this->belongsTo(PermissionCategory::class);
-    }
-
-    public function scope(): BelongsTo
-    {
-        return $this->belongsTo(Scope::class);
     }
 }
