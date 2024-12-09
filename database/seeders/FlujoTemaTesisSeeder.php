@@ -197,7 +197,7 @@ class FlujoTemaTesisSeeder extends Seeder
         ]);
 
 
-        TemaDeTesis::factory(2)->create([
+        TemaDeTesis::factory(10)->create([
             'area_id' => $areas->random()->id,
             'especialidad_id' => $especialidad->id,
             'estado' => 'aprobado',
