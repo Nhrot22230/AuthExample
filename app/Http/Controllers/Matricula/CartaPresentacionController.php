@@ -84,7 +84,7 @@ class CartaPresentacionController extends Controller
 
         // Verificar si no hay resultados
         if ($solicitudes->isEmpty()) {
-            return response()->json(['message' => 'No se encontraron solicitudes para este estudiante.'], 404);
+            return response()->json(['message' => 'No se encontraron solicitudes para este estudiante.'], 500);
         }
         
         // Aplicar el filtro de búsqueda si el campo no está vacío
