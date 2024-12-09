@@ -116,6 +116,26 @@ class AdministrativoController extends Controller
         return response()->json(['message' => 'Administrativo creado exitosamente', 'administrativo' => $administrativo], 201);
     }
 
+    public function destroy($codigo)
+    {
+        $administrativo = Administrativo::where('codigoAdministrativo', $codigo)->first();
+        if (!$administrativo) {
+            Log::channel('errors')->warning('Administrativo no encontrado para eliminación', [
+                'codigoAdministrativo' => $codigo,
+            ]);
+            return response()->json(['message' => 'Administrativo no encontrado'], 404);
+        }
+
+        try {
+            $administrativo->delete();
+        } catch (\Exception $e) {
+            Log::channel('errors')->warning('Administrativo no encontrado para eliminación', [
+                'codigoAdministrativo' => $codigo,
+            ]);
+        }
+
+        return response()->json(['message' => 'Administrativo eliminado exitosamente'], 200);
+    }
 
 
     public function storeMultiple(Request $request)
