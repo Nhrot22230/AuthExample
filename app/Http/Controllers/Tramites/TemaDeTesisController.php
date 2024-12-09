@@ -342,15 +342,20 @@ class TemaDeTesisController extends Controller
                     'file' => $file
                 ]);
                 $uploadRequest->files->set('file', $file);
-
+        
                 $fileResponse = $this->subirArchivo($uploadRequest);
-                $fileId = $fileResponse->getData()->file->id;
-
+                $fileData = $fileResponse->getData();
+        
+                if (!isset($fileData->file) || !isset($fileData->file->id)) {
+                    return response()->json(['message' => 'Error al subir el archivo firmado.'], 400);
+                }
+        
+                $fileId = $fileData->file->id;
                 $temaTesis->update(['file_firmado_id' => $fileId]);
             } else {
                 return response()->json(['message' => 'El archivo firmado no es válido.'], 400);
             }
-        }
+        }        
 
         if ($responsable === 'director') {
             DB::beginTransaction();
