@@ -39,7 +39,7 @@ class AssignRoles extends Seeder
             ->get();
         $coordinador_role->syncPermissions($permisos_coordinador);
 
-
+        // SECRETARIO ACADEMICO
         $secretario_role = Role::findByName('secretario-academico');
         $permisos_secretario = Permission::where('name', 'like', '%solicitudes%')
             ->orWhere('name', 'like', '%mis-tema-tesis%')
@@ -53,7 +53,8 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'like', '%usuarios%')
             ->get();
         $secretario_role->syncPermissions($permisos_secretario);
-        // Encontramos el rol de "docente"
+
+       // DOCENTE
         $docente_role = Role::findByName('docente');
 
         // Obtenemos los permisos que correspondan a los docentes

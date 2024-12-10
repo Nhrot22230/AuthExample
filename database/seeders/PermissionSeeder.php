@@ -26,15 +26,6 @@ class PermissionSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'tramites_academicos',
-                'access_path' => AccessPath::TRAMITES_ACADEMICOS,
-                'sub_permissions' => [
-                    'pedido-cursos',
-                    'jurado-tesis',
-                    'matricula-adicional'
-                ]
-            ],
-            [
                 'name' => 'mis_solicitudes',
                 'access_path' => AccessPath::MIS_SOLICITUDES,
                 'sub_permissions' => [
@@ -98,7 +89,16 @@ class PermissionSeeder extends Seeder
                 'sub_permissions' => [
                     'gestion-profesores-jps',
                 ]
-            ]
+                ],
+            [
+                'name' => 'permisos_facultad',
+                'access_path' => AccessPath::FACULTAD,
+                'sub_permissions' => [
+                    'proceso pedido de cursos',
+                    'proceso solicitud de jurado',
+                    'proceso matricula adicional',
+                ]
+            ],
         ];
 
         foreach ($permission_categories as $category) {

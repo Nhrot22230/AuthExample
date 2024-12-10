@@ -35,7 +35,7 @@ class FlujoTemaTesisSeeder extends Seeder
         $areas = Area::factory(1)->create([
             'especialidad_id' => $especialidad->id,
         ]);
-
+        // ESTUDIANTE
         $usuarioEstudiante = Usuario::create([
             'nombre' => 'Estudiante',
             'apellido_paterno' => 'Creado',
@@ -59,6 +59,8 @@ class FlujoTemaTesisSeeder extends Seeder
             'entity_id' => $especialidad->id,
         ]);
 
+
+        // DOCENTE
         $usuarioDocente = Usuario::create([
             'nombre' => 'Docente',
             'apellido_paterno' => 'Creado',
@@ -85,7 +87,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'entity_type' => Curso::class,
             'entity_id' => $especialidad->id,
         ]);
-
+        // COORDINADOR
         $usuarioCoordinador = Usuario::create([
             'nombre' => 'Docente Coordinador',
             'apellido_paterno' => 'Creado',
@@ -95,7 +97,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        
+
         Docente::factory()->create([
             'usuario_id' => $usuarioCoordinador->id,
             'especialidad_id' => $especialidad->id,
@@ -113,7 +115,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'entity_type' => Area::class,
             'entity_id' => $areas->first()->id,
         ]);
-
+        // DIRECTOR
         $usuarioDirector = Usuario::create([
             'nombre' => 'Director',
             'apellido_paterno' => 'Creado',
@@ -123,7 +125,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'estado' => 'activo',
             'password' => Hash::make('password'),
         ]);
-        
+
         Docente::factory()->create([
             'usuario_id' => $usuarioDirector->id,
             'especialidad_id' => $especialidad->id,
@@ -173,7 +175,7 @@ class FlujoTemaTesisSeeder extends Seeder
             'fecha_enviado' => Now()
         ]);
 
-        foreach($temasTesis as $tema){
+        foreach ($temasTesis as $tema) {
             $tema->asesores()->attach($docente->id);
             $tema->estudiantes()->attach($estudiante->id);
         }
@@ -192,6 +194,14 @@ class FlujoTemaTesisSeeder extends Seeder
             'comentarios' => null,
             'file_id' => null,
             'responsable' => 'asesor'
+        ]);
+
+
+        TemaDeTesis::factory(10)->create([
+            'area_id' => $areas->random()->id,
+            'especialidad_id' => $especialidad->id,
+            'estado' => 'aprobado',
+            'estado_jurado' => 'no enviado',     
         ]);
     }
 }
