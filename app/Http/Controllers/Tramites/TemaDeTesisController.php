@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\Storage\File;
+use App\Models\Universidad\Especialidad;
 
 class TemaDeTesisController extends Controller
 {
