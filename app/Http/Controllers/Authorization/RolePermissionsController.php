@@ -201,24 +201,31 @@ class RolePermissionsController extends Controller
 
         DB::beginTransaction();
         try {
-
+            // Eliminar roles y scopes existentes
             RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
+
             foreach ($request->roles as $roleData) {
                 $role = Role::find($roleData['role_id']);
                 $usuario->assignRole($role);
+
                 foreach ($roleData['scopes'] as $scopeData) {
                     $scope = Scope::find($scopeData['scope_id']);
-                    foreach ($scopeData['entities'] as $entityData) {
-                        RoleScopeUsuario::create([
-                            'role_id' => $role->id,
-                            'scope_id' => $scope->id,
-                            'usuario_id' => $usuario->id,
-                            'entity_id' => $entityData,
-                            'entity_type' => $scope->entity_type,
-                        ]);
+
+                    // Verifica si `entities` está definido y es un arreglo
+                    if (isset($scopeData['entities']) && is_array($scopeData['entities'])) {
+                        foreach ($scopeData['entities'] as $entityData) {
+                            RoleScopeUsuario::create([
+                                'role_id' => $role->id,
+                                'scope_id' => $scope->id,
+                                'usuario_id' => $usuario->id,
+                                'entity_id' => $entityData,
+                                'entity_type' => $scope->entity_type,
+                            ]);
+                        }
                     }
                 }
             }
+
             DB::commit();
             return response()->json([
                 'message' => 'Roles correctamente asignados al usuario',

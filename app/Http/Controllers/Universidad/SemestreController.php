@@ -166,6 +166,7 @@ class SemestreController extends Controller
 
     public function destroy($id)
     {
+        //Log::info("Llamado a destroy con ID: {$id}");
         $semestre = Semestre::find($id);
 
         if ($semestre) {
@@ -178,6 +179,7 @@ class SemestreController extends Controller
 
     public function destroyMultiple(Request $request)
     {
+        //Log::info("Llamado a destroyMultiple con IDs: " . json_encode($request->input('ids')));
         $ids = $request->input('ids'); // Recibir una lista de IDs
 
         if ($ids && is_array($ids)) {

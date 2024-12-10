@@ -12,7 +12,7 @@ Route::prefix('semestres')->group(function () {
         Route::get('/{id}', [SemestreController::class, 'show']);
         Route::put('/{id}', [SemestreController::class, 'update']);
         Route::post('/', [SemestreController::class, 'store']);
-        Route::delete('/{id}', [SemestreController::class, 'destroy']);
+        Route::delete('/eliminar/{id}', [SemestreController::class, 'destroy']);
         Route::delete('/eliminarSemestres', [SemestreController::class, 'destroyMultiple']);
     });
 });
