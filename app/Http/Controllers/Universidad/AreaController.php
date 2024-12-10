@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Universidad;
 use App\Http\Controllers\Controller;
 use App\Models\Universidad\Area;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AreaController extends Controller
 {
@@ -27,19 +28,23 @@ class AreaController extends Controller
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'especialidad_id' => 'required|integer|exists:especialidades,id',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'especialidad_id' => 'required|integer|exists:especialidades,id',
+            ]);
 
-        $area = new Area();
-        $area->nombre = $validatedData['nombre'];
-        $area->descripcion = $validatedData['descripcion'] ?? '';
-        $area->especialidad_id = $validatedData['especialidad_id'];
-        $area->save();
+            $area = new Area();
+            $area->nombre = $validatedData['nombre'];
+            $area->descripcion = $validatedData['descripcion'] ?? '';
+            $area->especialidad_id = $validatedData['especialidad_id'];
+            $area->save();
 
-        return response()->json($area, 201);
+            return response()->json($area, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 
     public function show($entity_id)

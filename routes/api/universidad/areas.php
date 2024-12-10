@@ -9,12 +9,12 @@ Route::prefix('areas')->group(function () {
     Route::get('/', [AreaController::class, 'indexAll']);
     Route::get('/paginated', [AreaController::class, 'index']);
 
-    Route::middleware("can:unidades")->group(function () {
-        Route::post('/', [AreaController::class, 'store']);
-        Route::get('/{entity_id}', [AreaController::class, 'show']);
-        Route::put('/{entity_id}', [AreaController::class, 'update']);
-        Route::delete('/{entity_id}', [AreaController::class, 'destroy']);
-    });
+    /*Route::middleware("can:unidades")->group(function () {*/
+    Route::post('/', [AreaController::class, 'store']);
+    Route::get('/{entity_id}', [AreaController::class, 'show']);
+    Route::put('/{entity_id}', [AreaController::class, 'update']);
+    Route::delete('/{entity_id}', [AreaController::class, 'destroy']);
+    //});
 
     Route::middleware(AuthzMiddleware::class . ":areas," . Area::class)->group(function () {
         Route::get('/{entity_id}', [AreaController::class, 'show']);

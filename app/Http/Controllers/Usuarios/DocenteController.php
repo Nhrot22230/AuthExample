@@ -236,6 +236,7 @@ class DocenteController extends Controller
                 'docentes.*.Email' => 'required|email|max:255',
                 'docentes.*.Especialidad' => 'required|string|exists:especialidades,nombre',
                 'docentes.*.Seccion' => 'required|string|exists:secciones,nombre',
+                'docentes.*.Tipo' => 'nullable|string|max:255',
             ]);
         } catch (\Exception $e) {
             Log::channel('errors')->error('Error al validar los datos de los docentes', ['error' => $e->getMessage()]);
@@ -260,7 +261,7 @@ class DocenteController extends Controller
                 Docente::create([
                     'usuario_id' => $usuario->id,
                     'codigoDocente' => $docenteData['Codigo'],
-                    'tipo' => 'TPA',
+                    'tipo' => $docenteData['Tipo'],
                     'especialidad_id' => $especialidad->id,
                     'seccion_id' => $seccion->id,
                     'area_id' => null,
