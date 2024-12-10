@@ -89,9 +89,18 @@ class PlanEstudioController extends Controller
                 'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
 
+            // Encontrar el mayor nivel entre los cursos
+            $maxNivel = 0;
+            if (isset($validatedData['cursos'])) {
+                foreach ($validatedData['cursos'] as $cursoData) {
+                    $maxNivel = max($maxNivel, $cursoData['nivel']);
+                }
+            }
+
             $planEstudio = PlanEstudio::create([
                 'estado' => $validatedData['estado'],
                 'especialidad_id' => $validatedData['especialidad_id'],
+                'cantidad_semestres' => $maxNivel,
             ]);
 
             if (isset($validatedData['semestres'])) {

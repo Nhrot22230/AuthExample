@@ -11,24 +11,7 @@ use Illuminate\Support\Facades\DB;
 class CursoController extends Controller
 {
     //
-    public function indexPaginated()
-    {
-        $perPage = request('per_page', 10);
-        $search = request('search', '');
-        $especialidad_id = request('especialidad_id', null);
-
-        $cursos = Curso::with('especialidad')
-            ->where('nombre', 'like', "%$search%")
-            ->where('cod_curso', 'like', "%$search%")
-            ->when($especialidad_id, function ($query, $especialidad_id) {
-                return $query->where('especialidad_id', $especialidad_id);
-            })
-            ->paginate($perPage);
-
-        return response()->json(['cursos' => $cursos], 200);
-    }
-
-    public function index(Request $request)
+    public function indexPaginated(Request $request)
     {
         $search = $request->input('search', '');
         $especialidad_id = $request->input('especialidad_id', null);
@@ -49,6 +32,19 @@ class CursoController extends Controller
         return response()->json($cursos, 200);
     }
 
+    public function index()
+    {
+        $search = request('search', '');
+        $especialidad_id = request('especialidad_id', null);
+        $cursos = Curso::with('especialidad')
+            ->where('nombre', 'like', "%$search%")
+            ->where('cod_curso', 'like', "%$search%")
+            ->when($especialidad_id, function ($query, $especialidad_id) {
+                return $query->where('especialidad_id', $especialidad_id);
+            })
+            ->get();
+        return response()->json($cursos, 200);
+    }
 
     public function getByCodigo($cod_curso)
     {

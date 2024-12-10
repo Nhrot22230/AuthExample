@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('cursos')->group(function () {
     Route::get('/', [CursoController::class, 'index']);
+    Route::get('/indexPaginated', [CursoController::class, 'indexPaginated']);
     Route::post('/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
     Route::post('/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);
     Route::post('/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
