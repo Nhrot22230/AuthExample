@@ -12,21 +12,43 @@ class PlanEstudioController extends Controller
 {
     public function index($entity_id)
     {
+        // Cargar los planes de estudio de la especialidad
         $planesEstudio = PlanEstudio::with(['especialidad', 'semestres', 'cursos.requisitos'])
             ->where('especialidad_id', $entity_id)
             ->get()
             ->map(function ($plan) {
-                $plan->cursos = $plan->cursos->map(function ($curso) {
-                    $curso->nivel = $curso->pivot->nivel;
-                    $curso->creditosReq = $curso->pivot->creditosReq;
-                    unset($curso->pivot);
+                // Convertir el plan de estudio a un array
+                $planArray = $plan->toArray();
+                
+                // Filtrar los cursos y requisitos
+                $planArray['cursos'] = array_map(function ($curso) use ($plan) {
+                    // Mover 'nivel' y 'creditosReq' fuera del 'pivot'
+                    if (isset($curso['pivot'])) {
+                        $curso['nivel'] = $curso['pivot']['nivel'];
+                        $curso['creditosReq'] = $curso['pivot']['creditosReq'];
+
+                        // Eliminar el 'pivot' después de extraer sus datos
+                        unset($curso['pivot']);
+                    }
+
+                    // Filtrar los requisitos de acuerdo al plan_estudio_id
+                    $curso['requisitos'] = array_filter($curso['requisitos'], function ($requisito) use ($plan) {
+                        return $requisito['plan_estudio_id'] === $plan['id'];
+                    });
+
+                    // Reindexar los requisitos después del filtro
+                    $curso['requisitos'] = array_values($curso['requisitos']);
+
                     return $curso;
-                });
-                return $plan;
+                }, $planArray['cursos']);
+
+                return $planArray;
             });
 
         return response()->json($planesEstudio, 200);
     }
+
+
 
     public function indexPaginated(Request $request, $entity_id)
     {
@@ -38,6 +60,35 @@ class PlanEstudioController extends Controller
             ->where(function ($query) use ($search) {
                 $query->where('cod_curso', 'like', "%$search%")
                     ->orWhere('nombre', 'like', "%$search%");
+            })
+            ->get()
+            ->map(function ($plan) {
+                // Convertir el plan de estudio a un array
+                $planArray = $plan->toArray();
+                
+                // Filtrar los cursos y requisitos
+                $planArray['cursos'] = array_map(function ($curso) use ($plan) {
+                    // Mover 'nivel' y 'creditosReq' fuera del 'pivot'
+                    if (isset($curso['pivot'])) {
+                        $curso['nivel'] = $curso['pivot']['nivel'];
+                        $curso['creditosReq'] = $curso['pivot']['creditosReq'];
+
+                        // Eliminar el 'pivot' después de extraer sus datos
+                        unset($curso['pivot']);
+                    }
+
+                    // Filtrar los requisitos de acuerdo al plan_estudio_id
+                    $curso['requisitos'] = array_filter($curso['requisitos'], function ($requisito) use ($plan) {
+                        return $requisito['plan_estudio_id'] === $plan['id'];
+                    });
+
+                    // Reindexar los requisitos después del filtro
+                    $curso['requisitos'] = array_values($curso['requisitos']);
+
+                    return $curso;
+                }, $planArray['cursos']);
+
+                return $planArray;
             })
             ->paginate($perPage);
 
@@ -60,16 +111,39 @@ class PlanEstudioController extends Controller
 
     public function show($entity_id, $plan_id)
     {
-        $planEstudio = PlanEstudio::with(['semestres', 'cursos.requisitos'])
-            ->where('especialidad_id', $entity_id)
-            ->find($plan_id);
+        $planEstudio = PlanEstudio::with(['cursos', 'semestres', 'cursos.requisitos' => function ($query) use ($plan_id) {
+            // Filtrar requisitos por plan_estudio_id además de curso_id
+            $query->where('plan_estudio_id', $plan_id);
+        }])
+        ->where('especialidad_id', $entity_id)
+        ->find($plan_id);
 
         if (!$planEstudio) {
             return response()->json(['message' => 'Plan de estudio no encontrado'], 404);
         }
 
+        // Transformar los cursos para mover 'nivel' y 'creditosReq' fuera del 'pivot'
+        $planEstudio->cursos = $planEstudio->cursos->map(function ($curso) {
+            // Mover 'nivel' y 'creditosReq' fuera del 'pivot'
+            if (isset($curso->pivot)) {
+                $curso->nivel = $curso->pivot->nivel;
+                $curso->creditosReq = $curso->pivot->creditosReq;
+
+                // Eliminar el 'pivot' después de extraer sus datos
+                unset($curso->pivot);
+            }
+
+            // Filtrar los requisitos de acuerdo al plan_estudio_id
+            $curso->requisitos = $curso->requisitos->filter(function ($requisito) use ($curso) {
+                return $requisito->plan_estudio_id === $curso->plan_estudio_id;
+            });
+
+            return $curso;
+        });
+
         return response()->json($planEstudio, 200);
     }
+
 
     public function store(Request $request)
     {
@@ -161,16 +235,23 @@ class PlanEstudioController extends Controller
                 'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
 
+            // Actualizamos el estado del plan de estudio
             $planEstudio->update(['estado' => $validatedData['estado']]);
 
+            // Actualizar los semestres si están presentes en la solicitud
             if (isset($validatedData['semestres'])) {
                 $semestreIds = array_column($validatedData['semestres'], 'id');
                 $planEstudio->semestres()->sync($semestreIds);
             }
 
+            // Actualizar los cursos, eliminando los anteriores y agregando los nuevos
             if (isset($validatedData['cursos'])) {
+                // Detach de todos los cursos previos
                 $planEstudio->cursos()->detach();
+
+                // Recorremos los cursos enviados y los agregamos
                 foreach ($validatedData['cursos'] as $cursoData) {
+                    // Asociamos el curso al plan de estudio con el nivel y los créditos requeridos
                     $planEstudio->cursos()->attach(
                         $cursoData['id'],
                         [
@@ -179,7 +260,14 @@ class PlanEstudioController extends Controller
                         ]
                     );
 
+                    // Si existen nuevos requisitos, los eliminamos y los volvemos a crear
                     if (isset($cursoData['requisitos'])) {
+                        // Eliminar requisitos antiguos para este curso
+                        Requisito::where('curso_id', $cursoData['id'])
+                            ->where('plan_estudio_id', $planEstudio->id)
+                            ->delete();
+
+                        // Crear los nuevos requisitos
                         foreach ($cursoData['requisitos'] as $requisitoData) {
                             Requisito::create([
                                 'curso_id' => $cursoData['id'],
@@ -200,6 +288,7 @@ class PlanEstudioController extends Controller
             return response()->json(['message' => 'Error al actualizar el plan de estudio: ' . $e->getMessage()], 500);
         }
     }
+
 
     public function destroy($entity_id, $plan_id)
     {
