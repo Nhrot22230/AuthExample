@@ -15,7 +15,9 @@ class DepartamentoController extends Controller
         $per_page = request('per_page', 10);
         $search = request('search', '');
         $departamentos = Departamento::with('facultad')
-            ->where('nombre', 'like', "%$search%")->paginate($per_page);
+            ->where('nombre', 'like', "%$search%")
+            ->orderBy('nombre')
+            ->paginate($per_page);
 
         return response()->json($departamentos, 200);
     }
@@ -24,7 +26,9 @@ class DepartamentoController extends Controller
     {
         $search = request('search', '');
         $departamentos = Departamento::with('facultad')
-            ->where('nombre', 'like', "%$search%")->get();
+            ->where('nombre', 'like', "%$search%")
+            ->orderBy('nombre')
+            ->get();
 
         return response()->json($departamentos, 200);
     }
