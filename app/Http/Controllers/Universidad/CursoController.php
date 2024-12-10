@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
 use App\Models\Delegados\Delegado;
+use App\Models\Universidad\Especialidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class CursoController extends Controller
@@ -27,19 +28,27 @@ class CursoController extends Controller
         return response()->json(['cursos' => $cursos], 200);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $search = request('search', '');
-        $especialidad_id = request('especialidad_id', null);
+        $search = $request->input('search', '');
+        $especialidad_id = $request->input('especialidad_id', null);
+        $perPage = $request->input('per_page', 10); // Valor por defecto: 10
+
         $cursos = Curso::with('especialidad')
-            ->where('nombre', 'like', "%$search%")
-            ->where('cod_curso', 'like', "%$search%")
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%$search%")
+                    ->orWhere('cod_curso', 'like', "%$search%");
+                });
+            })
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
             })
-            ->get();
+            ->paginate($perPage);
+
         return response()->json($cursos, 200);
     }
+
 
     public function getByCodigo($cod_curso)
     {
@@ -80,6 +89,49 @@ class CursoController extends Controller
         $curso->save();
 
         return response()->json($curso, 201);
+    }
+
+    public function storeMultiple(Request $request)
+    {
+        $validatedData = $request->validate([
+            'cursos' => 'required|array|min:1',
+            'cursos.*.especialidad_nombre' => 'required|string|exists:especialidades,nombre',
+            'cursos.*.cod_curso' => 'required|string|max:6|unique:cursos,cod_curso',
+            'cursos.*.nombre' => 'required|string|max:255',
+            'cursos.*.creditos' => 'required|numeric|min:0',
+            'cursos.*.estado' => 'nullable|string|in:activo,inactivo',
+        ]);
+
+        $nuevosCursos = [];
+        $errores = [];
+        
+        foreach ($validatedData['cursos'] as $cursoData) {
+            $especialidad = Especialidad::where('nombre', $cursoData['especialidad_nombre'])->first();
+
+            if (!$especialidad) {
+                $errores[] = [
+                    'nombre_curso' => $cursoData['nombre'],
+                    'error' => "Especialidad '{$cursoData['especialidad_nombre']}' no encontrada.",
+                ];
+                continue;
+            }
+
+            $curso = new Curso();
+            $curso->especialidad_id = $especialidad->id;
+            $curso->cod_curso = $cursoData['cod_curso'];
+            $curso->nombre = $cursoData['nombre'];
+            $curso->creditos = $cursoData['creditos'];
+            $curso->estado = $cursoData['estado'] ?? 'activo';
+            $curso->save();
+
+            $nuevosCursos[] = $curso;
+        }
+
+        return response()->json([
+            'message' => 'Proceso completado.',
+            'departamentos' => $nuevosCursos,
+            'errores' => $errores,
+        ], 201);
     }
 
     public function update(Request $request, $entity_id)

@@ -22,6 +22,7 @@ Route::prefix('cursos')->group(function () {
         Route::post('/', [CursoController::class, 'store']);
         Route::put('/{entity_id}', [CursoController::class, 'update']);
         Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
+        Route::post('/multiple', [CursoController::class, 'storeMultiple']);
     });
     
     Route::middleware(AuthzMiddleware::class . ":cursos," . Curso::class)->group(function () {
