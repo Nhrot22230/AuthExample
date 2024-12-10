@@ -38,20 +38,16 @@ class AssignRoles extends Seeder
             ->get();
         $coordinador_role->syncPermissions($permisos_coordinador);
 
-
+        // SECRETARIO ACADEMICO
         $secretario_role = Role::findByName('secretario-academico');
-        $permisos_secretario = Permission::where('name', 'like', '%solicitudes%')
-            ->orWhere('name', 'like', '%temas de tesis%')
-            ->orWhere('name', 'like', '%observaciones%')
-            ->orWhere('name', 'like', '%jurados%')
-            ->orWhere('name', 'like', '%especialidades%')
-            ->orWhere('name', 'like', '%mis unidades%')
-            ->orWhere('name', 'like', '%matricula%')
-            ->orWhere('name', 'like', '%mis_convocatorias%')
-            ->orWhere('name', 'like', '%facultades%')
-            ->get();
+        $permisos_secretario = Permission::whereIn('permission_category_id', function ($query) {
+            $query->select('id')
+                ->from('permission_categories')
+                ->whereIn('name', ['permisos_facultad', 'mis_unidades', 'mis_convocatorias']);
+        })->get();
         $secretario_role->syncPermissions($permisos_secretario);
-        // Encontramos el rol de "docente"
+
+       // DOCENTE
         $docente_role = Role::findByName('docente');
 
         // Obtenemos los permisos que correspondan a los docentes

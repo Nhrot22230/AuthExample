@@ -5,7 +5,6 @@ namespace App;
 enum AccessPath: string
 {
     case MIS_SOLICITUDES = "mis_solicitudes";
-    case TRAMITES_ACADEMICOS = "tramites_academicos";
     case MIS_UNIDADES = "mis_unidades";
     case MIS_CURSOS = "mis_cursos";
     case MIS_CONVOCATORIAS = "mis_convocatorias";
@@ -14,6 +13,7 @@ enum AccessPath: string
     case CONFIGURACION_SISTEMA = "configuracion_sistema";
     case GESTION_ALUMNOS = "gestion_alumnos";
     case GESTION_PROFESORES_JPS = "gestion_profesores_jps";
+    case FACULTAD = "permisos_facultad";
 
     public static function toArray(): array
     {
