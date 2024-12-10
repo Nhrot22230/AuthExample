@@ -203,19 +203,32 @@ class TemaDeTesisController extends Controller
             ]);
 
             $file = $request->file('file');
-            $path = 'files/tema-tesis/' . $file->getClientOriginalName();
+            $originalName = $file->getClientOriginalName();
+            $path = 'files/tema-tesis/';
 
-            Storage::disk('s3')->put($path, file_get_contents($file));
+            // Crear un nombre único para el archivo si ya existe
+            $uniqueName = $originalName;
+            $counter = 1;
+            while (Storage::disk('s3')->exists($path . $uniqueName)) {
+                // Si el archivo ya existe, agregar un número al final del nombre
+                $uniqueName = pathinfo($originalName, PATHINFO_FILENAME) . '-' . $counter . '.' . $file->getClientOriginalExtension();
+                $counter++;
+            }
 
+            // Subir el archivo a S3 con el nombre único
+            Storage::disk('s3')->put($path . $uniqueName, file_get_contents($file));
+
+            // Crear el registro en la base de datos para almacenar la información del archivo
             $fileRecord = File::create([
-                'name' => $request->name,
+                'name' => $uniqueName,
                 'file_type' => $request->file_type,
                 'mime_type' => $file->getClientMimeType(),
                 'size' => $file->getSize(),
-                'path' => $path,
-                'url' => Storage::url($path),
+                'path' => $path . $uniqueName,
+                'url' => Storage::url($path . $uniqueName),
             ]);
 
+            // Devolver la URL y el objeto del archivo creado
             return response()->json(['url' => $fileRecord->url, 'file' => $fileRecord], 201);
 
         } catch (\Exception $e) {
@@ -223,6 +236,7 @@ class TemaDeTesisController extends Controller
             return response()->json(['message' => 'Error uploading tema de tesis file: ' . $e->getMessage()], 500);
         }
     }
+
 
 
     public function registrarTema(Request $request): JsonResponse
@@ -305,6 +319,96 @@ class TemaDeTesisController extends Controller
             return response()->json([
                 'message' => 'Hubo un error al registrar el tema de tesis.',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function actualizarTema(Request $request, $idTesis): JsonResponse
+    {
+        $request->validate([
+            'titulo' => 'nullable|string|max:255',
+            'resumen' => 'nullable|string',
+            'area_id' => 'nullable|exists:areas,id',
+            'docente_id' => 'nullable|exists:docentes,id',
+            'documento' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+        ]);
+
+        Log::info('Datos recibidos en la solicitud:', $request->all());
+
+        DB::beginTransaction();
+        try {
+            // Buscar el tema existente
+            $temaTesis = TemaDeTesis::findOrFail($idTesis);
+
+            // Actualizar archivo si se proporciona uno nuevo
+            if ($request->hasFile('documento')) {
+                $file = $request->file('documento');
+                if (!$file || !$file->isValid()) {
+                    return response()->json(['message' => 'El archivo no es válido o no se ha recibido.'], 400);
+                }
+
+                $titulo_modificado = strtolower(str_replace(' ', '-', $request->titulo));
+                $uploadRequest = new Request([
+                    'name' => $titulo_modificado,
+                    'file_type' => 'document',
+                    'file' => $file,
+                ]);
+
+                $uploadRequest->files->set('file', $file);
+                $fileResponse = $this->subirArchivo($uploadRequest);
+                $fileData = $fileResponse->getData();
+
+                if (!isset($fileData->file) || !isset($fileData->file->id)) {
+                    return response()->json(['message' => 'Error al subir el archivo.'], 400);
+                }
+
+                $fileId = $fileData->file->id;
+
+                // Actualizar el campo file_id
+                $temaTesis->update(['file_id' => $fileId]);
+            }
+            
+            // Actualizar los datos básicos del tema
+            $temaTesis->update(array_filter([
+                'titulo' => $request->titulo ?? $temaTesis->titulo, // Solo actualizar si se envía un nuevo título
+                'resumen' => $request->resumen ?? $temaTesis->resumen, // Solo actualizar si se envía un nuevo resumen
+                'area_id' => $request->area_id ?? $temaTesis->area_id, // Solo actualizar si se envía una nueva área
+                'estado' => 'pendiente',
+                'file_firmado_id' => null,
+            ]));
+
+            // Actualizar los asesores del tema
+            if ($request->docente_id) {
+                $temaTesis->asesores()->sync([$request->docente_id]);
+            }
+
+            // Modificar el estado en la tabla estado_aprobacion_tema cuando el responsable sea "asesor"
+            // Cambiar el estado a "pendiente"
+            DB::table('estado_aprobacion_tema')
+                ->where('proceso_aprobacion_id', $idTesis)
+                ->where('responsable', 'asesor')
+                ->update(['estado' => 'pendiente', 'comentarios' => null]);
+
+            // Eliminar las filas donde el responsable sea "coordinador" o "director"
+            DB::table('estado_aprobacion_tema')
+                ->where('proceso_aprobacion_id', $idTesis)
+                ->whereIn('responsable', ['coordinador', 'director'])
+                ->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Tema de tesis actualizado correctamente.',
+                'tema_tesis' => $temaTesis,
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Hubo un error al actualizar el tema de tesis.',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
