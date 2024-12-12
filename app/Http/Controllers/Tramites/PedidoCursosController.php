@@ -172,14 +172,14 @@ class PedidoCursosController extends Controller
         return response()->json(['message' => 'Los pedidos han sido actualizados a enviado'], 200);
     }
 
-    public function getCursosPorEspecialidad(Request $request, $especialidadId)
+    public function getCursosPorEspecialidad(Request $request, $especialidadId, $pedidoId)
     {
         // Obtener el número de resultados por página
         $perPage = $request->input('per_page', 10);
         $searchTerm = $request->input('searchTerm', '');
 
         // Buscar el pedido de cursos de la especialidad e incluir el semestre
-        $pedido = PedidoCursos::where('especialidad_id', $especialidadId)
+        $pedido = PedidoCursos::where('id', $pedidoId)
             ->with(['planEstudio', 'semestre']) // Incluimos la relación con semestre
             ->first();
 
@@ -349,21 +349,15 @@ class PedidoCursosController extends Controller
         return response()->json(['message' => 'Cursos electivos y horarios eliminados del pedido exitosamente'], 200);
     }
 
-    public function getCursosElectivosPorEspecialidad(Request $request, $especialidadId)
+    public function getCursosElectivosPorEspecialidad(Request $request, $especialidadId, $pedidoId)
     {
         // Obtener el número de resultados por página
         $perPage = $request->input('per_page', 10);
         $searchTerm = $request->input('searchTerm', '');
 
         // Buscar el pedido de cursos más reciente de la especialidad
-        $pedido = PedidoCursos::where('especialidad_id', $especialidadId)
+        $pedido = PedidoCursos::where('id', $pedidoId)
                     ->with('planEstudio')
-                    ->orderByDesc(
-                        Semestre::select('fecha_inicio')
-                            ->whereColumn('semestres.id', 'pedido_cursos.semestre_id')
-                            ->orderBy('fecha_inicio', 'desc')
-                            ->limit(1)
-                    )
                     ->first();
 
         // Verificar si existe el pedido de cursos

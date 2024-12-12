@@ -100,7 +100,6 @@ class SemestreController extends Controller
 
     public function store(Request $request)
     {
-        // Validación de los datos de entrada
         $request->validate([
             'anho' => 'required|string',
             'periodo' => 'required|string',
@@ -108,8 +107,7 @@ class SemestreController extends Controller
             'fecha_fin' => 'required|date',
             'estado' => 'nullable|string',
         ]);
-    
-        // Crear el semestre
+
         $semestre = Semestre::create([
             'anho' => $request->input('anho'),
             'periodo' => $request->input('periodo'),
@@ -117,41 +115,44 @@ class SemestreController extends Controller
             'fecha_fin' => $request->input('fecha_fin'),
             'estado' => $request->input('estado') ?? 'activo',
         ]);
-    
-        // Obtener todas las especialidades
+
         $especialidades = Especialidad::all();
-    
-        // Array para almacenar los pedidos creados
         $pedidosCreados = [];
         $numeroPedidosCreados = 0;
-        // Crear pedidos de curso para cada especialidad
+
         foreach ($especialidades as $especialidad) {
-            // Obtener el plan de estudios activo para esta especialidad
             $planEstudioActivo = $especialidad->planEstudioActivo();
-    
+
             if ($planEstudioActivo) {
-                // Crear el pedido de curso
-                $pedidoCurso = PedidoCursos::create([
-                    'estado' => 'No Enviado',
-                    'observaciones' => null,
-                    'enviado' => false,
-                    'semestre_id' => $semestre->id,
-                    'facultad_id' => $especialidad->facultad_id,
-                    'especialidad_id' => $especialidad->id,
-                    'plan_estudio_id' => $planEstudioActivo->id,
-                ]);
-                
-                $pedidosCreados[] = $pedidoCurso;
-                $numeroPedidosCreados++;
+                $pedidoExistente = PedidoCursos::where('semestre_id', $semestre->id)
+                    ->where('plan_estudio_id', $planEstudioActivo->id)
+                    ->exists();
+
+                if (!$pedidoExistente) {
+                    $pedidoCurso = PedidoCursos::create([
+                        'estado' => 'No Enviado',
+                        'observaciones' => null,
+                        'enviado' => false,
+                        'semestre_id' => $semestre->id,
+                        'facultad_id' => $especialidad->facultad_id,
+                        'especialidad_id' => $especialidad->id,
+                        'plan_estudio_id' => $planEstudioActivo->id,
+                    ]);
+
+                    $pedidosCreados[] = $pedidoCurso;
+                    $numeroPedidosCreados++;
+                }
             }
         }
+
         Log::info('Se crearon ' . $numeroPedidosCreados . ' pedidos de curso para el semestre ' . $semestre->id);
-        // Retornar el semestre y los pedidos creados
+
         return response()->json([
             'semestre' => $semestre,
             'pedidos_cursos' => $pedidosCreados,
         ], 201);
     }
+
 
     public function show($id)
     {

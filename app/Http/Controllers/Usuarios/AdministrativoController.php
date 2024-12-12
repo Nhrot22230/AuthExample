@@ -43,7 +43,7 @@ class AdministrativoController extends Controller
     {
         $administrativo = Administrativo::with('usuario')->where('codigoAdministrativo', $codigo)->first();
         if (!$administrativo) {
-            return response()->json(['message' => 'Administrativo no encontrado' . $administrativo], 404);
+            return response()->json(['message' => 'Administrativo no encontrado'], 404);
         }
 
         $validatedData = $request->validate([

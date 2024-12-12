@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Tramites\PedidoCursos;
 use App\Models\Universidad\PlanEstudio;
 use App\Models\Universidad\Requisito;
+use App\Models\Universidad\Semestre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -162,7 +164,7 @@ class PlanEstudioController extends Controller
                 'cursos.*.requisitos.*.curso_requisito_id' => 'nullable|exists:cursos,id',
                 'cursos.*.requisitos.*.notaMinima' => 'nullable|numeric|min:0|max:20',
             ]);
-
+    
             // Encontrar el mayor nivel entre los cursos
             $maxNivel = 0;
             if (isset($validatedData['cursos'])) {
@@ -170,18 +172,22 @@ class PlanEstudioController extends Controller
                     $maxNivel = max($maxNivel, $cursoData['nivel']);
                 }
             }
-
+    
+            // Crear el plan de estudio
             $planEstudio = PlanEstudio::create([
                 'estado' => $validatedData['estado'],
                 'especialidad_id' => $validatedData['especialidad_id'],
                 'cantidad_semestres' => $maxNivel,
             ]);
-
+    
+            // Sincronizar semestres asociados si existen
+            $semestreIds = [];
             if (isset($validatedData['semestres'])) {
                 $semestreIds = array_column($validatedData['semestres'], 'id');
                 $planEstudio->semestres()->sync($semestreIds);
             }
-
+    
+            // Asociar cursos al plan
             if (isset($validatedData['cursos'])) {
                 foreach ($validatedData['cursos'] as $cursoData) {
                     $planEstudio->cursos()->attach(
@@ -191,7 +197,7 @@ class PlanEstudioController extends Controller
                             'creditosReq' => $cursoData['creditosReq'] ?? 0,
                         ]
                     );
-
+    
                     if (isset($cursoData['requisitos'])) {
                         foreach ($cursoData['requisitos'] as $requisitoData) {
                             Requisito::create([
@@ -205,13 +211,34 @@ class PlanEstudioController extends Controller
                     }
                 }
             }
-
+    
+            // Crear un pedido de curso solo para el semestre más reciente asociado al plan
+            if (!empty($semestreIds)) {
+                $semestreMasReciente = Semestre::whereIn('id', $semestreIds)
+                    ->orderBy('anho', 'desc')
+                    ->orderBy('periodo', 'desc')
+                    ->first();
+    
+                if ($semestreMasReciente) {
+                    PedidoCursos::create([
+                        'estado' => 'No Enviado',
+                        'observaciones' => null,
+                        'enviado' => false,
+                        'semestre_id' => $semestreMasReciente->id,
+                        'facultad_id' => $planEstudio->especialidad->facultad_id,
+                        'especialidad_id' => $planEstudio->especialidad_id,
+                        'plan_estudio_id' => $planEstudio->id,
+                    ]);
+                }
+            }
+    
             return response()->json(['message' => 'Plan de estudio creado exitosamente', 'plan_estudio' => $planEstudio], 201);
         } catch (\Exception $e) {
             Log::channel('errors')->error('Error al crear el plan de estudio', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error al crear el plan de estudio: ' . $e->getMessage()], 500);
         }
     }
+    
 
     public function update(Request $request, $entity_id, $plan_id)
     {
