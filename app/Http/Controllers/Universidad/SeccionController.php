@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Universidad\Departamento;
 use App\Models\Universidad\Seccion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class SeccionController extends Controller
 {
@@ -90,37 +92,55 @@ class SeccionController extends Controller
         $validatedData = $request->validate([
             'secciones' => 'required|array|min:1',
             'secciones.*.nombre' => 'required|string|max:255|unique:secciones,nombre',
-            'secciones.*.departamento_nombre' => 'required|string|exists:departamentos,nombre',
+            'secciones.*.departamento_nombre' => 'required|string',
+        ], [
+            'secciones.*.departamento_nombre.required' => 'El campo "departamento" es obligatorio.',
+            'secciones.*.departamento_nombre.string' => 'El campo "departamento" debe ser una cadena de texto.',
         ]);
-    
-        $nuevasSecciones = [];
-        $errores = [];
-    
-        foreach ($validatedData['secciones'] as $seccionData) {
-            // Buscar el departamento por su nombre
-            $departamento = Departamento::where('nombre', $seccionData['departamento_nombre'])->first();
-    
-            if (!$departamento) {
-                $errores[] = [
-                    'nombre_seccion' => $seccionData['nombre'],
-                    'error' => "Departamento '{$seccionData['departamento_nombre']}' no encontrado.",
-                ];
-                continue;
+
+        // Iniciar la transacción
+        DB::beginTransaction();
+
+        try {
+            $nuevasSecciones = [];
+
+            foreach ($validatedData['secciones'] as $seccionData) {
+                // Buscar el departamento por su nombre
+                $departamento = Departamento::where('nombre', $seccionData['departamento_nombre'])->first();
+
+                if (!$departamento) {
+                    // Si el departamento no existe, hacemos rollback y lanzamos el error
+                    return response()->json([
+                        'message' => "El departamento '{$seccionData['departamento_nombre']}' no se encuentra registrado para la sección '{$seccionData['nombre']}'. Debe registrarse primero.",
+                    ], 422);
+                }
+
+                // Crear la nueva seccion
+                $seccion = new Seccion();
+                $seccion->nombre = $seccionData['nombre'];
+                $seccion->departamento_id = $departamento->id;
+                $seccion->save();
+
+                $nuevasSecciones[] = $seccion;
             }
-    
-            // Crear la nueva seccion
-            $seccion = new Seccion();
-            $seccion->nombre = $seccionData['nombre'];
-            $seccion->departamento_id = $departamento->id;
-            $seccion->save();
-    
-            $nuevasSecciones[] = $seccion;
+
+            // Si todo fue exitoso, se confirma la transacción
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Proceso completado.',
+                'secciones' => $nuevasSecciones,
+            ], 201);
+
+        } catch (\Exception $e) {
+            // En caso de error, hacemos rollback de la transacción
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Se produjo un error en el proceso. ' . $e->getMessage(),
+            ], 500); // Aquí puedes personalizar el mensaje de error general si lo deseas
         }
-    
-        return response()->json([
-            'message' => 'Proceso completado.',
-            'secciones' => $nuevasSecciones,
-            'errores' => $errores,
-        ], 201);
     }
+
+
 }
