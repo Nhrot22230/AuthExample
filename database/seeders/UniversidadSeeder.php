@@ -39,6 +39,13 @@ class UniversidadSeeder extends Seeder
                 ]);
             }
         }
+        Facultad::factory()->create([
+            'nombre' => "Facultad de Gastronomía Espacial",
+            'abreviatura' => "FDF",
+            'anexo' => 123
+        ]
+        );
+
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
         Curso::factory(50)->create();
     }
