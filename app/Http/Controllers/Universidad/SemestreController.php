@@ -116,7 +116,7 @@ class SemestreController extends Controller
             'fecha_fin' => $request->input('fecha_fin'),
             'estado' => $request->input('estado') ?? 'activo',
         ]);
-
+        
         $especialidades = Especialidad::all();
         $pedidosCreados = [];
         $numeroPedidosCreados = 0;
@@ -147,10 +147,9 @@ class SemestreController extends Controller
         }
 
         Log::info('Se crearon ' . $numeroPedidosCreados . ' pedidos de curso para el semestre ' . $semestre->id);
-
+        
         return response()->json([
-            'semestre' => $semestre,
-            'pedidos_cursos' => $pedidosCreados,
+            'semestre' => $semestre
         ], 201);
     }
 

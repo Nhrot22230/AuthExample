@@ -367,7 +367,7 @@ class PedidoCursosController extends Controller
 
         // Obtener todos los cursos electivos del plan de estudios
         $cursosElectivos = $pedido->planEstudio->cursos()
-            ->wherePivot('nivel', 'E') // Solo cursos electivos
+            ->wherePivot('nivel', '0') // Solo cursos electivos
             ->get();
 
         // Obtener los IDs de los cursos electivos que ya están en el pedido
@@ -421,7 +421,7 @@ class PedidoCursosController extends Controller
     
         // Obtener los cursos electivos del plan de estudios que coincidan con los `curso_ids` y sean nivel 'E'
         $nuevosCursosElectivos = $pedido->planEstudio->cursos()
-            ->wherePivot('nivel', 'E')
+            ->wherePivot('nivel', '0')
             ->whereIn('cursos.id', $request->input('curso_ids'))
             ->whereNotIn('cursos.id', $cursosElectivosExistentes)
             ->get();
@@ -429,7 +429,7 @@ class PedidoCursosController extends Controller
         // Agregar los cursos electivos al pedido con los atributos adicionales
         foreach ($nuevosCursosElectivos as $curso) {
             $pedido->cursosElectivosSeleccionados()->attach($curso->id, [
-                'nivel' => 'E',
+                'nivel' => '0',
                 'creditosReq' => $curso->creditos
             ]);
         }
@@ -533,7 +533,7 @@ class PedidoCursosController extends Controller
                 // Verificar si es un curso electivo del plan de estudios
                 $isElectivo = $planEstudio->cursos()
                     ->where('id', $curso->id)
-                    ->wherePivot('nivel', 'E') // Asegura que sea electivo
+                    ->wherePivot('nivel', '0') // Asegura que sea electivo
                     ->exists();
 
                 if (!$isElectivo) {
@@ -542,7 +542,7 @@ class PedidoCursosController extends Controller
 
                 // Agregar el curso electivo al pedido
                 $pedido->cursosElectivosSeleccionados()->attach($curso->id, [
-                    'nivel' => 'E',
+                    'nivel' => '0',
                     'creditosReq' => $curso->creditos,
                 ]);
             }

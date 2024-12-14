@@ -48,7 +48,7 @@ class PedidoCursos extends Model
     public function cursosObligatorios()
     {
         return $this->planEstudio->cursos()
-            ->wherePivot('nivel', '!=', 'E');
+            ->wherePivot('nivel', '!=', '0');
     }
 
     // Obtener cursos electivos seleccionados específicamente para este pedido
@@ -56,7 +56,7 @@ class PedidoCursos extends Model
     {
         return $this->belongsToMany(Curso::class, 'pedido_curso_electivo')
                     ->withPivot('nivel', 'creditosReq')
-                    ->wherePivot('nivel', 'E');
+                    ->wherePivot('nivel', '0');
     }
 
     // Método para obtener todos los cursos del pedido
