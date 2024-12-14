@@ -19,7 +19,7 @@ class UniversidadSeeder extends Seeder
      */
     public function run(): void
     {
-        Institucion::factory(5)->create();
+        Institucion::factory(1)->create();
         $int_year_now = date('Y');
         $anhos = range($int_year_now - 10, $int_year_now);
         $periodos = [
@@ -39,14 +39,14 @@ class UniversidadSeeder extends Seeder
                 ]);
             }
         }
-        Facultad::factory()->create([
+        /*Facultad::factory()->create([
             'nombre' => "Facultad de Gastronomía Espacial",
             'abreviatura' => "FDF",
             'anexo' => 123
         ]
-        );
+        );*/
 
         Semestre::latest('id')->first()->update(['estado' => 'activo']);
-        Curso::factory(50)->create();
+        /*Curso::factory(50)->create();*/
     }
 }

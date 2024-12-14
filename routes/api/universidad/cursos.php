@@ -18,13 +18,13 @@ Route::prefix('cursos')->group(function () {
     Route::get('/{cursoId}/horarios', [CursoController::class, 'obtenerHorariosPorCurso']);
     Route::post('/alumnos', [CursoController::class, 'obtenerAlumnosPorHorario']);
     Route::get('/{entity_id}', [CursoController::class, 'show']);
-
-    Route::middleware("can:unidades")->group(function () {
-        Route::post('/', [CursoController::class, 'store']);
-        Route::put('/{entity_id}', [CursoController::class, 'update']);
-        Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
-        Route::post('/multiple', [CursoController::class, 'storeMultiple']);
-    });
+    
+    //Route::middleware("can:unidades")->group(function () {
+    Route::post('/', [CursoController::class, 'store']);
+    Route::put('/{entity_id}', [CursoController::class, 'update']);
+    Route::delete('/{entity_id}', [CursoController::class, 'destroy']);
+    Route::post('/multiple', [CursoController::class, 'storeMultiple']);
+    //});
     
     Route::middleware(AuthzMiddleware::class . ":cursos," . Curso::class)->group(function () {
         Route::put('/{entity_id}', [CursoController::class, 'update']);

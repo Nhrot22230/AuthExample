@@ -212,14 +212,14 @@ class PlanEstudioController extends Controller
                 }
             }
     
-            // Crear un pedido de curso solo para el semestre más reciente asociado al plan
-            if (!empty($semestreIds)) {
+            // Crear un pedido de curso solo para el semestre más reciente activo asociado al plan
+            if ($planEstudio->estado === 'activo' && !empty($semestreIds)) {
                 $semestreMasReciente = Semestre::whereIn('id', $semestreIds)
                     ->orderBy('anho', 'desc')
                     ->orderBy('periodo', 'desc')
                     ->first();
     
-                if ($semestreMasReciente) {
+                if ($semestreMasReciente && $semestreMasReciente->estado === 'activo') {
                     PedidoCursos::create([
                         'estado' => 'No Enviado',
                         'observaciones' => null,

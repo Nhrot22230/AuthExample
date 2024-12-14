@@ -49,6 +49,7 @@ class SemestreController extends Controller
 
         if (!$semestre) {
             return response()->json(['message' => 'No se encontró el último semestre'], 404);
+            //return null;
         }
 
         if ($semestre->periodo == 2) {
