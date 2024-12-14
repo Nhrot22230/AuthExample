@@ -24,43 +24,65 @@ class AssignRoles extends Seeder
         $permisos_secretario = Permission::where('name', 'proceso pedido de cursos')
             ->orWhere('name', 'proceso solicitud de jurado')
             ->orWhere('name', 'proceso matricula adicional')
+            ->orWhere('name', 'mis-unidades')
+            ->orWhere('name', 'facultades')
             ->get();
         $secretario_role->syncPermissions($permisos_secretario);
 
         $asistente_especialidad_role = Role::findByName('asistente-especialidad');
-        $permisos_asistente_especialidad = Permission::where('name', 'mis-unidades');
+        $permisos_asistente_especialidad = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'especialidades')
+            ->get();
         $asistente_especialidad_role->syncPermissions($permisos_asistente_especialidad);
 
         $asistente_seccion_role = Role::findByName('asistente-seccion');
-        $permisos_asistente_seccion = Permission::where('name', 'mis-unidades');
+        $permisos_asistente_seccion = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'secciones')
+            ->orWhere('name', 'gestion-convocatorias')
+            ->get();
         $asistente_seccion_role->syncPermissions($permisos_asistente_seccion);
 
         $director_role = Role::findByName('director');
-        $permisos_director = Permission::where('name', 'mis-unidades');
-        $director_role->syncPermissions($permisos_director);
-
-        $director_role = Role::findByName('director');
-        $permisos_director = Permission::where('name', 'mis-unidades');
+        $permisos_director = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'especialidades')
+            ->get();
         $director_role->syncPermissions($permisos_director);
 
         $coordinador_area_role = Role::findByName('coordinador-area');
-        $permisos_coordinador_area = Permission::where('name', 'mis-unidades');
+        $permisos_coordinador_area = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'areas')
+            ->get();
         $coordinador_area_role->syncPermissions($permisos_coordinador_area);
 
         $coordinador_seccion_role = Role::findByName('coordinador-seccion');
-        $permisos_coordinador_seccion = Permission::where('name', 'mis-unidades');
+        $permisos_coordinador_seccion = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'secciones')
+            ->get();
         $coordinador_seccion_role->syncPermissions($permisos_coordinador_seccion);
 
         $docente_role = Role::findByName('docente');
-        $permisos_docente = Permission::where('name', 'mis-unidades');
+        $permisos_docente = Permission::where('name', 'mis-unidades')
+            ->orWhere('name', 'cursos')
+            ->orWhere('name', 'especialidades')
+            ->orWhere('name', 'gestion-alumnos')
+            ->orWhere('name', 'gestion-profesores-jps')
+            ->get();
         $docente_role->syncPermissions($permisos_docente);
 
-        $jefe_practica_role = Role::findByName('jefe-practica');
+        /*$jefe_practica_role = Role::findByName('jefe-practica');
         $permisos_jefe_practica = Permission::where('name', 'mis-unidades');
-        $jefe_practica_role->syncPermissions($permisos_jefe_practica);
+        $jefe_practica_role->syncPermissions($permisos_jefe_practica);*/
 
         $estudiante_role = Role::findByName('estudiante');
-        $permisos_estudiante = Permission::where('name', 'mis-unidades');
+        $permisos_estudiante = Permission::where('name', 'mis-cursos')
+            ->orWhere('name', 'mis-horarios')
+            ->orWhere('name', 'mis-tema-tesis')
+            ->orWhere('name', 'mis-matriculas-adicionales')
+            ->orWhere('name', 'mis-encuestas');
         $estudiante_role->syncPermissions($permisos_estudiante);
+
+        /*$comite_role = Role::findByName('comite');
+        $permisos_comite = Permission::where('name', 'mis-unidades');
+        $comite_role->syncPermissions($permisos_comite);*/
     }
 }
