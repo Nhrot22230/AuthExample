@@ -29,23 +29,26 @@ class RoleSeeder extends Seeder
         $roles = [
             'administrador',
             'secretario-academico',
-            'asistente',
+            'asistente-especialidad',
+            'asistente-seccion',
             'director',
-            'coordinador',
+            'coordinador-area',
+            'coordinador-seccion',
             'docente',
             'jefe-practica',
             'estudiante',
-            'coordinador',
             'comite',
         ];
 
         foreach ($scopes as $scope) Scope::firstOrCreate($scope);
         foreach ($roles as $role) Role::firstOrCreate(['name' => $role]);
 
-        Role::findByName('asistente')->scopes([])->attach(Scope::all());
+        Role::findByName('asistente-especialidad')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
+        Role::findByName('asistente-seccion')->scopes([])->attach(Scope::where('name', 'Seccion')->first());
         Role::findByName('secretario-academico')->scopes([])->attach(Scope::where('name', 'Facultad')->first());
         Role::findByName('director')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
-        Role::findByName('coordinador')->scopes([])->attach(Scope::where('name', 'Area')->first());
+        Role::findByName('coordinador-area')->scopes([])->attach(Scope::where('name', 'Area')->first());
+        Role::findByName('coordinador-seccion')->scopes([])->attach(Scope::where('name', 'Seccion')->first());
         Role::findByName('docente')->scopes([])->attach(
             Scope::orWhere('name', 'Curso')
             ->orWhere('name', 'Seccion')
