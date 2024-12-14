@@ -127,7 +127,11 @@ class AdministrativoController extends Controller
         }
 
         try {
+            $usuario = $administrativo->usuario;
             $administrativo->delete();
+            if ($usuario) {
+                $usuario->delete();
+            }
         } catch (\Exception $e) {
             Log::channel('errors')->warning('Administrativo no encontrado para eliminación', [
                 'codigoAdministrativo' => $codigo,

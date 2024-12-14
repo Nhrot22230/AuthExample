@@ -213,7 +213,11 @@ class DocenteController extends Controller
         }
 
         try {
+            $usuario = $docente->usuario;
             $docente->delete();
+            if ($usuario) {
+                $usuario->delete();
+            }
         } catch (\Exception $e) {
             Log::channel('errors')->warning('Docente no encontrado para eliminación', [
                 'codigoDocente' => $codigo,

@@ -196,7 +196,11 @@ class EstudianteController extends Controller
                 return response()->json(['message' => 'Estudiante no encontrado'], 404);
             }
 
+            $usuario = $estudiante->usuario;
             $estudiante->delete();
+            if ($usuario) {
+                $usuario->delete();
+            }
 
             Log::channel('audit-log')->info('Estudiante eliminado', [
                 'estudiante_id' => $id,
