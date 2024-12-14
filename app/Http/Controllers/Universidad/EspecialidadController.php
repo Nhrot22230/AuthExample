@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class EspecialidadController extends Controller
@@ -116,37 +117,61 @@ class EspecialidadController extends Controller
             'especialidades.*.nombre' => 'required|string|max:255|unique:especialidades,nombre',
             'especialidades.*.descripcion' => 'nullable|string',
             'especialidades.*.facultad_nombre' => 'required|string|exists:facultades,nombre',
+        ], [
+            'especialidades.required' => 'Debe enviar al menos una especialidad.',
+            'especialidades.*.nombre.required' => 'El nombre de la especialidad es obligatorio.',
+            'especialidades.*.nombre.unique' => 'El nombre de la especialidad ":input" ya está registrado.',
+            'especialidades.*.facultad_nombre.required' => 'El campo "facultad" es obligatorio.',
+            'especialidades.*.facultad_nombre.exists' => 'La facultad ":input" no está registrada.',
         ]);
 
-        $nuevasEspecialidades = [];
-        $errores = [];
+        // Iniciar la transacción
+        DB::beginTransaction();
 
-        foreach ($validatedData['especialidades'] as $especialidadData) {
-            // Buscar la facultad por su nombre
-            $facultad = Facultad::where('nombre', $especialidadData['facultad_nombre'])->first();
+        try {
+            $nuevasEspecialidades = [];
+            $errores = [];
 
-            if (!$facultad) {
-                $errores[] = [
-                    'nombre_especialidad' => $especialidadData['nombre'],
-                    'error' => "Facultad '{$especialidadData['facultad_nombre']}' no encontrada.",
+            foreach ($validatedData['especialidades'] as $especialidadData) {
+                // Buscar la facultad por su nombre
+                $facultad = Facultad::where('nombre', $especialidadData['facultad_nombre'])->first();
+
+                if (!$facultad) {
+                    $errores[] = [
+                        'nombre_especialidad' => $especialidadData['nombre'],
+                        'error' => "La facultad '{$especialidadData['facultad_nombre']}' no se encuentra registrada para la especialidad '{$especialidadData['nombre']}'.",
+                    ];
+                    continue;
+                }
+
+                // Crear la nueva especialidad
+                $especialidad = new Especialidad();
+                $especialidad->nombre = $especialidadData['nombre'];
+                $especialidad->descripcion = $especialidadData['descripcion'] ?? null;
+                $especialidad->facultad_id = $facultad->id;
+                $especialidad->save();
+
+                $nuevasEspecialidades[] = [
+                    'nombre' => $especialidad->nombre,
+                    'mensaje' => "La especialidad '{$especialidad->nombre}' se registró correctamente.",
                 ];
-                continue;
             }
 
-            // Crear la nueva especialidad
-            $especialidad = new Especialidad();
-            $especialidad->nombre = $especialidadData['nombre'];
-            $especialidad->descripcion = $especialidadData['descripcion'] ?? null;
-            $especialidad->facultad_id = $facultad->id;
-            $especialidad->save();
+            // Confirmar la transacción
+            DB::commit();
 
-            $nuevasEspecialidades[] = $especialidad;
+            return response()->json([
+                'message' => 'Proceso completado.',
+                'especialidades' => $nuevasEspecialidades,
+                'errores' => $errores,
+            ], 201);
+        } catch (\Exception $e) {
+            // En caso de error, hacemos rollback de la transacción
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Se produjo un error en el proceso. ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Proceso completado.',
-            'especialidades' => $nuevasEspecialidades,
-            'errores' => $errores,
-        ], 201);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Universidad\Departamento;
 use App\Models\Universidad\Facultad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DepartamentoController extends Controller
 {
@@ -112,37 +113,61 @@ class DepartamentoController extends Controller
             'departamentos.*.nombre' => 'required|string|max:255|unique:departamentos,nombre',
             'departamentos.*.descripcion' => 'nullable|string',
             'departamentos.*.facultad_nombre' => 'required|string|exists:facultades,nombre',
+        ], [
+            'departamentos.required' => 'Debe enviar al menos un departamento.',
+            'departamentos.*.nombre.required' => 'El nombre del departamento es obligatorio.',
+            'departamentos.*.nombre.unique' => 'El nombre del departamento ":input" ya existe.',
+            'departamentos.*.facultad_nombre.required' => 'El campo "facultad" es obligatorio.',
+            'departamentos.*.facultad_nombre.exists' => 'La facultad ":input" no está registrada.',
         ]);
 
-        $nuevosDepartamentos = [];
-        $errores = [];
+        // Iniciar la transacción
+        DB::beginTransaction();
 
-        foreach ($validatedData['departamentos'] as $departamentoData) {
-            // Buscar la facultad por su nombre
-            $facultad = Facultad::where('nombre', $departamentoData['facultad_nombre'])->first();
+        try {
+            $nuevosDepartamentos = [];
+            $errores = [];
 
-            if (!$facultad) {
-                $errores[] = [
-                    'nombre_departamento' => $departamentoData['nombre'],
-                    'error' => "Facultad '{$departamentoData['facultad_nombre']}' no encontrada.",
+            foreach ($validatedData['departamentos'] as $departamentoData) {
+                // Buscar la facultad por su nombre
+                $facultad = Facultad::where('nombre', $departamentoData['facultad_nombre'])->first();
+
+                if (!$facultad) {
+                    $errores[] = [
+                        'nombre_departamento' => $departamentoData['nombre'],
+                        'error' => "La facultad '{$departamentoData['facultad_nombre']}' no se encuentra registrada para el departamento '{$departamentoData['nombre']}'.",
+                    ];
+                    continue;
+                }
+
+                // Crear el nuevo departamento
+                $departamento = new Departamento();
+                $departamento->nombre = $departamentoData['nombre'];
+                $departamento->descripcion = $departamentoData['descripcion'] ?? null;
+                $departamento->facultad_id = $facultad->id;
+                $departamento->save();
+
+                $nuevosDepartamentos[] = [
+                    'nombre' => $departamento->nombre,
+                    'mensaje' => "El departamento '{$departamento->nombre}' se registró correctamente.",
                 ];
-                continue;
             }
 
-            // Crear el nuevo departamento
-            $departamento = new Departamento();
-            $departamento->nombre = $departamentoData['nombre'];
-            $departamento->descripcion = $departamentoData['descripcion'] ?? null;
-            $departamento->facultad_id = $facultad->id;
-            $departamento->save();
+            // Confirmar la transacción
+            DB::commit();
 
-            $nuevosDepartamentos[] = $departamento;
+            return response()->json([
+                'message' => 'Proceso completado.',
+                'departamentos' => $nuevosDepartamentos,
+                'errores' => $errores,
+            ], 201);
+        } catch (\Exception $e) {
+            // En caso de error, hacemos rollback de la transacción
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Se produjo un error en el proceso. ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Proceso completado.',
-            'departamentos' => $nuevosDepartamentos,
-            'errores' => $errores,
-        ], 201);
     }
 }

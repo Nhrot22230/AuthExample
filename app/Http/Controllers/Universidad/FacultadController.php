@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Universidad;
 use App\Http\Controllers\Controller;
 use App\Models\Universidad\Facultad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FacultadController extends Controller
 {
@@ -104,27 +105,64 @@ class FacultadController extends Controller
     {
         // Validar el arreglo de facultades
         $validatedData = $request->validate([
-            'facultades' => 'required|array',
+            'facultades' => 'required|array|min:1',
             'facultades.*.nombre' => 'required|string|max:255|unique:facultades,nombre',
             'facultades.*.abreviatura' => 'required|string|max:255',
             'facultades.*.anexo' => 'nullable|string',
+        ], [
+            'facultades.required' => 'Debe enviar al menos una facultad.',
+            'facultades.*.nombre.required' => 'El nombre de la facultad es obligatorio.',
+            'facultades.*.nombre.unique' => 'El nombre de la facultad ":input" ya está registrado.',
+            'facultades.*.abreviatura.required' => 'La abreviatura de la facultad es obligatoria.',
         ]);
-
-        $nuevasFacultades = [];
-
-        foreach ($validatedData['facultades'] as $facultadData) {
-            $facultad = new Facultad();
-            $facultad->nombre = $facultadData['nombre'];
-            $facultad->abreviatura = $facultadData['abreviatura'];
-            $facultad->anexo = $facultadData['anexo'] ?? null;
-            $facultad->save();
-
-            $nuevasFacultades[] = $facultad;
+    
+        // Iniciar la transacción
+        DB::beginTransaction();
+    
+        try {
+            $nuevasFacultades = [];
+            $errores = [];
+    
+            foreach ($validatedData['facultades'] as $facultadData) {
+                // Verificar si la facultad ya existe (validación redundante)
+                if (Facultad::where('nombre', $facultadData['nombre'])->exists()) {
+                    $errores[] = [
+                        'nombre_facultad' => $facultadData['nombre'],
+                        'error' => "La facultad '{$facultadData['nombre']}' ya está registrada.",
+                    ];
+                    continue;
+                }
+    
+                // Crear la nueva facultad
+                $facultad = new Facultad();
+                $facultad->nombre = $facultadData['nombre'];
+                $facultad->abreviatura = $facultadData['abreviatura'];
+                $facultad->anexo = $facultadData['anexo'] ?? null;
+                $facultad->save();
+    
+                $nuevasFacultades[] = [
+                    'nombre' => $facultad->nombre,
+                    'mensaje' => "La facultad '{$facultad->nombre}' se registró correctamente.",
+                ];
+            }
+    
+            // Confirmar la transacción
+            DB::commit();
+    
+            return response()->json([
+                'message' => 'Proceso completado.',
+                'facultades' => $nuevasFacultades,
+                'errores' => $errores,
+            ], 201);
+    
+        } catch (\Exception $e) {
+            // En caso de error, hacemos rollback de la transacción
+            DB::rollBack();
+    
+            return response()->json([
+                'message' => 'Se produjo un error en el proceso. ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Facultades creadas exitosamente',
-            'facultades' => $nuevasFacultades,
-        ], 201);
     }
+    
 }
