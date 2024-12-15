@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +41,21 @@ class EspecialidadController extends Controller
 
         if (!$especialidad) {
             return response()->json(['message' => 'Especialidad no encontrada'], 404);
+        }
+
+        // Buscar el director de carrera relacionado
+        $directorData = RoleScopeUsuario::where('entity_type', Especialidad::class)
+            ->where('entity_id', $entity_id)
+            ->first();
+
+        // Si existe un director de carrera asociado, obtener su información de usuario
+        if ($directorData) {
+            $director = Usuario::find($directorData->usuario_id);
+
+            // Agregar el director de carrera a la facultad como un atributo adicional
+            $especialidad->director = $director;
+        } else {
+            $especialidad->director = null; // Si no hay director de carrera, asignar null
         }
 
         return response()->json($especialidad, 200);

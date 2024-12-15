@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Universidad\Facultad;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -32,6 +34,21 @@ class FacultadController extends Controller
 
         if (!$facultad) {
             return response()->json(['message' => 'Facultad no encontrada'], 404);
+        }
+
+        // Buscar el secretario académico relacionado
+        $secretarioData = RoleScopeUsuario::where('entity_type', Facultad::class)
+            ->where('entity_id', $entity_id)
+            ->first();
+
+        // Si existe un secretario asociado, obtener su información de usuario
+        if ($secretarioData) {
+            $secretario = Usuario::find($secretarioData->usuario_id);
+
+            // Agregar el secretario a la facultad como un atributo adicional
+            $facultad->secretario = $secretario;
+        } else {
+            $facultad->secretario = null; // Si no hay secretario, asignar null
         }
 
         return response()->json($facultad, 200);
