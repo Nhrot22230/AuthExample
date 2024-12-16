@@ -212,7 +212,7 @@ class RolePermissionsController extends Controller
                 $role = Role::find($roleData['role_id']);
                 $usuario->assignRole($role);
 
-                $rolesActuales->each(function ($roleActual) use ($role) {
+                $rolesActuales->each(function ($roleActual) use ($role, $usuario) {
                     if ($roleActual->id !== $role->id) {
                         $usuario->removeRole($roleActual);  // Eliminar rol que ya no está en la solicitud
                     }
