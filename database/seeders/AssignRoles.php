@@ -59,6 +59,7 @@ class AssignRoles extends Seeder
         $coordinador_seccion_role = Role::findByName('coordinador-seccion');
         $permisos_coordinador_seccion = Permission::where('name', 'mis-unidades')
             ->orWhere('name', 'secciones')
+            ->orWhere('name', 'gestion-convocatorias')
             ->get();
         $coordinador_seccion_role->syncPermissions($permisos_coordinador_seccion);
 
@@ -83,8 +84,12 @@ class AssignRoles extends Seeder
             ->get();
         $estudiante_role->syncPermissions($permisos_estudiante);
 
-        /*$comite_role = Role::findByName('comite');
-        $permisos_comite = Permission::where('name', 'mis-unidades');
-        $comite_role->syncPermissions($permisos_comite);*/
+        $comite_role = Role::findByName('comite');
+        $permisos_comite = Permission::where('name', 'evaluar-candidatos')->get();
+        $comite_role->syncPermissions($permisos_comite);
+
+        $candidato_role = Role::findByName('candidato');
+        $permisos_candidato = Permission::where('name', 'mis-convocatorias')->get();
+        $candidato_role->syncPermissions($permisos_candidato);
     }
 }
