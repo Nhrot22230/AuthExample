@@ -334,8 +334,6 @@ class TemaDeTesisController extends Controller
             'documento' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        Log::info('Datos recibidos en la solicitud:', $request->all());
-
         DB::beginTransaction();
         try {
             // Buscar el tema existente
