@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('cursos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('set null');
-            $table->foreignId('seccion_Id')->constrained('secciones')->onDelete('set null');
+            $table->foreignId('especialidad_id')->nullable()->constrained('especialidades')->onDelete('set null');
+            $table->foreignId('seccion_Id')->nullable()->constrained('secciones')->onDelete('set null');
             $table->string('cod_curso');
             $table->string('nombre');
             $table->double('creditos');
