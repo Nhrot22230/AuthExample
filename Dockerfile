@@ -35,8 +35,8 @@ RUN composer install --no-dev --optimize-autoloader
 
 RUN php artisan key:generate
 
-# Expone el puerto 8000
-EXPOSE 8000
+# Expone el puerto 80
+EXPOSE 80
 
 # Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
