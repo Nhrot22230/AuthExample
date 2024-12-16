@@ -203,20 +203,23 @@ class RolePermissionsController extends Controller
 
         DB::beginTransaction();
         try {
-            $rolesActuales = $usuario->roles;
-            $usuario->roles()->detach();
+            $rolesActuales = $usuario->roles->pluck('id')->toArray();
+            // Obtener los nuevos roles de la solicitud
+            $rolesNuevos = collect($request->roles)->pluck('role_id')->toArray();
+
+            // Determinar los roles que deben eliminarse (roles que no están en la nueva lista)
+            $rolesParaEliminar = array_diff($rolesActuales, $rolesNuevos);
+            foreach ($rolesParaEliminar as $roleId) {
+                $role = Role::find($roleId);
+                $usuario->removeRole($role);  // Eliminar rol que ya no está en la solicitud
+            }
+            
             // Eliminar roles y scopes existentes
             RoleScopeUsuario::where('usuario_id', $usuario->id)->delete();
 
             foreach ($request->roles as $roleData) {
                 $role = Role::find($roleData['role_id']);
                 $usuario->assignRole($role);
-
-                $rolesActuales->each(function ($roleActual) use ($role, $usuario) {
-                    if ($roleActual->id !== $role->id) {
-                        $usuario->removeRole($roleActual);  // Eliminar rol que ya no está en la solicitud
-                    }
-                });
 
                 foreach ($roleData['scopes'] as $scopeData) {
                     $scope = Scope::find($scopeData['scope_id']);
