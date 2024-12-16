@@ -34,11 +34,16 @@ variable "db_instance_class" {
   type    = string
   default = "db.t3.micro"
 }
+
 resource "aws_s3_bucket" "app_bucket" {
   bucket = "${var.project_name}-${var.environment}-bucket"
   acl    = "private"
-  versioning {
-    enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "app_bucket_versioning" {
+  bucket = aws_s3_bucket.app_bucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 

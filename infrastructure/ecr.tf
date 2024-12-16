@@ -1,7 +1,11 @@
 resource "aws_ecr_repository" "app_repo" {
   name                 = "${var.project_name}-repo"
   image_tag_mutability = "MUTABLE"
-  lifecycle_policy     = <<EOF
+}
+
+resource "aws_ecr_lifecycle_policy" "app_repo_policy" {
+  repository = aws_ecr_repository.app_repo.name
+  policy     = <<EOF
 {
   "rules": [
     {
