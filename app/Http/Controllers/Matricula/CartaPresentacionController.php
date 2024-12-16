@@ -80,12 +80,13 @@ class CartaPresentacionController extends Controller
         ])
         ->where('estudiante_id', $estudianteId);
 
-        $solicitudes = $query->get();
+        //$solicitudes = $query->get();
 
         // Verificar si no hay resultados
-        if ($solicitudes->isEmpty()) {
-            return response()->json(['message' => 'No se encontraron solicitudes para este estudiante.'], 500);
-        }
+        /*if ($solicitudes->isEmpty()) {
+            //return response()->json(['message' => 'No se encontraron solicitudes para este estudiante.'], 500);
+            return;
+        }*/
         
         // Aplicar el filtro de búsqueda si el campo no está vacío
         if (!empty($search)) {
@@ -189,15 +190,15 @@ class CartaPresentacionController extends Controller
     }
 
 
-public function getCursosPorEstudiante($estudianteId)
-{
-    // Recupera los horarios del estudiante con el curso asociado
-    $estudiante = Estudiante::with(['horarios' => function($query) {
-        $query->with('curso');  // Cargar también el curso asociado a cada horario
-    }])->find($estudianteId);
+    public function getCursosPorEstudiante($estudianteId)
+    {
+        // Recupera los horarios del estudiante con el curso asociado
+        $estudiante = Estudiante::with(['horarios' => function($query) {
+            $query->with('curso');  // Cargar también el curso asociado a cada horario
+        }])->find($estudianteId);
 
-    return response()->json($estudiante->horarios);
-}
+        return response()->json($estudiante->horarios);
+    }
 
     public function store(Request $request)
     {
@@ -254,96 +255,96 @@ public function getCursosPorEstudiante($estudianteId)
         }
     }
 
-public function getByEspecialidad(Request $request, $especialidadId)
-{
-    // Recoger los filtros de búsqueda y estado
-    $search = $request->input('search', ''); // Campo de búsqueda
-    $estado = $request->input('estado', null); // Estado para filtrar
-    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+    public function getByEspecialidad(Request $request, $especialidadId)
+    {
+        // Recoger los filtros de búsqueda y estado
+        $search = $request->input('search', ''); // Campo de búsqueda
+        $estado = $request->input('estado', null); // Estado para filtrar
+        $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
 
-    // Comenzar la consulta
-    $query = CartaPresentacionSolicitud::with([
-        'estudiante.usuario',
-        'horario',
-        'horario.docentes.usuario:id,nombre,apellido_paterno',
-        'horario.curso',
-    ])
-    ->whereHas('estudiante', function ($query) use ($especialidadId) {
-        $query->where('especialidad_id', $especialidadId);  // Filtramos los estudiantes por especialidad
-    });
-
-    // Aplicar el filtro de búsqueda si el campo no está vacío
-    if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->whereHas('horario', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('horario.curso', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%')
-                  ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
-            });
+        // Comenzar la consulta
+        $query = CartaPresentacionSolicitud::with([
+            'estudiante.usuario',
+            'horario',
+            'horario.docentes.usuario:id,nombre,apellido_paterno',
+            'horario.curso',
+        ])
+        ->whereHas('estudiante', function ($query) use ($especialidadId) {
+            $query->where('especialidad_id', $especialidadId);  // Filtramos los estudiantes por especialidad
         });
+
+        // Aplicar el filtro de búsqueda si el campo no está vacío
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('horario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('horario.curso', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+                });
+            });
+        }
+
+        // Aplicar el filtro de estado si se ha seleccionado
+        if ($estado) {
+            $query->whereIn('estado', (array)$estado);
+        }
+
+        // Paginación
+        $solicitudes = $query->paginate($perPage);
+
+        // Formatear los datos de la respuesta
+        $result = $solicitudes->map(function ($solicitud) {
+            // Obtener datos del estudiante
+            $estudiante = $solicitud->estudiante;
+            $usuarioEstudiante = $estudiante->usuario;
+
+            // Componer el nombre completo del estudiante
+            $nombreCompletoEstudiante = $usuarioEstudiante->nombre . ' ' . 
+                $usuarioEstudiante->apellido_paterno . ' ' . 
+                $usuarioEstudiante->apellido_materno;
+
+            // Obtener el profesor
+            $profesor = isset($solicitud->horario->docentes->first()->usuario)
+                ? $solicitud->horario->docentes->first()->usuario->nombre . ' ' . 
+                $solicitud->horario->docentes->first()->usuario->apellido_paterno
+                : 'Sin Profesor';
+
+            // Obtener el curso
+            $cursoNombre = $solicitud->horario->curso->nombre;
+            
+            // Obtener el código de horario
+            $codigoHorario = $solicitud->horario->codigo;
+
+            // Devolver la información formateada
+            return [
+                'id' => $solicitud->id,  // ID de la solicitud
+                'codigo_alumno' => $estudiante->codigoEstudiante,  // Código del alumno
+                'nombre_alumno' => $nombreCompletoEstudiante,  // Nombre del alumno
+                'ultima_modificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'),  // Última modificación
+                'curso' => $cursoNombre,  // Nombre del curso
+                'codigo_horario' => $codigoHorario,  // Código del horario
+                'estado' => $solicitud->estado,  // Estado de la solicitud
+            ];
+        });
+
+        // Responder con los datos formateados y la paginación
+        return response()->json([
+            'data' => $result,
+            'pagination' => [
+                'total' => $solicitudes->total(), // Total de filas
+                'current_page' => $solicitudes->currentPage(),
+                'last_page' => $solicitudes->lastPage(),
+                'per_page' => $solicitudes->perPage(),
+            ],
+        ]);
     }
 
-    // Aplicar el filtro de estado si se ha seleccionado
-    if ($estado) {
-        $query->whereIn('estado', (array)$estado);
-    }
-
-    // Paginación
-    $solicitudes = $query->paginate($perPage);
-
-    // Formatear los datos de la respuesta
-    $result = $solicitudes->map(function ($solicitud) {
-        // Obtener datos del estudiante
-        $estudiante = $solicitud->estudiante;
-        $usuarioEstudiante = $estudiante->usuario;
-
-        // Componer el nombre completo del estudiante
-        $nombreCompletoEstudiante = $usuarioEstudiante->nombre . ' ' . 
-            $usuarioEstudiante->apellido_paterno . ' ' . 
-            $usuarioEstudiante->apellido_materno;
-
-        // Obtener el profesor
-        $profesor = isset($solicitud->horario->docentes->first()->usuario)
-            ? $solicitud->horario->docentes->first()->usuario->nombre . ' ' . 
-              $solicitud->horario->docentes->first()->usuario->apellido_paterno
-            : 'Sin Profesor';
-
-        // Obtener el curso
-        $cursoNombre = $solicitud->horario->curso->nombre;
-        
-        // Obtener el código de horario
-        $codigoHorario = $solicitud->horario->codigo;
-
-        // Devolver la información formateada
-        return [
-            'id' => $solicitud->id,  // ID de la solicitud
-            'codigo_alumno' => $estudiante->codigoEstudiante,  // Código del alumno
-            'nombre_alumno' => $nombreCompletoEstudiante,  // Nombre del alumno
-            'ultima_modificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'),  // Última modificación
-            'curso' => $cursoNombre,  // Nombre del curso
-            'codigo_horario' => $codigoHorario,  // Código del horario
-            'estado' => $solicitud->estado,  // Estado de la solicitud
-        ];
-    });
-
-    // Responder con los datos formateados y la paginación
-    return response()->json([
-        'data' => $result,
-        'pagination' => [
-            'total' => $solicitudes->total(), // Total de filas
-            'current_page' => $solicitudes->currentPage(),
-            'last_page' => $solicitudes->lastPage(),
-            'per_page' => $solicitudes->perPage(),
-        ],
-    ]);
-}
-
-public function rechazarCarta($id, Request $request)
+    public function rechazarCarta($id, Request $request)
     {
         // Validación del motivo de rechazo
         $validated = $request->validate([
@@ -424,100 +425,100 @@ public function rechazarCarta($id, Request $request)
     }
 
     public function getByProfesor(Request $request, $profesorId)
-{
-    // Recoger los filtros de búsqueda y estado
-    $search = $request->input('search', ''); // Campo de búsqueda
-    $estado = $request->input('estado', null); // Estado para filtrar
-    $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
+    {
+        // Recoger los filtros de búsqueda y estado
+        $search = $request->input('search', ''); // Campo de búsqueda
+        $estado = $request->input('estado', null); // Estado para filtrar
+        $perPage = $request->input('per_Page', 10); // Cantidad de elementos por página
 
-    // Comenzar la consulta
-    $query = CartaPresentacionSolicitud::with([
-        'estudiante.usuario', // Cargar el usuario del estudiante
-        'horario', // Cargar los horarios
-        'horario.docentes.usuario:id,nombre,apellido_paterno', // Cargar los docentes del horario
-        'horario.curso', // Cargar el curso asociado al horario
-    ])
-    // Filtrar por los horarios asociados a este profesor
-    ->whereHas('horario.docentes', function($q) use ($profesorId) {
-        $q->where('docente_id', $profesorId);
-    });
-
-    // Aplicar el filtro de búsqueda si el campo no está vacío
-    if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->whereHas('horario', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('horario.curso', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%');
-            })
-            ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%')
-                  ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
-            });
+        // Comenzar la consulta
+        $query = CartaPresentacionSolicitud::with([
+            'estudiante.usuario', // Cargar el usuario del estudiante
+            'horario', // Cargar los horarios
+            'horario.docentes.usuario:id,nombre,apellido_paterno', // Cargar los docentes del horario
+            'horario.curso', // Cargar el curso asociado al horario
+        ])
+        // Filtrar por los horarios asociados a este profesor
+        ->whereHas('horario.docentes', function($q) use ($profesorId) {
+            $q->where('docente_id', $profesorId);
         });
-    }
 
-    // Aplicar el filtro de estado si se ha seleccionado
-    if ($estado) {
-        $query->whereIn('estado', (array)$estado); // Asegura que el estado sea un array
-    }
+        // Aplicar el filtro de búsqueda si el campo no está vacío
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('horario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('horario.curso', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('horario.docentes.usuario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('apellido_paterno', 'like', '%' . $search . '%');
+                });
+            });
+        }
 
-    // Paginación
-    $solicitudes = $query->paginate($perPage);
+        // Aplicar el filtro de estado si se ha seleccionado
+        if ($estado) {
+            $query->whereIn('estado', (array)$estado); // Asegura que el estado sea un array
+        }
 
-    // Formatear los resultados
-    $result = $solicitudes->map(function ($solicitud) {
-        return [
-            'id' => $solicitud->id, // Primer campo es id
-            'profesor' => isset($solicitud->horario->docentes->first()->usuario)
-                ? $solicitud->horario->docentes->first()->usuario->nombre . ' ' . $solicitud->horario->docentes->first()->usuario->apellido_paterno
-                : 'Sin Profesor', // Profesor
-            'curso' => $solicitud->horario->curso->nombre, // Curso
-            'horario' => $solicitud->horario->codigo, // Código del horario
-            'ultimaModificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'), // Última modificación
-            'estado' => $solicitud->estado, // Estado
-        ];
-    });
+        // Paginación
+        $solicitudes = $query->paginate($perPage);
 
-    // Retornar la respuesta con la paginación
-    return response()->json([
-        'data' => $result,
-        'pagination' => [
-            'total' => $solicitudes->total(), // Total de filas
-            'current_page' => $solicitudes->currentPage(),
-            'last_page' => $solicitudes->lastPage(),
-            'per_page' => $solicitudes->perPage(),
-        ],
-    ]);
-}
+        // Formatear los resultados
+        $result = $solicitudes->map(function ($solicitud) {
+            return [
+                'id' => $solicitud->id, // Primer campo es id
+                'profesor' => isset($solicitud->horario->docentes->first()->usuario)
+                    ? $solicitud->horario->docentes->first()->usuario->nombre . ' ' . $solicitud->horario->docentes->first()->usuario->apellido_paterno
+                    : 'Sin Profesor', // Profesor
+                'curso' => $solicitud->horario->curso->nombre, // Curso
+                'horario' => $solicitud->horario->codigo, // Código del horario
+                'ultimaModificacion' => Carbon::parse($solicitud->updated_at)->format('d-m-Y'), // Última modificación
+                'estado' => $solicitud->estado, // Estado
+            ];
+        });
 
-public function solicitarActividades($id, Request $request)
-{
-    // Buscar la carta de presentación por ID
-    $carta = CartaPresentacionSolicitud::find($id);
-
-    if (!$carta) {
-        return response()->json(['message' => 'Carta de presentación no encontrada.'], 404);
-    }
-
-    // Verificar si el estado es "Pendiente Secretaria"
-    if ($carta->estado !== 'Pendiente Secretaria') {
+        // Retornar la respuesta con la paginación
         return response()->json([
-            'message' => 'La carta no puede ser actualizada porque no está en el estado "Pendiente Secretaria".'
-        ], 400);
+            'data' => $result,
+            'pagination' => [
+                'total' => $solicitudes->total(), // Total de filas
+                'current_page' => $solicitudes->currentPage(),
+                'last_page' => $solicitudes->lastPage(),
+                'per_page' => $solicitudes->perPage(),
+            ],
+        ]);
     }
 
-    // Cambiar el estado a "Pendiente de Actividades"
-    $carta->estado = 'Pendiente de Actividades';
-    $carta->save();
+    public function solicitarActividades($id, Request $request)
+    {
+        // Buscar la carta de presentación por ID
+        $carta = CartaPresentacionSolicitud::find($id);
 
-    // Respuesta exitosa
-    return response()->json([
-        'message' => 'Solicitud de actividades enviada correctamente.',
-        'carta' => $carta
-    ], 200);
-}
+        if (!$carta) {
+            return response()->json(['message' => 'Carta de presentación no encontrada.'], 404);
+        }
+
+        // Verificar si el estado es "Pendiente Secretaria"
+        if ($carta->estado !== 'Pendiente Secretaria') {
+            return response()->json([
+                'message' => 'La carta no puede ser actualizada porque no está en el estado "Pendiente Secretaria".'
+            ], 400);
+        }
+
+        // Cambiar el estado a "Pendiente de Actividades"
+        $carta->estado = 'Pendiente de Actividades';
+        $carta->save();
+
+        // Respuesta exitosa
+        return response()->json([
+            'message' => 'Solicitud de actividades enviada correctamente.',
+            'carta' => $carta
+        ], 200);
+    }
 
     public function aprobarPorHorario($horario_id)
     {
@@ -622,5 +623,4 @@ public function solicitarActividades($id, Request $request)
             return response()->json(['message' => 'Error al descargar el archivo: ' . $e->getMessage()], 500);
         }
     }
-
 }

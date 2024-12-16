@@ -30,4 +30,9 @@ class Seccion extends Model
     {
         return $this->hasMany(Docente::class);
     }
+
+    public function cursos(): HasMany
+    {
+        return $this->hasMany(Curso::class);
+    }
 }

@@ -83,7 +83,7 @@ class Horario extends Model
     }
     public function cartasPresentacion(): HasMany
     {
-        return $this->hasMany(CartaPresentacion::class, 'idHorario');
+        return $this->hasMany(CartaPresentacionSolicitud::class, 'horario_id');
     }
     public function delegado()
     {

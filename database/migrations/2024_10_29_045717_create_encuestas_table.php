@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre_encuesta');
             $table->enum('tipo_encuesta', ['docente', 'jefe_practica']);
             $table->boolean('disponible');
-            $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
+            $table->foreignId('seccion_id')->constrained('secciones')->onDelete('cascade');
             $table->timestamps();
         });
 

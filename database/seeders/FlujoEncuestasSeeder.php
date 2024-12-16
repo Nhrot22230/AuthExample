@@ -115,7 +115,7 @@ class FlujoEncuestasSeeder extends Seeder
 
         $estudiante_role = Role::with('scopes')->where('name', 'estudiante')->first();
         $horarios = Horario::with('curso', 'estudiantes')
-            ->where('semestre_id', Semestre::where('estado', 'activo')->first()->id)
+            ->where('semestre_id', Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first()->id)
             ->orderBy('curso_id')
             ->get();
         $horarios->each(function ($horario) use ($estudiante_role) {

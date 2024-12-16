@@ -39,12 +39,14 @@ class AssignRoles extends Seeder
         $permisos_asistente_seccion = Permission::where('name', 'mis-unidades')
             ->orWhere('name', 'secciones')
             ->orWhere('name', 'gestion-convocatorias')
+            ->orWhere('name', 'gestion-profesores-jps')
             ->get();
         $asistente_seccion_role->syncPermissions($permisos_asistente_seccion);
 
         $director_role = Role::findByName('director');
         $permisos_director = Permission::where('name', 'mis-unidades')
             ->orWhere('name', 'especialidades')
+            ->orWhere('name', 'gestion-alumnos')
             ->get();
         $director_role->syncPermissions($permisos_director);
 
@@ -61,11 +63,10 @@ class AssignRoles extends Seeder
         $coordinador_seccion_role->syncPermissions($permisos_coordinador_seccion);
 
         $docente_role = Role::findByName('docente');
-        $permisos_docente = Permission::where('name', 'mis-unidades')
-            ->orWhere('name', 'cursos')
-            ->orWhere('name', 'especialidades')
+        $permisos_docente = Permission::where('name', 'mis-cursos')
+            ->orWhere('name', 'mis-horarios')
+            ->orWhere('name', 'mis-tema-tesis')
             ->orWhere('name', 'gestion-alumnos')
-            ->orWhere('name', 'gestion-profesores-jps')
             ->get();
         $docente_role->syncPermissions($permisos_docente);
 
@@ -78,7 +79,8 @@ class AssignRoles extends Seeder
             ->orWhere('name', 'mis-horarios')
             ->orWhere('name', 'mis-tema-tesis')
             ->orWhere('name', 'mis-matriculas-adicionales')
-            ->orWhere('name', 'mis-encuestas');
+            ->orWhere('name', 'mis-encuestas')
+            ->get();
         $estudiante_role->syncPermissions($permisos_estudiante);
 
         /*$comite_role = Role::findByName('comite');

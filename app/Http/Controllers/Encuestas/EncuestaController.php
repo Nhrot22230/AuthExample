@@ -12,12 +12,11 @@ use App\Models\Matricula\Horario;
 use App\Models\Matricula\HorarioEstudiante;
 use App\Models\Matricula\HorarioEstudianteJp;
 use App\Models\Universidad\Curso;
-use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Semestre;
 use App\Models\Usuarios\JefePractica;
 use App\Models\Encuestas\TextoRespuestaDocente;
 use App\Models\Encuestas\TextoRespuestaJP;
-
+use App\Models\Universidad\Seccion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,16 +26,16 @@ use Carbon\Carbon;
 
 class EncuestaController extends Controller
 {
-    public function indexEncuesta(int $especialidad_id, string $tipo_encuesta): JsonResponse
+    public function indexEncuesta( $seccion_id, string $tipo_encuesta): JsonResponse
     {
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
         $encuestas = Encuesta::where('tipo_encuesta', $tipo_encuesta)
-            ->where('especialidad_id', $especialidad_id)
+            ->where('seccion_id', $seccion_id)
             ->select('id', 'fecha_inicio', 'fecha_fin', 'nombre_encuesta', 'disponible')
             ->get();
         if ($encuestas->isEmpty())
@@ -63,35 +62,47 @@ class EncuestaController extends Controller
         return response()->json($encuestasConTotales);
     }
 
-    public function indexCursoSemestreEspecialidad(int $especialidad_id): JsonResponse
+    public function indexCursoSemestreSeccion( $seccion_id): JsonResponse
     {
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        // Verificar si la sección existe
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
-        $semestre_id = Semestre::where('estado', 'activo')->first()->id;
-        $cursos = Curso::where('especialidad_id', $especialidad_id)
-            ->whereHas('horarios', function ($query) use ($semestre_id) {
-                $query->where('semestre_id', $semestre_id);
-            })
-            ->select('id', 'nombre', 'cod_curso')
-            ->get();
+
+        // Obtener el último semestre activo
+        $semestre_id = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first()->id;
+
+        Log::info('Semestre: ' . $semestre_id);
+
+        // Obtener los cursos que tengan docentes asociados con la sección en el semestre activo
+        $cursos = Curso::whereHas('docentes', function ($query) use ($seccion_id) {
+            $query->where('seccion_id', $seccion_id);  // Filtrar por seccion_id
+        })
+        ->whereHas('horarios', function ($query) use ($semestre_id) {
+            $query->where('semestre_id', $semestre_id);  // Filtrar por semestre activo
+        })
+        ->select('id', 'nombre', 'cod_curso')  // Seleccionar los campos que quieres devolver
+        ->get();
+
+        Log::info('Cursos: ' . $cursos->toJson());
+
         return response()->json($cursos);
     }
 
 
-    public function countPreguntasLatestEncuesta(int $especialidad_id, string $tipo_encuesta): JsonResponse
+    public function countPreguntasLatestEncuesta( $seccion_id, string $tipo_encuesta): JsonResponse
     {
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
 
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
 
         // Obtener la última encuesta de acuerdo a los parámetros especificados
         $ultimaEncuesta = Encuesta::where('tipo_encuesta', $tipo_encuesta)
-            ->where('especialidad_id', $especialidad_id)
+            ->where('seccion_id', $seccion_id)
             ->latest()
             ->first();
 
@@ -101,18 +112,18 @@ class EncuestaController extends Controller
         return response()->json(['cantidad_preguntas' => $cantidadPreguntas]);
     }
 
-    public function obtenerPreguntasUltimaEncuesta(int $especialidad_id, string $tipo_encuesta): JsonResponse
+    public function obtenerPreguntasUltimaEncuesta( $seccion_id, string $tipo_encuesta): JsonResponse
     {
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
 
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
 
         $ultimaEncuesta = Encuesta::where('tipo_encuesta', $tipo_encuesta)
-            ->where('especialidad_id', $especialidad_id)
+            ->where('seccion_id', $seccion_id)
             ->latest()
             ->first();
 
@@ -121,14 +132,14 @@ class EncuestaController extends Controller
         return response()->json($preguntas, 200);
     }
 
-    public function registrarNuevaEncuesta(Request $request, int $especialidad_id, string $tipo_encuesta): ?JsonResponse
+    public function registrarNuevaEncuesta(Request $request, $seccion_id, string $tipo_encuesta): ?JsonResponse
     {
-        // Validación inicial de tipo de encuesta y especialidad
+        // Validación inicial de tipo de encuesta y sección
         if (!in_array($tipo_encuesta, ['docente', 'jefe_practica'])) {
             return response()->json(['message' => 'Tipo de encuesta no válido.'], 400);
         }
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
 
         // Validación de los datos del request
@@ -143,7 +154,7 @@ class EncuestaController extends Controller
         ]);
 
         // Obtener semestre activo
-        $semestre = Semestre::where('estado', 'activo')->first();
+        $semestre = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first();
         if (!$semestre) {
             return response()->json(['message' => 'No hay semestre activo.'], 404);
         }
@@ -166,7 +177,7 @@ class EncuestaController extends Controller
             $encuesta = Encuesta::create([
                 'nombre_encuesta' => $validated['nombre_encuesta'],
                 'tipo_encuesta' => $validated['tipo_encuesta'],
-                'especialidad_id' => $especialidad_id,
+                'seccion_id' => $seccion_id,
                 'fecha_inicio' => $validated['fecha_inicio'],
                 'fecha_fin' => $validated['fecha_fin'],
                 'disponible' => $validated['disponible']
@@ -214,7 +225,7 @@ class EncuestaController extends Controller
         }
     }
 
-    public function mostrarCursos(int $encuesta_id): JsonResponse
+    public function mostrarCursos( $encuesta_id): JsonResponse
     {
         $encuesta = Encuesta::with(['horario.curso'])->findOrFail($encuesta_id);
         if (!$encuesta) {
@@ -232,7 +243,7 @@ class EncuestaController extends Controller
         return response()->json($cursosEncuesta->values());
     }
 
-    public function listarPreguntas(int $encuesta_id): JsonResponse
+    public function listarPreguntas( $encuesta_id): JsonResponse
     {
         $encuesta = Encuesta::find($encuesta_id);
         if (!$encuesta) {
@@ -248,10 +259,10 @@ class EncuestaController extends Controller
         ]);
     }
 
-    public function gestionarEncuesta(Request $request, int $especialidad_id, int $encuesta_id): JsonResponse
+    public function gestionarEncuesta(Request $request, $seccion_id, $encuesta_id): JsonResponse
     {
-        if (!Especialidad::where('id', $especialidad_id)->exists()) {
-            return response()->json(['message' => 'Especialidad no encontrada.'], 404);
+        if (!Seccion::where('id', $seccion_id)->exists()) {
+            return response()->json(['message' => 'Sección no encontrada.'], 404);
         }
 
         $encuesta = Encuesta::find($encuesta_id);
@@ -275,7 +286,7 @@ class EncuestaController extends Controller
             $encuesta->update(array_filter($validated));
             if (!empty($validated['cursos'])) {
                 $encuesta->horario()->detach();
-                $semestreActivo = Semestre::where('estado', 'activo')->first();
+                $semestreActivo = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first();
                 if (!$semestreActivo) {
                     return response()->json(['message' => 'No hay semestre activo.'], 404);
                 }
@@ -366,8 +377,11 @@ class EncuestaController extends Controller
                 $jefePractica = $horario->jefePracticas->firstWhere('id', (int) $jpId);
 
                 if ($jefePractica) {
-                    $nombreResponsable = $jefePractica->usuario->nombre." ".
-                    $jefePractica->usuario->apellido_paterno." ".$jefePractica->usuario->apellido_materno;
+                    $nombreResponsable = trim(implode(' ', [
+                        $jefePractica->usuario->nombre ?? '',
+                        $jefePractica->usuario->apellido_paterno ?? '',
+                        $jefePractica->usuario->apellido_materno ?? ''
+                    ]));
                 } elseif ($jpId===null){
 
                 }
@@ -385,7 +399,7 @@ class EncuestaController extends Controller
                 'id' => $horario->curso->id,
                 'nombre' => $horario->curso->nombre,
             ],
-            'horario_nombre' => $horario->nombre,
+            'horario_codigo' => $horario->codigo,
             'nombre_encuesta' => $encuesta->nombre_encuesta,
             'fecha_inicio' => $encuesta->fecha_inicio,
             'fecha_fin' => $encuesta->fecha_fin,
@@ -402,6 +416,8 @@ class EncuestaController extends Controller
             })->values(),
 
         ];
+
+        Log::info("Detalle encuesta: ", $detalleEncuesta);
 
         return response()->json($detalleEncuesta);
     }
@@ -839,7 +855,7 @@ class EncuestaController extends Controller
             $nombreDocente = $docentes->first()->usuario->nombre . ' ' . $docentes->first()->usuario->apellido_paterno;
 
             return response()->json([
-                'horario' => $horario->nombre,
+                'horario' => $horario->codigo,
                 'responsable' => $nombreDocente,
                 'total_estudiantes' => $totalEstudiantes,
                 'total_completaron' => $totalCompletaron,
@@ -871,7 +887,7 @@ class EncuestaController extends Controller
             })->count();
 
             $resumenHorario = [
-                'horario' => $horario->nombre,
+                'horario' => $horario->codigo,
                 'responsable' => $nombreResponsable,
                 'total_estudiantes' => $totalEstudiantes,
                 'total_completaron' => $totalCompletaron
@@ -891,7 +907,11 @@ class EncuestaController extends Controller
             if (!$encuesta) {
                 return response()->json(['message' => 'Encuesta no encontrada.'], 404);
             }
-            $estudiantes = $encuesta
+            // Si no se encuentran horarios asociados
+            if ($encuesta->horario->isEmpty()) {
+                return response()->json(['message' => 'No hay horarios asociados a esta encuesta.'], 404);
+            }
+            /*$estudiantes = $encuesta
                 ->horario()
                 ->with(['horarioEstudiantes.estudiante'])
                 ->get()
@@ -901,7 +921,19 @@ class EncuestaController extends Controller
                 ->map(function ($horarioEstudiante) {
                     return $horarioEstudiante->estudiante->usuario_id;
                 })
-                ->unique()->values();
+                ->unique()->values();*/
+            
+            // Recopilar los estudiantes únicos a través de los horarios
+            $estudiantes = $encuesta->horario
+                ->flatMap(function ($horario) {
+                    return $horario->horarioEstudiantes->map(function ($horarioEstudiante) {
+                        return $horarioEstudiante->estudiante->usuario_id;
+                    });
+                })
+                ->unique()
+                ->values();
+                
+            Log::info("Estudiantes: ", $estudiantes);
 
             return response()->json($estudiantes);
             

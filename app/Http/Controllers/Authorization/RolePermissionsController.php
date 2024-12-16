@@ -8,6 +8,8 @@ use App\Models\Authorization\PermissionCategory;
 use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Authorization\Scope;
+use App\Models\Universidad\Facultad;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -221,6 +223,23 @@ class RolePermissionsController extends Controller
                                 'entity_id' => $entityData,
                                 'entity_type' => $scope->entity_type,
                             ]);
+
+                            // Verificar condiciones adicionales
+                            if (
+                                $scope->entity_type === Facultad::class &&
+                                str_contains($role->name, 'secret') &&
+                                Administrativo::whereHas('usuario', function ($query) use ($usuario) {
+                                    $query->where('id', $usuario->id);
+                                })->exists()
+                            ) {
+                                // Encontrar el administrativo asociado
+                                $administrativo = Administrativo::whereHas('usuario', function ($query) use ($usuario) {
+                                    $query->where('id', $usuario->id);
+                                })->first();
+
+                                // Modificar el facultad_id del administrativo
+                                $administrativo->update(['facultad_id' => $entityData]);
+                            }
                         }
                     }
                 }

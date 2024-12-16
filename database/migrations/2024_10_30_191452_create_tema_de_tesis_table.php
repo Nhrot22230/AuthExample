@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('file_id')->nullable();
             $table->unsignedBigInteger('file_firmado_id')->nullable();
             $table->enum('estado', ['aprobado', 'pendiente', 'desaprobado'])->default('pendiente');
-            $table->enum('estado_jurado', ['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido'])->default('pendiente');
+            $table->enum('estado_jurado', ['enviado', 'no enviado', 'aprobado', 'pendiente', 'desaprobado', 'vencido'])->default('no enviado');
             $table->date('fecha_enviado')->nullable();
             $table->foreignId('especialidad_id')->constrained('especialidades')->onDelete('cascade');
             $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');

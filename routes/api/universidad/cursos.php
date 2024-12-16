@@ -9,6 +9,7 @@ Route::prefix('cursos')->group(function () {
     Route::get('/', [CursoController::class, 'index']);
     Route::get('/indexPaginated', [CursoController::class, 'indexPaginated']);
     Route::post('/cursosDocente', [CursoController::class, 'obtenerCursosPorDocente']);
+    Route::post('/cursosEstudiante', [CursoController::class, 'obtenerCursosPorEstudiante']);
     Route::post('/actualizar-delegado', [CursoController::class, 'actualizarDelegado']);
     Route::post('/horarios', [CursoController::class, 'obtenerHorariosPorDocenteYCursos']);
     Route::post('/detalle', [CursoController::class, 'obtenerCursoPorId']);

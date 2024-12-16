@@ -8,6 +8,7 @@ use App\Models\Universidad\Curso;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
 use App\Models\Universidad\Seccion;
+use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Usuario;
 use Illuminate\Database\Seeder;
 
@@ -24,6 +25,21 @@ class AssignRolesUsersTest extends Seeder
             'entity_type' => Facultad::class,
             'entity_id' => 1,
         ]);
+        if (
+            Facultad::class === Facultad::class &&
+            str_contains('secretario-academico', 'secret') &&
+            Administrativo::whereHas('usuario', function ($query) {
+                $query->where('id', 2);
+            })->exists()
+        ) {
+            // Encontrar el administrativo asociado
+            $administrativo = Administrativo::whereHas('usuario', function ($query) {
+                $query->where('id', 2);
+            })->first();
+
+            // Modificar el facultad_id del administrativo
+            $administrativo->update(['facultad_id' => 1]);
+        }
         Usuario::find(3)->assignRole('asistente-especialidad');
         RoleScopeUsuario::firstOrCreate([
             'role_id' => 3,

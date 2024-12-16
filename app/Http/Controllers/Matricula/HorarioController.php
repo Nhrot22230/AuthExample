@@ -13,7 +13,7 @@ class HorarioController extends Controller
     //
     public function obtenerCursosEstudiante($estudianteId)
     {
-        $semestre_id = Semestre::where('estado', 'activo')->first()->id;
+        $semestre_id = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first()->id;
 
         $horarios = Horario::where('semestre_id', $semestre_id)
             ->whereHas('estudiantes', function ($query) use ($estudianteId) {
@@ -97,7 +97,7 @@ class HorarioController extends Controller
 
     public function obtenerEncuestasDocentesEstudiante($estudianteId)
     {
-        $semestre = Semestre::where('estado', 'activo')->first();
+        $semestre = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first();
         if (!$semestre) {
             return response()->json(['message' => 'No hay un semestre activo'], 404);
         }

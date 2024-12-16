@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('secciones')->group(function () {
     Route::get('/', [SeccionController::class, 'indexAll']);
     Route::get('/paginated', [SeccionController::class, 'index']);
+    Route::get('/{seccion_id}/cursos-horarios/{semestre_id}', [SeccionController::class, 'obtenerCursosHorarios']);
 
 
     Route::middleware("can:unidades")->group(function () {

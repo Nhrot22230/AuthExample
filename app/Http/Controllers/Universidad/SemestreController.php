@@ -65,6 +65,7 @@ class SemestreController extends Controller
             'periodo' => $semestre->periodo,
             'fecha_inicio' => $semestre->fecha_inicio,
             'fecha_fin' => $semestre->fecha_fin,
+            'id' => $semestre->id,
         ];
 
         return response()->json($response, 200);
@@ -195,8 +196,7 @@ class SemestreController extends Controller
     public function obtenerSemestreActual()
     {
         $semestreActual = Semestre::where('estado', 'activo')
-            ->orderBy('anho', 'desc')
-            ->orderBy('periodo', 'desc')
+            ->orderByDesc('fecha_inicio')
             ->first(['id', 'anho', 'periodo']); // Selecciona solo los campos específicos
 
         if (!$semestreActual) {

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\Role;
+use App\Models\Authorization\RoleScopeUsuario;
+use App\Models\Universidad\Curso;
 use App\Models\Universidad\Departamento;
 use App\Models\Universidad\Seccion;
+use App\Models\Usuarios\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,12 +37,111 @@ class SeccionController extends Controller
         return response()->json($secciones, 200);
     }
 
+    public function obtenerCursosHorarios($seccion_id, $semestre_id)
+    {
+        // Obtener los cursos que pertenecen a la sección y el semestre
+        $cursos = Curso::where('seccion_id', $seccion_id)
+                        ->whereHas('horarios', function($query) use ($semestre_id) {
+                            $query->where('semestre_id', $semestre_id);
+                        })
+                        ->with(['horarios' => function($query) use ($semestre_id) {
+                            $query->where('semestre_id', $semestre_id)
+                                ->with(['jefePracticas', 'docentes']); // Cargar docentes y jefes de práctica
+                        }])
+                        ->get();
+
+        // Si no hay cursos
+        if ($cursos->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron cursos solicitados para la sección en el semestre actual'], 404);
+        }
+
+        // Formatear los datos de los cursos, horarios, docentes y jefes de práctica
+        $resultados = $cursos->map(function($curso) {
+            return $curso->horarios->map(function($horario) use ($curso) {
+                return [
+                    'codigo_curso' => $curso->cod_curso,
+                    'nombre_curso' => $curso->nombre,
+                    'codigo_horario' => $horario->codigo,
+                    'docentes' => $horario->docentes->map(function($docente) {
+                        // Acceder al usuario del docente
+                        $usuario = $docente->usuario;
+                        
+                        // Concatenar los campos disponibles
+                        $nombreCompleto = trim(implode(' ', [
+                            $usuario->nombre,
+                            $usuario->apellido_paterno,
+                            $usuario->apellido_materno
+                        ]));
+
+                        // Retornar el nombre completo del docente
+                        return $nombreCompleto;
+                    }),
+                    'jefes_practica' => $horario->jefePracticas->map(function($jefe) {
+                        // Acceder al usuario del jefe de práctica
+                        $usuario = $jefe->usuario;
+
+                        // Concatenar los campos disponibles
+                        $nombreCompleto = trim(implode(' ', [
+                            $usuario->nombre,
+                            $usuario->apellido_paterno,
+                            $usuario->apellido_materno
+                        ]));
+
+                        // Retornar el nombre completo del jefe de práctica
+                        return $nombreCompleto;
+                    }),
+                ];
+            });
+        })->flatten(1);
+
+        // Retornar los cursos con sus horarios, docentes y jefes de práctica
+        return response()->json($resultados, 200);
+    }
+
     public function show($entity_id)
     {
         $seccion = Seccion::find($entity_id);
 
         if (!$seccion) {
             return response()->json(['message' => 'Seccion no encontrada'], 404);
+        }
+
+        //Buscar el rol de coordinador de sección
+        $rolCoordinador = Role::where('name', 'like', '%coord%secc%')->first();
+
+        // Buscar el coordinador de sección relacionado
+        $coordinadorData = RoleScopeUsuario::where('entity_type', Seccion::class)
+            ->where('entity_id', $entity_id)
+            ->where('role_id', $rolCoordinador->id)
+            ->first();
+
+        // Si existe un coordinador de sección asociado, obtener su información de usuario
+        if ($coordinadorData) {
+            $coordinador = Usuario::find($coordinadorData->usuario_id);
+
+            // Agregar el coordinador de sección a la sección como un atributo adicional
+            $seccion->coordinador = $coordinador;
+        } else {
+            $seccion->coordinador = null; // Si no hay coordinador de sección, asignar null
+        }
+
+        //Buscar el rol de asistente de sección
+        $rolAsistente = Role::where('name', 'like', '%asis%secc%')->first();
+
+        // Buscar el asistente de sección relacionado
+        $asistenteData = RoleScopeUsuario::where('entity_type', Seccion::class)
+            ->where('entity_id', $entity_id)
+            ->where('role_id', $rolAsistente->id)
+            ->first();
+
+        // Si existe un asistente de sección asociado, obtener su información de usuario
+        if ($asistenteData) {
+            $asistente = Usuario::find($asistenteData->usuario_id);
+
+            // Agregar el asistente de sección a la sección como un atributo adicional
+            $seccion->asistente = $asistente;
+        } else {
+            $seccion->asistente = null; // Si no hay asistente de sección, asignar null
         }
 
         return response()->json($seccion, 200);
