@@ -78,14 +78,6 @@ resource "aws_ecs_task_definition" "app_task" {
       name      = "app"
       image     = aws_ecr_repository.app_repo.repository_url
       essential = true
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          "awslogs-group"         = "/ecs/mi-laravel-app",
-          "awslogs-region"        = "us-east-1",
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
       portMappings = [
         {
           containerPort = 80
