@@ -31,7 +31,7 @@ COPY . .
 RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoloader
 
 # Ejecuta `composer install` para instalar las dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 #RUN php artisan key:generate
 
@@ -42,4 +42,5 @@ RUN php artisan config:clear
 EXPOSE 80
 
 # Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+#CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+CMD php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=80
