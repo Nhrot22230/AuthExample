@@ -107,7 +107,8 @@ resource "aws_ecs_task_definition" "app_task" {
         },{
           name  = "APP_KEY"
           value = "base64:m2IOOijVL+ktI6Pwh5iTcObwoOvi+A0He0YknnO6GGY=="
-        }
+        },
+        { name = "RUN_SEEDER", value = "true" }
       ]
     }
   ])

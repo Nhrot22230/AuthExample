@@ -41,5 +41,6 @@ RUN php artisan config:clear
 # Expone el puerto 80
 EXPOSE 80
 
-# Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+# Comando de inicio (corre los seeders solo si RUN_SEEDER=true)
+CMD if [ "$RUN_SEEDER" = "true" ]; then php artisan migrate --force --seed; fi && \
+    php artisan serve --host=0.0.0.0 --port=80
