@@ -104,6 +104,9 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "S3_BUCKET"
           value = aws_s3_bucket.app_bucket.bucket
+        },{
+          name  = "APP_KEY"
+          value = "base64:m2IOOijVL+ktI6Pwh5iTcObwoOvi+A0He0YknnO6GGY=="
         }
       ]
     }

@@ -33,7 +33,7 @@ RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoload
 # Ejecuta `composer install` para instalar las dependencias de Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-RUN php artisan key:generate
+#RUN php artisan key:generate
 
 # Expone el puerto 80
 EXPOSE 80
