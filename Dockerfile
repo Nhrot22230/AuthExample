@@ -23,7 +23,7 @@ RUN apt-get update && \
     dpkg -i /tmp/amazon-ssm-agent.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/amazon-ssm-agent.deb
 
-RUN systemctl enable amazon-ssm-agent
+RUN amazon-ssm-agent &
 
 # Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
