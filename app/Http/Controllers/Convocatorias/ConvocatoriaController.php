@@ -254,6 +254,18 @@ class ConvocatoriaController extends Controller
             $convocatoria->comite()->attach($validatedData['miembros']);
             Log::info('Miembros asignados al comité');
             Log::info($validatedData['miembros']);
+            // Asignar el rol 'comite' a los docentes miembros
+            foreach ($validatedData['miembros'] as $miembroId) {
+                // Obtener el docente
+                $docente = Docente::find($miembroId);
+
+                if ($docente) {
+                    // Asignar el rol 'comite' al usuario asociado al docente
+                    $usuario = $docente->usuario; // Suponiendo que la relación docente -> usuario está correctamente configurada
+                    $usuario->assignRole('comite'); // Asigna el rol "comite" al usuario
+                    Log::info('Rol "comite" asignado a: ' . $usuario->nombre);
+                }
+            }
             // Crear registros en la tabla comite_candidato_convocatoria
             foreach ($validatedData['miembros'] as $miembroId) {
                 foreach ($convocatoria->candidatos as $candidato) {
@@ -357,6 +369,26 @@ class ConvocatoriaController extends Controller
             Log::info('Criterios actualizados');
             Log::info($validatedData['miembros']);
             if (!empty($validatedData['miembros'])) {
+                // Quitar rol 'comite' a los miembros actuales que no están en la nueva lista
+                $miembrosAntiguos = $convocatoria->comite()->pluck('docentes.id')->toArray();
+                $miembrosNuevos = $validatedData['miembros'];
+    
+                // Miembros a los que hay que quitar el rol 'comite'
+                $miembrosAEliminar = array_diff($miembrosAntiguos, $miembrosNuevos);
+                foreach ($miembrosAEliminar as $miembroId) {
+                    $docente = Docente::find($miembroId);
+                    if ($docente && $docente->usuario) {
+                        $docente->usuario->removeRole('comite');
+                    }
+                }
+    
+                // Asignar rol 'comite' a los nuevos miembros
+                foreach ($miembrosNuevos as $miembroId) {
+                    $docente = Docente::find($miembroId);
+                    if ($docente && $docente->usuario) {
+                        $docente->usuario->assignRole('comite');
+                    }
+                }
                 $convocatoria->comite()->sync($validatedData['miembros']);
 
                 // Eliminar registros existentes en comite_candidato_convocatoria
@@ -393,7 +425,6 @@ class ConvocatoriaController extends Controller
             return response()->json(['message' => 'Error al actualizar la convocatoria.'], 500);
         }
     }
-
     private function sincronizarComiteCandidatos(Convocatoria $convocatoria, array $miembros)
     {
         // Eliminar registros existentes
