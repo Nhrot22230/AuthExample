@@ -10,12 +10,13 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     zip \
     unzip \
-    amazon-ssm-agent \
     git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql pdo_sqlite zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+    
+RUN apt-get update && apt-get install -y amazon-ssm-agent
 RUN systemctl enable amazon-ssm-agent
 
 # Instala Composer
