@@ -25,18 +25,22 @@ WORKDIR /var/www/html
 COPY . .
 
 # Copia el archivo .env o crea uno a partir del archivo de ejemplo
-RUN cp .env.example .env
+#RUN cp .env.example .env
 
 # Elimina el directorio vendor si existe
 RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoloader
 
 # Ejecuta `composer install` para instalar las dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
-RUN php artisan key:generate
+#RUN php artisan key:generate
 
-# Expone el puerto 8000
-EXPOSE 8000
+# Limpia cualquier caché previo de configuración
+RUN php artisan config:clear
+
+# Expone el puerto 80
+EXPOSE 80
 
 # Comando de inicio
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+#CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+CMD php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=80
