@@ -136,4 +136,6 @@ resource "aws_ecs_service" "app_service" {
   }
 
   depends_on = [aws_lb_listener.app_listener]
+
+  force_new_deployment = true
 }
