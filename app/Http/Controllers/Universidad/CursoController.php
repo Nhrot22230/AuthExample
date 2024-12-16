@@ -6,8 +6,11 @@ use App\Models\Matricula\Horario;
 use App\Models\Universidad\Curso;
 use App\Models\Delegados\Delegado;
 use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Seccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 class CursoController extends Controller
 {
     //
@@ -15,9 +18,10 @@ class CursoController extends Controller
     {
         $search = $request->input('search', '');
         $especialidad_id = $request->input('especialidad_id', null);
+        $seccion_id = $request->input('seccion_id', null);
         $perPage = $request->input('per_page', 10); // Valor por defecto: 10
 
-        $cursos = Curso::with('especialidad')
+        $cursos = Curso::with('especialidad', 'seccion', 'especialidad.facultad', 'seccion.departamento')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('nombre', 'like', "%$search%")
@@ -26,6 +30,9 @@ class CursoController extends Controller
             })
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
+            })
+            ->when($seccion_id, function ($query, $seccion_id) {
+                return $query->where('seccion_id', $seccion_id);
             })
             ->paginate($perPage);
 
@@ -36,11 +43,15 @@ class CursoController extends Controller
     {
         $search = request('search', '');
         $especialidad_id = request('especialidad_id', null);
-        $cursos = Curso::with('especialidad')
+        $seccion_id = request('seccion_id', null);
+        $cursos = Curso::with('especialidad', 'seccion', 'especialidad.facultad', 'seccion.departamento')
             ->where('nombre', 'like', "%$search%")
             ->where('cod_curso', 'like', "%$search%")
             ->when($especialidad_id, function ($query, $especialidad_id) {
                 return $query->where('especialidad_id', $especialidad_id);
+            })
+            ->when($seccion_id, function ($query, $seccion_id) {
+                return $query->where('seccion_id', $seccion_id);
             })
             ->get();
         return response()->json($cursos, 200);
@@ -48,7 +59,7 @@ class CursoController extends Controller
 
     public function getByCodigo($cod_curso)
     {
-        $curso = Curso::with('especialidad')->where('cod_curso', $cod_curso)->first();
+        $curso = Curso::with('especialidad', 'seccion')->where('cod_curso', $cod_curso)->first();
         if ($curso) {
             return response()->json($curso, 200);
         } else {
@@ -59,7 +70,7 @@ class CursoController extends Controller
     public function show($entity_id)
     {
         try {
-            $curso = Curso::with('especialidad', 'planesEstudio')->findOrFail($entity_id);
+            $curso = Curso::with('especialidad', 'planesEstudio', 'seccion')->findOrFail($entity_id);
             return response()->json($curso, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Curso no encontrado'], 404);
@@ -70,6 +81,7 @@ class CursoController extends Controller
     {
         $validatedData = $request->validate([
             'especialidad_id' => 'required|exists:especialidades,id',
+            'seccion_id' => 'required|exists:secciones,id',
             'cod_curso' => 'required|string|max:6|unique:cursos,cod_curso',
             'nombre' => 'required|string|max:255',
             'creditos' => 'required|numeric|min:0',
@@ -78,6 +90,7 @@ class CursoController extends Controller
 
         $curso = new Curso();
         $curso->especialidad_id = $validatedData['especialidad_id'];
+        $curso->seccion_id = $validatedData['seccion_id'];
         $curso->cod_curso = $validatedData['cod_curso'];
         $curso->nombre = $validatedData['nombre'];
         $curso->creditos = $validatedData['creditos'];
@@ -92,6 +105,7 @@ class CursoController extends Controller
         $validatedData = $request->validate([
             'cursos' => 'required|array|min:1',
             'cursos.*.especialidad_nombre' => 'required|string|exists:especialidades,nombre',
+            'cursos.*.seccion_nombre' => 'required|string|exists:secciones,nombre',
             'cursos.*.cod_curso' => 'required|string|max:6|unique:cursos,cod_curso',
             'cursos.*.nombre' => 'required|string|max:255',
             'cursos.*.creditos' => 'required|numeric|min:0',
@@ -112,8 +126,19 @@ class CursoController extends Controller
                 continue;
             }
 
+            $seccion = Seccion::where('nombre', $cursoData['seccion_nombre'])->first();
+
+            if (!$seccion) {
+                $errores[] = [
+                    'nombre_curso' => $cursoData['nombre'],
+                    'error' => "Sección '{$cursoData['seccion_nombre']}' no encontrada.",
+                ];
+                continue;
+            }
+
             $curso = new Curso();
             $curso->especialidad_id = $especialidad->id;
+            $curso->seccion_id = $seccion->id;
             $curso->cod_curso = $cursoData['cod_curso'];
             $curso->nombre = $cursoData['nombre'];
             $curso->creditos = $cursoData['creditos'];
@@ -139,6 +164,7 @@ class CursoController extends Controller
 
         $validatedData = $request->validate([
             'especialidad_id' => 'required|exists:especialidades,id',
+            'seccion_id' => 'required|exists:secciones,id',
             'cod_curso' => 'required|string|max:6|unique:cursos,cod_curso,' . $curso->id,
             'nombre' => 'required|string|max:255',
             'creditos' => 'required|numeric|min:0',
@@ -146,6 +172,7 @@ class CursoController extends Controller
         ]);
 
         $curso->especialidad_id = $validatedData['especialidad_id'];
+        $curso->seccion_id = $validatedData['seccion_id'];
         $curso->cod_curso = $validatedData['cod_curso'];
         $curso->nombre = $validatedData['nombre'];
         $curso->creditos = $validatedData['creditos'];
@@ -177,11 +204,16 @@ class CursoController extends Controller
         $docentesPorHorario = $horarios->map(function ($horario) {
             return [
                 'horario_id' => $horario->id,
-                'horario_nombre' => $horario->nombre,
+                'horario_codigo' => $horario->codigo,
                 'docentes' => $horario->docentes->map(function ($docente) {
                     $usuario = $docente->usuario;
+                    $nombreCompleto = trim(implode(' ', [
+                        $usuario->nombre,
+                        $usuario->apellido_paterno,
+                        $usuario->apellido_materno
+                    ]));
                     return [
-                        'nombre_completo' => $usuario->nombre . ' ' . $usuario->apellido_paterno . ' ' . $usuario->apellido_materno,
+                        'nombre_completo' => $nombreCompleto,
                         'docente_id' => $docente->id,
                     ];
                 }),
@@ -195,19 +227,42 @@ class CursoController extends Controller
     {
         // Obtener los horarios asociados al curso especificado
         $horarios = Horario::where('curso_id', $cursoId)
-            ->select('id', 'nombre') // Seleccionamos solo los campos necesarios
+            ->where('oculto', 0)
+            ->select('id', 'codigo') // Seleccionamos solo los campos necesarios
             ->get();
+
+        Log::info("Horarios: " . $horarios);
 
         // Estructurar la respuesta para devolver los horarios
         $horariosData = $horarios->map(function ($horario) {
             return [
                 'horario_id' => $horario->id,
-                'horario_nombre' => $horario->nombre,
+                'horario_codigo' => $horario->codigo,
+                'docentes' => $horario->docentes->isEmpty() ? [
+                    [
+                        'nombre_completo' => '',
+                        'docente_id' => ''
+                    ]
+                ] : $horario->docentes->map(function ($docente) {
+                    $usuario = $docente->usuario;
+                    $nombreCompleto = trim(implode(' ', [
+                        $usuario->nombre ?? '',
+                        $usuario->apellido_paterno ?? '',
+                        $usuario->apellido_materno ?? ''
+                    ]));
+                    return [
+                        'nombre_completo' => $nombreCompleto ?? '',
+                        'docente_id' => $docente->id ?? ''
+                    ];
+                }),
             ];
         });
 
+        Log::info("Horarios data: " . $horariosData);
+
         return response()->json($horariosData);
     }
+
     public function obtenerCursosPorDocente(Request $request)
     {
         $docenteId = $request->input('id'); // Obtener el ID del docente desde el cuerpo de la solicitud
@@ -248,6 +303,48 @@ class CursoController extends Controller
 
         return response()->json($cursos);
     }
+
+    public function obtenerCursosPorEstudiante(Request $request)
+    {
+        $estudianteId = $request->input('id'); // Obtener el ID del docente desde el cuerpo de la solicitud
+
+        // Validar que el ID esté presente y sea un número
+        if (!$estudianteId || !is_numeric($estudianteId)) {
+            return response()->json(['message' => 'El ID del estudiante es requerido y debe ser un número.'], 400);
+        }
+
+        // Ejecutar la consulta SQL
+        $cursos = DB::select("
+            SELECT 
+                cursos.id AS curso_id,
+                cursos.nombre AS curso_nombre,
+                cursos.cod_curso AS codigo_curso,
+                cursos.creditos AS creditos,
+                cursos.estado AS estado,
+                horarios.id AS horario_id,
+                horarios.nombre AS horario_nombre,
+                horarios.codigo AS horario_codigo,
+                horarios.vacantes AS vacantes,
+                horarios.created_at AS horario_creacion,
+                horarios.updated_at AS horario_actualizacion
+            FROM 
+                estudiante_horario
+            JOIN 
+                horarios ON estudiante_horario.horario_id = horarios.id
+            JOIN 
+                cursos ON horarios.curso_id = cursos.id
+            WHERE 
+                estudiante_horario.estudiante_id = ?
+        ", [$estudianteId]);
+
+        // Verificar si hay resultados
+        if (empty($cursos)) {
+            return response()->json(['message' => 'No se encontraron cursos asignados para este estudiante.'], 404);
+        }
+
+        return response()->json($cursos);
+    }
+
     public function obtenerCursoPorId(Request $request)
     {
         // Validar que el ID esté presente en la solicitud
@@ -259,7 +356,7 @@ class CursoController extends Controller
         $cursoId = $request->input('id');
 
         // Buscar el curso en la base de datos
-        $curso = Curso::with(['horarios', 'especialidad']) // Relación con horarios y especialidad
+        $curso = Curso::with(['horarios', 'especialidad', 'seccion']) // Relación con horarios, especialidad y sección
             ->find($cursoId);
 
         // Si no se encuentra el curso, devolver un error

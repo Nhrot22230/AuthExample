@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Universidad\Facultad;
 use App\Models\Usuarios\Usuario;
@@ -36,9 +37,13 @@ class FacultadController extends Controller
             return response()->json(['message' => 'Facultad no encontrada'], 404);
         }
 
+        //Buscar el rol de secretario académico
+        $rolSecretario = Role::where('name', 'like', '%secret%')->first();
+
         // Buscar el secretario académico relacionado
         $secretarioData = RoleScopeUsuario::where('entity_type', Facultad::class)
             ->where('entity_id', $entity_id)
+            ->where('role_id', $rolSecretario->id)
             ->first();
 
         // Si existe un secretario asociado, obtener su información de usuario

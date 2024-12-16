@@ -13,8 +13,8 @@ class HorarioEstudianteJp extends Model
     use HasFactory;
 
     protected $fillable = [
-        'horario_estudiante_id',
-        'usuario_id',
+        'estudiante_horario_id',
+        'jp_horario_id',
         'encuestaJP',
     ];
 
@@ -25,6 +25,6 @@ class HorarioEstudianteJp extends Model
 
     public function jefePractica()
     {
-        return $this->belongsTo(JefePractica::class);
+        return $this->belongsTo(JefePractica::class, 'usuario_id');
     }
 }

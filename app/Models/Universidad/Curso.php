@@ -17,6 +17,7 @@ class Curso extends Model
 
     protected $fillable = [
         'especialidad_id',
+        'seccion_id',
         'cod_curso',
         'nombre',
         'creditos',
@@ -32,6 +33,11 @@ class Curso extends Model
     public function especialidad(): BelongsTo
     {
         return $this->belongsTo(Especialidad::class);
+    }
+
+    public function seccion(): BelongsTo
+    {
+        return $this->belongsTo(Seccion::class);
     }
 
     public function planesEstudio(): BelongsToMany

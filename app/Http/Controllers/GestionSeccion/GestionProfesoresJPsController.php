@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\GestionEspecialidad;
+namespace App\Http\Controllers\GestionSeccion;
 
 use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
-use App\Models\Universidad\Especialidad;
+use App\Models\Matricula\HorarioEstudiante;
+use App\Models\Matricula\HorarioEstudianteJp;
 use App\Models\Usuarios\Estudiante;
 use App\Models\Universidad\Curso;
+use App\Models\Universidad\Seccion;
 use App\Models\Usuarios\Administrativo;
 use App\Models\Usuarios\Docente;
 use App\Models\Usuarios\JefePractica;
@@ -14,7 +16,7 @@ use Illuminate\Http\Request;
 
 class GestionProfesoresJPsController extends Controller
 {
-    public function asignarDocentes(Request $request, $especialidad_id)
+    public function asignarDocentes(Request $request, $seccion_id)
     {
         // Validar el request
         $request->validate([
@@ -24,28 +26,18 @@ class GestionProfesoresJPsController extends Controller
             'datos.*.codigo_docente' => 'required|string|exists:docentes,codigoDocente',
         ]);
 
-        // Verificar que la especialidad exista
-        $especialidad = Especialidad::find($especialidad_id);
-        if (!$especialidad) {
-            return response()->json(['error' => 'Especialidad no encontrada'], 404);
+        // Verificar que la sección exista
+        $seccion = Seccion::find($seccion_id);
+        if (!$seccion) {
+            return response()->json(['error' => 'Sección no encontrada'], 404);
         }
-        
+
         $docentes_agregados_correctamente = 0;
         $resultados = [];
 
         foreach ($request->input('datos') as $dato) {
-            // Buscar curso por código y verificar que pertenezca a la especialidad
-            $curso = Curso::where('cod_curso', $dato['codigo_curso'])
-                ->where('especialidad_id', $especialidad_id)
-                ->first();
-
-            if (!$curso) {
-                $resultados[] = [
-                    'codigo_curso' => $dato['codigo_curso'],
-                    'error' => 'El curso no pertenece a la especialidad especificada.',
-                ];
-                continue;
-            }
+            // Buscar curso por código
+            $curso = Curso::where('cod_curso', $dato['codigo_curso'])->first();
 
             // Buscar el horario por código y curso
             $horario = Horario::where('codigo', $dato['codigo_horario'])
@@ -67,7 +59,7 @@ class GestionProfesoresJPsController extends Controller
             if (!$docente) {
                 $resultados[] = [
                     'codigo_docente' => $dato['codigo_docente'],
-                    'error' => 'docente no encontrado.',
+                    'error' => 'Docente no encontrado.',
                 ];
                 continue;
             }
@@ -85,6 +77,12 @@ class GestionProfesoresJPsController extends Controller
             // Asociar el docente al horario
             $horario->docentes()->attach($docente->id);
 
+            // Verificar si el docente ya está asociado al curso en la tabla docente_curso
+            if (!$curso->docentes()->where('docente_id', $docente->id)->exists()) {
+                // Asociar el docente con el curso solo si no está ya asociado
+                $curso->docentes()->attach($docente->id);
+            }
+
             $resultados[] = [
                 'codigo_docente' => $dato['codigo_docente'],
                 'codigo_horario' => $dato['codigo_horario'],
@@ -100,7 +98,7 @@ class GestionProfesoresJPsController extends Controller
         ]);
     }
     
-    public function asignarJefesPractica(Request $request, $especialidad_id)
+    public function asignarJefesPractica(Request $request, $seccion_id)
     {
         // Validar el request
         $request->validate([
@@ -109,27 +107,27 @@ class GestionProfesoresJPsController extends Controller
             'datos.*.codigo_horario' => 'required|string|exists:horarios,codigo',
             'datos.*.codigo_persona' => 'required|string', // Código único de Docente, Estudiante o Administrativo
         ]);
-        $especialidad = Especialidad::find($especialidad_id);
-        if (!$especialidad) {
-            return response()->json(['error' => 'Especialidad no encontrada'], 404);
+        $seccion = Seccion::find($seccion_id);
+        if (!$seccion) {
+            return response()->json(['error' => 'Sección no encontrada'], 404);
         }
 
         $resultados = [];
         $jps_agregados_correctamente = 0;
 
         foreach ($request->input('datos') as $dato) {
-            // Buscar el curso por código y verificar que pertenezca a la especialidad
+            // Buscar el curso por código
             $curso = Curso::where('cod_curso', $dato['codigo_curso'])
-                ->where('especialidad_id', $especialidad_id)
+                //->where('especialidad_id', $especialidad_id)
                 ->first();
 
-            if (!$curso) {
+            /*if (!$curso) {
                 $resultados[] = [
                     'codigo_curso' => $dato['codigo_curso'],
                     'error' => 'El curso no pertenece a la especialidad especificada.',
                 ];
                 continue;
-            }
+            }*/
 
             // Buscar el horario por código y curso
             $horario = Horario::where('codigo', $dato['codigo_horario'])
@@ -184,10 +182,22 @@ class GestionProfesoresJPsController extends Controller
             }
 
             // Asignar el JP al horario
-            JefePractica::create([
+            $jefePractica = JefePractica::create([
                 'usuario_id' => $usuario->id,
                 'horario_id' => $horario->id,
             ]);
+
+            // Crear el registro correspondiente en la tabla HorarioEstudianteJp para los estudiantes asignados a este horario
+            // Suponemos que los estudiantes están asociados con el horario, por lo que recuperamos a los estudiantes
+            $estudiantes = HorarioEstudiante::where('horario_id', $horario->id)->get();
+
+            foreach ($estudiantes as $estudiante) {
+                HorarioEstudianteJp::create([
+                    'estudiante_horario_id' => $estudiante->id,
+                    'jp_horario_id' => $jefePractica->id,
+                    'encuestaJP' => 0,
+                ]);
+            }
 
             $resultados[] = [
                 'codigo_persona' => $dato['codigo_persona'],

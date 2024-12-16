@@ -414,13 +414,15 @@ class TemaDeTesisController extends Controller
         }
     }
 
-    private function obtenerUsuario($rol, $entidad_id){
-        $rol_id = Role::findByName($rol)->id;
-        return RoleScopeUsuario::where('role_id', $rol_id)
-            ->where('entity_id', $entidad_id)
-            ->orderBy('id', 'desc') // Asegúrate de ordenar por el campo adecuado
-            ->first()
-            ->usuario_id ?? null;
+    private function obtenerUsuario($rol, $entidad_id)
+    {
+        return RoleScopeUsuario::whereHas('role', function($query) use ($rol) {
+            $query->where('name', 'like', $rol);  // Búsqueda parcial del nombre del rol
+        })
+        ->where('entity_id', $entidad_id)
+        ->orderBy('id', 'desc') // Asegúrate de ordenar por el campo adecuado
+        ->first()
+        ->usuario_id ?? null;
     }
 
     public function aprobarTemaUsuario(Request $request, $tema_tesis_id): JsonResponse
@@ -535,7 +537,7 @@ class TemaDeTesisController extends Controller
                     'estado' => 'aprobado',
                     'file_id' => $fileId,
                 ]);
-                $usuarioId = $this->obtenerUsuario('coordinador', $temaTesis->area_id);
+                $usuarioId = $this->obtenerUsuario('%coord%area%', $temaTesis->area_id);
                 if($usuarioId){
                     EstadoAprobacionTema::create([
                         'proceso_aprobacion_id' => $procesoAprobacion->id,

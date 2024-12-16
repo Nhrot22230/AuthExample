@@ -3,7 +3,7 @@
 namespace App\Models\Encuestas;
 
 use App\Models\Matricula\Horario;
-use App\Models\Universidad\Especialidad;
+use App\Models\Universidad\Seccion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +18,7 @@ class Encuesta extends Model
         'nombre_encuesta',
         'tipo_encuesta',
         'disponible',
-        'especialidad_id'
+        'seccion_id'
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
@@ -32,9 +32,9 @@ class Encuesta extends Model
         return $this->belongsToMany(Pregunta::class, 'encuesta_pregunta')->withPivot('es_modificacion')->withTimestamps();;
     }
 
-    public function especialidad(): BelongsTo
+    public function seccion(): BelongsTo
     {
-        return $this->belongsTo(Especialidad::class);
+        return $this->belongsTo(Seccion::class);
     }
 
 }

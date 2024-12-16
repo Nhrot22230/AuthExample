@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Universidad;
 
 use App\Http\Controllers\Controller;
+use App\Models\Authorization\Role;
 use App\Models\Authorization\RoleScopeUsuario;
 use App\Models\Universidad\Especialidad;
 use App\Models\Universidad\Facultad;
@@ -43,9 +44,13 @@ class EspecialidadController extends Controller
             return response()->json(['message' => 'Especialidad no encontrada'], 404);
         }
 
+        //Buscar el rol de director de carrera
+        $rolDirector = Role::where('name', 'like', '%director%')->first();
+
         // Buscar el director de carrera relacionado
         $directorData = RoleScopeUsuario::where('entity_type', Especialidad::class)
             ->where('entity_id', $entity_id)
+            ->where('role_id', $rolDirector->id)
             ->first();
 
         // Si existe un director de carrera asociado, obtener su información de usuario
@@ -56,6 +61,25 @@ class EspecialidadController extends Controller
             $especialidad->director = $director;
         } else {
             $especialidad->director = null; // Si no hay director de carrera, asignar null
+        }
+
+        //Buscar el rol de asistente de especialidad
+        $rolAsistente = Role::where('name', 'like', '%asis%espe%')->first();
+
+        // Buscar el asistente de especialidad relacionado
+        $asistenteData = RoleScopeUsuario::where('entity_type', Especialidad::class)
+            ->where('entity_id', $entity_id)
+            ->where('role_id', $rolAsistente->id)
+            ->first();
+
+        // Si existe un asistente de especialidad asociado, obtener su información de usuario
+        if ($asistenteData) {
+            $asistente = Usuario::find($asistenteData->usuario_id);
+
+            // Agregar el asistente de especialidad a la facultad como un atributo adicional
+            $especialidad->asistente = $asistente;
+        } else {
+            $especialidad->asistente = null; // Si no hay asistente de especialidad, asignar null
         }
 
         return response()->json($especialidad, 200);
