@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Convocatorias;
 
 use App\Http\Controllers\Controller;
+use App\Models\Usuarios\Docente;
 use App\Models\Convocatorias\CandidatoConvocatoria;
 use App\Models\Convocatorias\ComiteCandidatoConvocatoria;
 use App\Models\Convocatorias\Convocatoria;
