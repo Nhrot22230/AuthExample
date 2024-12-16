@@ -49,12 +49,7 @@ class RoleSeeder extends Seeder
         Role::findByName('director')->scopes([])->attach(Scope::where('name', 'Especialidad')->first());
         Role::findByName('coordinador-area')->scopes([])->attach(Scope::where('name', 'Area')->first());
         Role::findByName('coordinador-seccion')->scopes([])->attach(Scope::where('name', 'Seccion')->first());
-        Role::findByName('docente')->scopes([])->attach(
-            Scope::orWhere('name', 'Curso')
-            ->orWhere('name', 'Seccion')
-            ->orWhere('name', 'Area')
-            ->get()
-        );
+        Role::findByName('docente')->scopes([])->attach(Scope::orWhere('name', 'Curso')->first());
         Role::findByName('jefe-practica')->scopes([])->attach(Scope::where('name', 'Curso')->first());
         Role::findByName('estudiante')->scopes([])->attach(Scope::where('name', 'Curso')->first());
         Role::findByName('comite')->scopes([])->attach(Scope::where('name', 'Curso')->first());
