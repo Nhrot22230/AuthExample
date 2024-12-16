@@ -38,6 +38,7 @@ class RoleSeeder extends Seeder
             'jefe-practica',
             'estudiante',
             'comite',
+            'candidato'
         ];
 
         foreach ($scopes as $scope) Scope::firstOrCreate($scope);
@@ -52,6 +53,7 @@ class RoleSeeder extends Seeder
         Role::findByName('docente')->scopes([])->attach(Scope::orWhere('name', 'Curso')->first());
         Role::findByName('jefe-practica')->scopes([])->attach(Scope::where('name', 'Curso')->first());
         Role::findByName('estudiante')->scopes([])->attach(Scope::where('name', 'Curso')->first());
-        Role::findByName('comite')->scopes([])->attach(Scope::where('name', 'Curso')->first());
+        Role::findByName('comite')->scopes([])->attach(Scope::where('name', 'Seccion')->first());
+        Role::findByName('candidato')->scopes([])->attach(Scope::where('name', 'Seccion')->first());
     }
 }
