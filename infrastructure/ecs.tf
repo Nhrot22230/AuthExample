@@ -84,6 +84,14 @@ resource "aws_ecs_task_definition" "app_task" {
           hostPort      = 80
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/mi-laravel-app"
+          "awslogs-region"        = "us-east-1" # Cambia según tu región
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
       environment = [
         {
           name  = "DB_HOST"
