@@ -231,7 +231,7 @@ class CursoController extends Controller
             ->select('id', 'codigo') // Seleccionamos solo los campos necesarios
             ->get();
 
-        Log::info("Horarios: " . $horarios);
+        //Log::info("Horarios: " . $horarios);
 
         // Estructurar la respuesta para devolver los horarios
         $horariosData = $horarios->map(function ($horario) {
@@ -258,7 +258,7 @@ class CursoController extends Controller
             ];
         });
 
-        Log::info("Horarios data: " . $horariosData);
+        //Log::info("Horarios data: " . $horariosData);
 
         return response()->json($horariosData);
     }

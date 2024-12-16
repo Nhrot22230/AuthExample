@@ -72,7 +72,7 @@ class EncuestaController extends Controller
         // Obtener el último semestre activo
         $semestre_id = Semestre::where('estado', 'activo')->orderByDesc('fecha_inicio')->first()->id;
 
-        Log::info('Semestre: ' . $semestre_id);
+        //Log::info('Semestre: ' . $semestre_id);
 
         // Obtener los cursos que tengan docentes asociados con la sección en el semestre activo
         $cursos = Curso::whereHas('docentes', function ($query) use ($seccion_id) {
@@ -84,7 +84,7 @@ class EncuestaController extends Controller
         ->select('id', 'nombre', 'cod_curso')  // Seleccionar los campos que quieres devolver
         ->get();
 
-        Log::info('Cursos: ' . $cursos->toJson());
+        //Log::info('Cursos: ' . $cursos->toJson());
 
         return response()->json($cursos);
     }
@@ -186,7 +186,7 @@ class EncuestaController extends Controller
 
             // Asociamos los cursos con la encuesta
             $semestre_id = $semestre->id;
-            Log::info('Semestre activo encontrado: ' . $semestre->toJson());
+            //Log::info('Semestre activo encontrado: ' . $semestre->toJson());
 
             foreach ($validated['cursos'] as $curso_id) {
                 $horarios = Horario::where('curso_id', $curso_id)
@@ -195,7 +195,7 @@ class EncuestaController extends Controller
 
                 foreach ($horarios as $horario) {
                     $encuesta->horario()->attach($horario->id);
-                    Log::info('Horario asociado: ' . $horario->id);
+                    //Log::info('Horario asociado: ' . $horario->id);
                 }
             }
 
@@ -417,7 +417,7 @@ class EncuestaController extends Controller
 
         ];
 
-        Log::info("Detalle encuesta: ", $detalleEncuesta);
+        //Log::info("Detalle encuesta: ", $detalleEncuesta);
 
         return response()->json($detalleEncuesta);
     }
@@ -933,7 +933,7 @@ class EncuestaController extends Controller
                 ->unique()
                 ->values();
                 
-            Log::info("Estudiantes: ", $estudiantes);
+            //Log::info("Estudiantes: ", $estudiantes);
 
             return response()->json($estudiantes);
             
