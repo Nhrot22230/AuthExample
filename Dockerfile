@@ -35,6 +35,9 @@ RUN composer install --no-dev --optimize-autoloader
 
 #RUN php artisan key:generate
 
+# Limpia cualquier caché previo de configuración
+RUN php artisan config:clear
+
 # Expone el puerto 80
 EXPOSE 80
 
