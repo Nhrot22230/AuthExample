@@ -16,7 +16,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
     
-RUN apt-get update && apt-get install -y amazon-ssm-agent
+# Descarga e instala el Amazon SSM Agent
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -o /tmp/amazon-ssm-agent.deb https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/debian_amd64/amazon-ssm-agent.deb && \
+    dpkg -i /tmp/amazon-ssm-agent.deb && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/amazon-ssm-agent.deb
+
 RUN systemctl enable amazon-ssm-agent
 
 # Instala Composer
