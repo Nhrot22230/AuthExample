@@ -25,7 +25,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Copia el archivo .env o crea uno a partir del archivo de ejemplo
-#RUN cp .env.example .env
+RUN cp .env.example .env
 
 # Elimina el directorio vendor si existe
 RUN rm -rf /var/www/html/vendor && composer install --no-dev --optimize-autoloader
