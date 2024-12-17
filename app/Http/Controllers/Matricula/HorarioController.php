@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Matricula\Horario;
 use App\Models\Universidad\Semestre;
 use App\Models\Delegados\Delegado;
+use App\Models\Matricula\HorarioEstudianteJp;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 class HorarioController extends Controller
@@ -370,16 +371,34 @@ class HorarioController extends Controller
 
         try {
             // Insertar una nueva fila en la tabla jp_horario
-            DB::table('jp_horario')->insert([
+            $jpHorarioId = DB::table('jp_horario')->insertGetId([
                 'horario_id' => $request->input('horario_id'),
                 'usuario_id' => $request->input('usuario_id'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
+            // Obtener los estudiantes asociados al horario
+            $estudiantes = DB::table('estudiante_horario')
+                ->where('horario_id', $request->input('horario_id'))
+                ->get();
+
+            // Crear un registro en HorarioEstudianteJp para cada estudiante usando Eloquent
+            foreach ($estudiantes as $estudiante) {
+                HorarioEstudianteJp::firstOrCreate(
+                    [
+                        'estudiante_horario_id' => $estudiante->id,
+                        'jp_horario_id' => $jpHorarioId,
+                    ],
+                    [
+                        'encuestaJP' => 0, // Solo se usa si se crea el registro
+                    ]
+                );
+            }
+
             return response()->json([
-                'message' => 'Jefe de práctica agregado exitosamente.',
-            ], 201);
+                'message' => 'Jefe de práctica agregado exitosamente y registros creados en HorarioEstudianteJp.',
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al agregar el jefe de práctica.',
@@ -387,5 +406,7 @@ class HorarioController extends Controller
             ], 500);
         }
     }
+
+
 
 }
