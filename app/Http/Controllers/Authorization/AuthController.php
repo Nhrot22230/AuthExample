@@ -244,7 +244,7 @@ class AuthController extends Controller
                 'picture' => $picture,
                 'estado' => 'activo',
             ]);
-            $db_usuario->assignRole('estudiante');
+            $db_usuario->assignRole('docente');
             return $db_usuario;
         }
 
