@@ -91,6 +91,8 @@ class EstudianteController extends Controller
                     'especialidad_id' => $validatedData['especialidad_id'],
                     'codigoEstudiante' => $validatedData['codigoEstudiante'],
                 ]);
+
+                $usuario->assignRole('estudiante');
             });
 
             Log::channel('audit-log')->info('Estudiante creado exitosamente', [
@@ -252,6 +254,7 @@ class EstudianteController extends Controller
                 $estudiante->codigoEstudiante = $estudianteData['Codigo'];
                 $estudiante->especialidad_id = Especialidad::where('nombre', $estudianteData['Especialidad'])->first()->id;
                 $usuario->estudiante()->save($estudiante);
+                $usuario->assignRole('estudiante');
             }
             DB::commit();
             Log::channel('errors')->info('Estudiantes guardados exitosamente', ['estudiantes' => $request->estudiantes]);

@@ -124,6 +124,7 @@ class DocenteController extends Controller
             $docente->area_id = $validatedData['area_id'] ?? null;
 
             $usuario->docente()->save($docente);
+            $usuario->assignRole('docente');
 
             Log::channel('audit-log')->info('Docente creado exitosamente', [
                 'docente' => $docente->toArray(),
@@ -270,6 +271,8 @@ class DocenteController extends Controller
                     'seccion_id' => $seccion->id,
                     'area_id' => null,
                 ]);
+
+                $usuario->assignRole('docente');
             }
             DB::commit();
             return response()->json(['message' => 'Docentes cargados exitosamente'], 201);
